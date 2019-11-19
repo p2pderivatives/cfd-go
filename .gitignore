@@ -172,3 +172,6 @@ external/*
 
 /doc/*.bat
 /tools/*localdebug.bat
+
+!go.mod
+/go.sum
