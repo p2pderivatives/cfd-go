@@ -10,8 +10,7 @@ func TestCfdCreateHandle(t *testing.T) {
 	ret := CfdCreateHandle(nil)
 	assert.Equal(t, 1, ret)
 
-	var handle uintptr
-	ret = CfdCreateHandle(&handle)
+	handle, ret := CfdGoCreateHandle()
 	assert.Equal(t, 0, ret)
 
 	ret = CfdFreeHandle(handle)
@@ -20,16 +19,14 @@ func TestCfdCreateHandle(t *testing.T) {
 }
 
 func TestCfdGetLastError(t *testing.T) {
-	var handle uintptr
-	ret := CfdCreateHandle(&handle)
+	handle, ret := CfdGoCreateHandle()
 	assert.Equal(t, 0, ret)
 
 	lastErr := CfdGetLastErrorCode(handle)
 	assert.Equal(t, 0, lastErr)
 
-	errStr := ""
-	ret = CfdGetLastErrorMessage(handle, &errStr)
-	assert.Equal(t, 0, ret)
+	errStr, strret := CfdGoGetLastErrorMessage(handle)
+	assert.Equal(t, 0, strret)
 	assert.Equal(t, "", errStr)
 
 	ret = CfdFreeHandle(handle)
@@ -38,8 +35,7 @@ func TestCfdGetLastError(t *testing.T) {
 }
 
 func TestCfdGetSupportedFunction(t *testing.T) {
-	var handle uintptr
-	ret := CfdCreateHandle(&handle)
+	handle, ret := CfdGoCreateHandle()
 	assert.Equal(t, 0, ret)
 
 	flag, ret2 := CfdGoGetSupportedFunction()
