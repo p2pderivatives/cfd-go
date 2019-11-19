@@ -36,3 +36,17 @@ func TestCfdGetLastError(t *testing.T) {
 	assert.Equal(t, 0, ret)
 	fmt.Print("TestCfdGetLastError test done.\n")
 }
+
+func TestCfdGetSupportedFunction(t *testing.T) {
+	var handle uintptr
+	ret := CfdCreateHandle(&handle)
+	assert.Equal(t, 0, ret)
+
+	flag, ret2 := CfdGoGetSupportedFunction()
+	assert.Equal(t, 0, ret2)
+	assert.Equal(t, uint64(1), (flag & 0x01))
+
+	ret = CfdFreeHandle(handle)
+	assert.Equal(t, 0, ret)
+	fmt.Print("TestCfdGetSupportedFunction test done.\n")
+}

@@ -243,6 +243,16 @@ func CfdGetLastErrorMessage(arg1 uintptr, arg2 *string) (_swig_ret int) {
 }
 
 
+/**
+ * Get supported function.
+ */
+func CfdGoGetSupportedFunction() (func_flag uint64, _swig_ret int) {
+	func_flag_value := SwigcptrUint64_t(uintptr(unsafe.Pointer(&func_flag)))
+	ret := CfdGetSupportedFunction(func_flag_value)
+	return func_flag, ret
+}
+
+
 type SwigcptrUint64_t uintptr
 type Uint64_t interface {
 	Swigcptr() uintptr;
