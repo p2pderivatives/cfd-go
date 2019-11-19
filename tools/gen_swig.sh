@@ -1,3 +1,3 @@
 #!/bin/sh
 cd `git rev-parse --show-toplevel`
-swig -go -outdir . -o cfdgo.c -cgo -intgosize 32 src/swig.i
+swig -go -outdir . -o cfdgo.c -cgo -intgosize 32 swig.i
