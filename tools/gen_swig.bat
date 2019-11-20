@@ -1,5 +1,5 @@
 if exist "gen_swig.bat" (
   cd ..
 )
-swig -go -outdir . -o cfdgo.c -cgo -intgosize 32 swig.i
+swig -go -DCFD_DISABLE_FREESTRING -outdir . -o cfdgo.c -cgo -intgosize 32 swig.i
 pause

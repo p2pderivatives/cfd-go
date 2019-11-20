@@ -29,16 +29,11 @@ func CfdGoCreateHandle() (handle uintptr, _swig_ret int) {
 
 /**
  * Get last error message.
- * param: 
+ * param: handle   cfd handle
  */
 func CfdGoGetLastErrorMessage(handle uintptr) (message string, _swig_ret int) {
-	var err_msg string
-	message = ""
-	ret := CfdGetLastErrorMessage(handle, &err_msg)
-	if ret == 0 {
-		message += err_msg
-		CfdFreeStringBuffer(err_msg)
-	}
+	ret := CfdGetLastErrorMessage(handle, &message)
+	// Do not use the Free API as it will be released by Go-GC.
 	return message, ret
 }
 
