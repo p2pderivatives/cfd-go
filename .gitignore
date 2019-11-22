@@ -176,3 +176,4 @@ external/*
 !go.mod
 /go.sum
 /cover.html
+*.log
