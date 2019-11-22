@@ -1,10 +1,17 @@
 %module cfdgo
 %{
-#include "external/cfd/include/cfdc/cfdcapi_common.h"
-#include "external/cfd/include/cfdc/cfdcapi_address.h"
+#include "cfdc/cfdcapi_common.h"
+#include "cfdc/cfdcapi_address.h"
 %}
 
+%typemap(argout) (char **) {
+    if ($1 && *$1) {
+        $input->n = strlen(*$1);
+    }
+}
+
 %insert(cgo_comment_typedefs) %{
+#cgo CFLAGS: -I./external/cfd/include -I../cfd/include
 #cgo LDFLAGS: -L/usr/local/lib -L${SRCDIR}/build/Release -L${SRCDIR}/build/Debug -lcfd
 %}
 
