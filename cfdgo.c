@@ -223,7 +223,7 @@ static void* Swig_malloc(int c) {
 extern "C" {
 #endif
 
-void _wrap_Swig_free_cfdgo_d73e63cfe7679271(void *_swig_go_0) {
+void _wrap_Swig_free_cfdgo_0d8b6786211aa15d(void *_swig_go_0) {
   void *arg1 = (void *) 0 ;
   
   arg1 = *(void **)&_swig_go_0; 
@@ -233,7 +233,7 @@ void _wrap_Swig_free_cfdgo_d73e63cfe7679271(void *_swig_go_0) {
 }
 
 
-void *_wrap_Swig_malloc_cfdgo_d73e63cfe7679271(intgo _swig_go_0) {
+void *_wrap_Swig_malloc_cfdgo_0d8b6786211aa15d(intgo _swig_go_0) {
   int arg1 ;
   void *result = 0 ;
   void *_swig_go_result;
@@ -246,7 +246,7 @@ void *_wrap_Swig_malloc_cfdgo_d73e63cfe7679271(intgo _swig_go_0) {
 }
 
 
-intgo _wrap_kCfdSuccess_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdSuccess_cfdgo_0d8b6786211aa15d() {
   enum CfdErrorCode result;
   intgo _swig_go_result;
   
@@ -258,7 +258,7 @@ intgo _wrap_kCfdSuccess_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdUnknownError_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdUnknownError_cfdgo_0d8b6786211aa15d() {
   enum CfdErrorCode result;
   intgo _swig_go_result;
   
@@ -270,7 +270,7 @@ intgo _wrap_kCfdUnknownError_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdInternalError_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdInternalError_cfdgo_0d8b6786211aa15d() {
   enum CfdErrorCode result;
   intgo _swig_go_result;
   
@@ -282,7 +282,7 @@ intgo _wrap_kCfdInternalError_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdMemoryFullError_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdMemoryFullError_cfdgo_0d8b6786211aa15d() {
   enum CfdErrorCode result;
   intgo _swig_go_result;
   
@@ -294,7 +294,7 @@ intgo _wrap_kCfdMemoryFullError_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdIllegalArgumentError_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdIllegalArgumentError_cfdgo_0d8b6786211aa15d() {
   enum CfdErrorCode result;
   intgo _swig_go_result;
   
@@ -306,7 +306,7 @@ intgo _wrap_kCfdIllegalArgumentError_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdIllegalStateError_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdIllegalStateError_cfdgo_0d8b6786211aa15d() {
   enum CfdErrorCode result;
   intgo _swig_go_result;
   
@@ -318,7 +318,7 @@ intgo _wrap_kCfdIllegalStateError_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdOutOfRangeError_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdOutOfRangeError_cfdgo_0d8b6786211aa15d() {
   enum CfdErrorCode result;
   intgo _swig_go_result;
   
@@ -330,7 +330,7 @@ intgo _wrap_kCfdOutOfRangeError_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdInvalidSettingError_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdInvalidSettingError_cfdgo_0d8b6786211aa15d() {
   enum CfdErrorCode result;
   intgo _swig_go_result;
   
@@ -342,7 +342,7 @@ intgo _wrap_kCfdInvalidSettingError_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdConnectionError_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdConnectionError_cfdgo_0d8b6786211aa15d() {
   enum CfdErrorCode result;
   intgo _swig_go_result;
   
@@ -354,7 +354,7 @@ intgo _wrap_kCfdConnectionError_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDiskAccessError_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDiskAccessError_cfdgo_0d8b6786211aa15d() {
   enum CfdErrorCode result;
   intgo _swig_go_result;
   
@@ -366,7 +366,7 @@ intgo _wrap_kCfdDiskAccessError_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdEnableBitcoin_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdEnableBitcoin_cfdgo_0d8b6786211aa15d() {
   enum CfdLibraryFunction result;
   intgo _swig_go_result;
   
@@ -378,7 +378,7 @@ intgo _wrap_kCfdEnableBitcoin_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdEnableElements_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdEnableElements_cfdgo_0d8b6786211aa15d() {
   enum CfdLibraryFunction result;
   intgo _swig_go_result;
   
@@ -390,7 +390,7 @@ intgo _wrap_kCfdEnableElements_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_CfdGetSupportedFunction_cfdgo_d73e63cfe7679271(uint64_t *_swig_go_0) {
+intgo _wrap_CfdGetSupportedFunction_cfdgo_0d8b6786211aa15d(uint64_t *_swig_go_0) {
   uint64_t *arg1 = (uint64_t *) 0 ;
   int result;
   intgo _swig_go_result;
@@ -403,7 +403,7 @@ intgo _wrap_CfdGetSupportedFunction_cfdgo_d73e63cfe7679271(uint64_t *_swig_go_0)
 }
 
 
-intgo _wrap_CfdInitialize_cfdgo_d73e63cfe7679271() {
+intgo _wrap_CfdInitialize_cfdgo_0d8b6786211aa15d() {
   int result;
   intgo _swig_go_result;
   
@@ -414,7 +414,7 @@ intgo _wrap_CfdInitialize_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_CfdFinalize_cfdgo_d73e63cfe7679271(bool _swig_go_0) {
+intgo _wrap_CfdFinalize_cfdgo_0d8b6786211aa15d(bool _swig_go_0) {
   bool arg1 ;
   int result;
   intgo _swig_go_result;
@@ -427,7 +427,7 @@ intgo _wrap_CfdFinalize_cfdgo_d73e63cfe7679271(bool _swig_go_0) {
 }
 
 
-intgo _wrap_CfdCreateHandle_cfdgo_d73e63cfe7679271(void **_swig_go_0) {
+intgo _wrap_CfdCreateHandle_cfdgo_0d8b6786211aa15d(void **_swig_go_0) {
   void **arg1 = (void **) 0 ;
   int result;
   intgo _swig_go_result;
@@ -440,7 +440,7 @@ intgo _wrap_CfdCreateHandle_cfdgo_d73e63cfe7679271(void **_swig_go_0) {
 }
 
 
-intgo _wrap_CfdFreeHandle_cfdgo_d73e63cfe7679271(void *_swig_go_0) {
+intgo _wrap_CfdFreeHandle_cfdgo_0d8b6786211aa15d(void *_swig_go_0) {
   void *arg1 = (void *) 0 ;
   int result;
   intgo _swig_go_result;
@@ -453,7 +453,7 @@ intgo _wrap_CfdFreeHandle_cfdgo_d73e63cfe7679271(void *_swig_go_0) {
 }
 
 
-intgo _wrap_CfdFreeBuffer_cfdgo_d73e63cfe7679271(void *_swig_go_0) {
+intgo _wrap_CfdFreeBuffer_cfdgo_0d8b6786211aa15d(void *_swig_go_0) {
   void *arg1 = (void *) 0 ;
   int result;
   intgo _swig_go_result;
@@ -466,7 +466,7 @@ intgo _wrap_CfdFreeBuffer_cfdgo_d73e63cfe7679271(void *_swig_go_0) {
 }
 
 
-intgo _wrap_CfdGetLastErrorCode_cfdgo_d73e63cfe7679271(void *_swig_go_0) {
+intgo _wrap_CfdGetLastErrorCode_cfdgo_0d8b6786211aa15d(void *_swig_go_0) {
   void *arg1 = (void *) 0 ;
   int result;
   intgo _swig_go_result;
@@ -479,7 +479,7 @@ intgo _wrap_CfdGetLastErrorCode_cfdgo_d73e63cfe7679271(void *_swig_go_0) {
 }
 
 
-intgo _wrap_CfdGetLastErrorMessage_cfdgo_d73e63cfe7679271(void *_swig_go_0, _gostring_* _swig_go_1) {
+intgo _wrap_CfdGetLastErrorMessage_cfdgo_0d8b6786211aa15d(void *_swig_go_0, _gostring_* _swig_go_1) {
   void *arg1 = (void *) 0 ;
   char **arg2 = (char **) 0 ;
   int result;
@@ -499,7 +499,7 @@ intgo _wrap_CfdGetLastErrorMessage_cfdgo_d73e63cfe7679271(void *_swig_go_0, _gos
 }
 
 
-intgo _wrap_kCfdNetworkMainnet_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdNetworkMainnet_cfdgo_0d8b6786211aa15d() {
   enum CfdNetworkType result;
   intgo _swig_go_result;
   
@@ -511,7 +511,7 @@ intgo _wrap_kCfdNetworkMainnet_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdNetworkTestnet_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdNetworkTestnet_cfdgo_0d8b6786211aa15d() {
   enum CfdNetworkType result;
   intgo _swig_go_result;
   
@@ -523,7 +523,7 @@ intgo _wrap_kCfdNetworkTestnet_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdNetworkRegtest_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdNetworkRegtest_cfdgo_0d8b6786211aa15d() {
   enum CfdNetworkType result;
   intgo _swig_go_result;
   
@@ -535,7 +535,7 @@ intgo _wrap_kCfdNetworkRegtest_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdNetworkLiquidv1_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdNetworkLiquidv1_cfdgo_0d8b6786211aa15d() {
   enum CfdNetworkType result;
   intgo _swig_go_result;
   
@@ -547,7 +547,7 @@ intgo _wrap_kCfdNetworkLiquidv1_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdNetworkElementsRegtest_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdNetworkElementsRegtest_cfdgo_0d8b6786211aa15d() {
   enum CfdNetworkType result;
   intgo _swig_go_result;
   
@@ -559,7 +559,7 @@ intgo _wrap_kCfdNetworkElementsRegtest_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdNetworkCustomChain_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdNetworkCustomChain_cfdgo_0d8b6786211aa15d() {
   enum CfdNetworkType result;
   intgo _swig_go_result;
   
@@ -571,7 +571,7 @@ intgo _wrap_kCfdNetworkCustomChain_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2shAddress_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2shAddress_cfdgo_0d8b6786211aa15d() {
   enum CfdAddressType result;
   intgo _swig_go_result;
   
@@ -583,7 +583,7 @@ intgo _wrap_kCfdP2shAddress_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2pkhAddress_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2pkhAddress_cfdgo_0d8b6786211aa15d() {
   enum CfdAddressType result;
   intgo _swig_go_result;
   
@@ -595,7 +595,7 @@ intgo _wrap_kCfdP2pkhAddress_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2wshAddress_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2wshAddress_cfdgo_0d8b6786211aa15d() {
   enum CfdAddressType result;
   intgo _swig_go_result;
   
@@ -607,7 +607,7 @@ intgo _wrap_kCfdP2wshAddress_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2wpkhAddress_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2wpkhAddress_cfdgo_0d8b6786211aa15d() {
   enum CfdAddressType result;
   intgo _swig_go_result;
   
@@ -619,7 +619,7 @@ intgo _wrap_kCfdP2wpkhAddress_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2shP2wshAddress_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2shP2wshAddress_cfdgo_0d8b6786211aa15d() {
   enum CfdAddressType result;
   intgo _swig_go_result;
   
@@ -631,7 +631,7 @@ intgo _wrap_kCfdP2shP2wshAddress_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2shP2wpkhAddress_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2shP2wpkhAddress_cfdgo_0d8b6786211aa15d() {
   enum CfdAddressType result;
   intgo _swig_go_result;
   
@@ -643,7 +643,7 @@ intgo _wrap_kCfdP2shP2wpkhAddress_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2sh_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2sh_cfdgo_0d8b6786211aa15d() {
   enum CfdHashType result;
   intgo _swig_go_result;
   
@@ -655,7 +655,7 @@ intgo _wrap_kCfdP2sh_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2pkh_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2pkh_cfdgo_0d8b6786211aa15d() {
   enum CfdHashType result;
   intgo _swig_go_result;
   
@@ -667,7 +667,7 @@ intgo _wrap_kCfdP2pkh_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2wsh_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2wsh_cfdgo_0d8b6786211aa15d() {
   enum CfdHashType result;
   intgo _swig_go_result;
   
@@ -679,7 +679,7 @@ intgo _wrap_kCfdP2wsh_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2wpkh_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2wpkh_cfdgo_0d8b6786211aa15d() {
   enum CfdHashType result;
   intgo _swig_go_result;
   
@@ -691,7 +691,7 @@ intgo _wrap_kCfdP2wpkh_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2shP2wsh_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2shP2wsh_cfdgo_0d8b6786211aa15d() {
   enum CfdHashType result;
   intgo _swig_go_result;
   
@@ -703,7 +703,7 @@ intgo _wrap_kCfdP2shP2wsh_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdP2shP2wpkh_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdP2shP2wpkh_cfdgo_0d8b6786211aa15d() {
   enum CfdHashType result;
   intgo _swig_go_result;
   
@@ -715,7 +715,7 @@ intgo _wrap_kCfdP2shP2wpkh_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdSigHashAll_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdSigHashAll_cfdgo_0d8b6786211aa15d() {
   enum CfdSighashType result;
   intgo _swig_go_result;
   
@@ -727,7 +727,7 @@ intgo _wrap_kCfdSigHashAll_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdSigHashNone_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdSigHashNone_cfdgo_0d8b6786211aa15d() {
   enum CfdSighashType result;
   intgo _swig_go_result;
   
@@ -739,7 +739,7 @@ intgo _wrap_kCfdSigHashNone_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdSigHashSingle_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdSigHashSingle_cfdgo_0d8b6786211aa15d() {
   enum CfdSighashType result;
   intgo _swig_go_result;
   
@@ -751,7 +751,7 @@ intgo _wrap_kCfdSigHashSingle_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorScriptNull_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorScriptNull_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorScriptType result;
   intgo _swig_go_result;
   
@@ -763,7 +763,7 @@ intgo _wrap_kCfdDescriptorScriptNull_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorScriptSh_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorScriptSh_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorScriptType result;
   intgo _swig_go_result;
   
@@ -775,7 +775,7 @@ intgo _wrap_kCfdDescriptorScriptSh_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorScriptWsh_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorScriptWsh_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorScriptType result;
   intgo _swig_go_result;
   
@@ -787,7 +787,7 @@ intgo _wrap_kCfdDescriptorScriptWsh_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorScriptPk_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorScriptPk_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorScriptType result;
   intgo _swig_go_result;
   
@@ -799,7 +799,7 @@ intgo _wrap_kCfdDescriptorScriptPk_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorScriptPkh_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorScriptPkh_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorScriptType result;
   intgo _swig_go_result;
   
@@ -811,7 +811,7 @@ intgo _wrap_kCfdDescriptorScriptPkh_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorScriptWpkh_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorScriptWpkh_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorScriptType result;
   intgo _swig_go_result;
   
@@ -823,7 +823,7 @@ intgo _wrap_kCfdDescriptorScriptWpkh_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorScriptCombo_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorScriptCombo_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorScriptType result;
   intgo _swig_go_result;
   
@@ -835,7 +835,7 @@ intgo _wrap_kCfdDescriptorScriptCombo_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorScriptMulti_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorScriptMulti_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorScriptType result;
   intgo _swig_go_result;
   
@@ -847,7 +847,7 @@ intgo _wrap_kCfdDescriptorScriptMulti_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorScriptSortedMulti_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorScriptSortedMulti_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorScriptType result;
   intgo _swig_go_result;
   
@@ -859,7 +859,7 @@ intgo _wrap_kCfdDescriptorScriptSortedMulti_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorScriptAddr_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorScriptAddr_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorScriptType result;
   intgo _swig_go_result;
   
@@ -871,7 +871,7 @@ intgo _wrap_kCfdDescriptorScriptAddr_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorScriptRaw_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorScriptRaw_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorScriptType result;
   intgo _swig_go_result;
   
@@ -883,7 +883,19 @@ intgo _wrap_kCfdDescriptorScriptRaw_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorKeyPublic_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorKeyNull_cfdgo_0d8b6786211aa15d() {
+  enum CfdDescriptorKeyType result;
+  intgo _swig_go_result;
+  
+  
+  result = kCfdDescriptorKeyNull;
+  
+  _swig_go_result = (intgo)result; 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_kCfdDescriptorKeyPublic_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorKeyType result;
   intgo _swig_go_result;
   
@@ -895,7 +907,7 @@ intgo _wrap_kCfdDescriptorKeyPublic_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorKeyBip32_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorKeyBip32_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorKeyType result;
   intgo _swig_go_result;
   
@@ -907,7 +919,7 @@ intgo _wrap_kCfdDescriptorKeyBip32_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_kCfdDescriptorKeyBip32Priv_cfdgo_d73e63cfe7679271() {
+intgo _wrap_kCfdDescriptorKeyBip32Priv_cfdgo_0d8b6786211aa15d() {
   enum CfdDescriptorKeyType result;
   intgo _swig_go_result;
   
@@ -919,7 +931,7 @@ intgo _wrap_kCfdDescriptorKeyBip32Priv_cfdgo_d73e63cfe7679271() {
 }
 
 
-intgo _wrap_CfdCreateAddress_cfdgo_d73e63cfe7679271(void *_swig_go_0, intgo _swig_go_1, _gostring_ _swig_go_2, _gostring_ _swig_go_3, intgo _swig_go_4, _gostring_* _swig_go_5, _gostring_* _swig_go_6, _gostring_* _swig_go_7) {
+intgo _wrap_CfdCreateAddress_cfdgo_0d8b6786211aa15d(void *_swig_go_0, intgo _swig_go_1, _gostring_ _swig_go_2, _gostring_ _swig_go_3, intgo _swig_go_4, _gostring_* _swig_go_5, _gostring_* _swig_go_6, _gostring_* _swig_go_7) {
   void *arg1 = (void *) 0 ;
   int arg2 ;
   char *arg3 = (char *) 0 ;
@@ -971,7 +983,7 @@ intgo _wrap_CfdCreateAddress_cfdgo_d73e63cfe7679271(void *_swig_go_0, intgo _swi
 }
 
 
-intgo _wrap_CfdInitializeMultisigScript_cfdgo_d73e63cfe7679271(void *_swig_go_0, intgo _swig_go_1, intgo _swig_go_2, void **_swig_go_3) {
+intgo _wrap_CfdInitializeMultisigScript_cfdgo_0d8b6786211aa15d(void *_swig_go_0, intgo _swig_go_1, intgo _swig_go_2, void **_swig_go_3) {
   void *arg1 = (void *) 0 ;
   int arg2 ;
   int arg3 ;
@@ -990,7 +1002,7 @@ intgo _wrap_CfdInitializeMultisigScript_cfdgo_d73e63cfe7679271(void *_swig_go_0,
 }
 
 
-intgo _wrap_CfdAddMultisigScriptData_cfdgo_d73e63cfe7679271(void *_swig_go_0, void *_swig_go_1, _gostring_ _swig_go_2) {
+intgo _wrap_CfdAddMultisigScriptData_cfdgo_0d8b6786211aa15d(void *_swig_go_0, void *_swig_go_1, _gostring_ _swig_go_2) {
   void *arg1 = (void *) 0 ;
   void *arg2 = (void *) 0 ;
   char *arg3 = (char *) 0 ;
@@ -1012,7 +1024,7 @@ intgo _wrap_CfdAddMultisigScriptData_cfdgo_d73e63cfe7679271(void *_swig_go_0, vo
 }
 
 
-intgo _wrap_CfdFinalizeMultisigScript_cfdgo_d73e63cfe7679271(void *_swig_go_0, void *_swig_go_1, uint32_t *_swig_go_2, _gostring_* _swig_go_3, _gostring_* _swig_go_4, _gostring_* _swig_go_5) {
+intgo _wrap_CfdFinalizeMultisigScript_cfdgo_0d8b6786211aa15d(void *_swig_go_0, void *_swig_go_1, uint32_t *_swig_go_2, _gostring_* _swig_go_3, _gostring_* _swig_go_4, _gostring_* _swig_go_5) {
   void *arg1 = (void *) 0 ;
   void *arg2 = (void *) 0 ;
   uint32_t arg3 ;
@@ -1057,7 +1069,7 @@ intgo _wrap_CfdFinalizeMultisigScript_cfdgo_d73e63cfe7679271(void *_swig_go_0, v
 }
 
 
-intgo _wrap_CfdFreeMultisigScriptHandle_cfdgo_d73e63cfe7679271(void *_swig_go_0, void *_swig_go_1) {
+intgo _wrap_CfdFreeMultisigScriptHandle_cfdgo_0d8b6786211aa15d(void *_swig_go_0, void *_swig_go_1) {
   void *arg1 = (void *) 0 ;
   void *arg2 = (void *) 0 ;
   int result;
@@ -1072,7 +1084,7 @@ intgo _wrap_CfdFreeMultisigScriptHandle_cfdgo_d73e63cfe7679271(void *_swig_go_0,
 }
 
 
-intgo _wrap_CfdParseDescriptor_cfdgo_d73e63cfe7679271(void *_swig_go_0, _gostring_ _swig_go_1, intgo _swig_go_2, _gostring_ _swig_go_3, void **_swig_go_4, uint32_t *_swig_go_5) {
+intgo _wrap_CfdParseDescriptor_cfdgo_0d8b6786211aa15d(void *_swig_go_0, _gostring_ _swig_go_1, intgo _swig_go_2, _gostring_ _swig_go_3, void **_swig_go_4, uint32_t *_swig_go_5) {
   void *arg1 = (void *) 0 ;
   char *arg2 = (char *) 0 ;
   int arg3 ;
@@ -1105,7 +1117,7 @@ intgo _wrap_CfdParseDescriptor_cfdgo_d73e63cfe7679271(void *_swig_go_0, _gostrin
 }
 
 
-intgo _wrap_CfdGetDescriptorData_cfdgo_d73e63cfe7679271(void *_swig_go_0, void *_swig_go_1, uint32_t *_swig_go_2, uint32_t *_swig_go_3, uint32_t *_swig_go_4, intgo *_swig_go_5, _gostring_* _swig_go_6, _gostring_* _swig_go_7, intgo *_swig_go_8, _gostring_* _swig_go_9, intgo *_swig_go_10, _gostring_* _swig_go_11, _gostring_* _swig_go_12, _gostring_* _swig_go_13, bool *_swig_go_14, uint32_t *_swig_go_15) {
+intgo _wrap_CfdGetDescriptorData_cfdgo_0d8b6786211aa15d(void *_swig_go_0, void *_swig_go_1, uint32_t *_swig_go_2, uint32_t *_swig_go_3, uint32_t *_swig_go_4, intgo *_swig_go_5, _gostring_* _swig_go_6, _gostring_* _swig_go_7, intgo *_swig_go_8, _gostring_* _swig_go_9, intgo *_swig_go_10, _gostring_* _swig_go_11, _gostring_* _swig_go_12, _gostring_* _swig_go_13, bool *_swig_go_14, uint32_t *_swig_go_15) {
   void *arg1 = (void *) 0 ;
   void *arg2 = (void *) 0 ;
   uint32_t arg3 ;
@@ -1185,7 +1197,7 @@ intgo _wrap_CfdGetDescriptorData_cfdgo_d73e63cfe7679271(void *_swig_go_0, void *
 }
 
 
-intgo _wrap_CfdGetDescriptorMultisigKey_cfdgo_d73e63cfe7679271(void *_swig_go_0, void *_swig_go_1, uint32_t *_swig_go_2, intgo *_swig_go_3, _gostring_* _swig_go_4, _gostring_* _swig_go_5, _gostring_* _swig_go_6) {
+intgo _wrap_CfdGetDescriptorMultisigKey_cfdgo_0d8b6786211aa15d(void *_swig_go_0, void *_swig_go_1, uint32_t *_swig_go_2, intgo *_swig_go_3, _gostring_* _swig_go_4, _gostring_* _swig_go_5, _gostring_* _swig_go_6) {
   void *arg1 = (void *) 0 ;
   void *arg2 = (void *) 0 ;
   uint32_t arg3 ;
@@ -1232,7 +1244,7 @@ intgo _wrap_CfdGetDescriptorMultisigKey_cfdgo_d73e63cfe7679271(void *_swig_go_0,
 }
 
 
-intgo _wrap_CfdFreeDescriptorHandle_cfdgo_d73e63cfe7679271(void *_swig_go_0, void *_swig_go_1) {
+intgo _wrap_CfdFreeDescriptorHandle_cfdgo_0d8b6786211aa15d(void *_swig_go_0, void *_swig_go_1) {
   void *arg1 = (void *) 0 ;
   void *arg2 = (void *) 0 ;
   int result;
@@ -1247,7 +1259,7 @@ intgo _wrap_CfdFreeDescriptorHandle_cfdgo_d73e63cfe7679271(void *_swig_go_0, voi
 }
 
 
-intgo _wrap_CfdGetAddressesFromMultisig_cfdgo_d73e63cfe7679271(void *_swig_go_0, _gostring_ _swig_go_1, intgo _swig_go_2, intgo _swig_go_3, void **_swig_go_4, uint32_t *_swig_go_5) {
+intgo _wrap_CfdGetAddressesFromMultisig_cfdgo_0d8b6786211aa15d(void *_swig_go_0, _gostring_ _swig_go_1, intgo _swig_go_2, intgo _swig_go_3, void **_swig_go_4, uint32_t *_swig_go_5) {
   void *arg1 = (void *) 0 ;
   char *arg2 = (char *) 0 ;
   int arg3 ;
@@ -1275,7 +1287,7 @@ intgo _wrap_CfdGetAddressesFromMultisig_cfdgo_d73e63cfe7679271(void *_swig_go_0,
 }
 
 
-intgo _wrap_CfdGetAddressFromMultisigKey_cfdgo_d73e63cfe7679271(void *_swig_go_0, void *_swig_go_1, uint32_t *_swig_go_2, _gostring_* _swig_go_3, _gostring_* _swig_go_4) {
+intgo _wrap_CfdGetAddressFromMultisigKey_cfdgo_0d8b6786211aa15d(void *_swig_go_0, void *_swig_go_1, uint32_t *_swig_go_2, _gostring_* _swig_go_3, _gostring_* _swig_go_4) {
   void *arg1 = (void *) 0 ;
   void *arg2 = (void *) 0 ;
   uint32_t arg3 ;
@@ -1313,7 +1325,7 @@ intgo _wrap_CfdGetAddressFromMultisigKey_cfdgo_d73e63cfe7679271(void *_swig_go_0
 }
 
 
-intgo _wrap_CfdFreeAddressesMultisigHandle_cfdgo_d73e63cfe7679271(void *_swig_go_0, void *_swig_go_1) {
+intgo _wrap_CfdFreeAddressesMultisigHandle_cfdgo_0d8b6786211aa15d(void *_swig_go_0, void *_swig_go_1) {
   void *arg1 = (void *) 0 ;
   void *arg2 = (void *) 0 ;
   int result;
