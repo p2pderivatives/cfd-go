@@ -2,6 +2,8 @@
 %{
 #include "cfdc/cfdcapi_common.h"
 #include "cfdc/cfdcapi_address.h"
+#include "cfdc/cfdcapi_elements_transaction.h"
+#include "cfdc/cfdcapi_transaction.h"
 %}
 
 %typemap(argout) (char **) {
@@ -17,6 +19,8 @@
 
 %include "external/cfd/include/cfdc/cfdcapi_common.h"
 %include "external/cfd/include/cfdc/cfdcapi_address.h"
+%include "external/cfd/include/cfdc/cfdcapi_elements_transaction.h"
+%include "external/cfd/include/cfdc/cfdcapi_transaction.h"
 
 %insert(go_wrapper) %{
 /**
@@ -231,6 +235,414 @@ func CfdGoGetAddressesFromMultisig(handle uintptr, redeemScript string, networkT
 		}
 	}
 	return addressList, pubkeyList, ret
+}
+
+/**
+ * Get initialized confidential transaction.
+ * param: handle        cfd handle
+ * param: version       transaction version
+ * param: locktime      locktime
+ * return: txHex        transaction hex
+ * return: _swig_ret    error code
+ */
+func CfdGoInitializeConfidentialTx(handle uintptr, version uint32, locktime uint32) (txHex string, _swig_ret int) {
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&version)))
+	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&locktime)))
+	ret := CfdInitializeConfidentialTx(handle, versionPtr, locktimePtr, &txHex)
+	return txHex, ret
+}
+
+/**
+ * Add txin to confidential transaction.
+ * param: handle        cfd handle
+ * param: txHex         transaction hex
+ * param: txid          txid
+ * param: vout          vout
+ * param: sequence      sequence
+ * return: outputTxHex  output transaction hex
+ * return: _swig_ret    error code
+ */
+func CfdGoAddConfidentialTxIn(handle uintptr, txHex string, txid string, vout uint32, sequence uint32) (outputTxHex string, _swig_ret int) {
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	sequencePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&sequence)))
+	ret := CfdAddConfidentialTxIn(handle, txHex, txid, voutPtr, sequencePtr, &outputTxHex)
+	return outputTxHex, ret
+}
+
+/**
+ * Add txout to confidential transaction.
+ * param: handle              cfd handle
+ * param: txHex               transaction hex
+ * param: asset               asset
+ * param: satoshiAmount       amount by satoshi
+ * param: valueCommitment     amount by commitment bytes.
+ * param: address             destination address
+ * param: directLockingScript  locking script for direct insert.
+ * param: nonce               confidential nonce
+ * return: outputTxHex        output transaction hex
+ * return: _swig_ret          error code
+ */
+func CfdGoAddConfidentialTxOut(handle uintptr, txHex string, asset string, satoshiAmount int64, valueCommitment string, address string, directLockingScript string, nonce string) (outputTxHex string, _swig_ret int) {
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdAddConfidentialTxOut(handle, txHex, asset, satoshiPtr, valueCommitment, address, directLockingScript, nonce, &outputTxHex)
+	return outputTxHex, ret
+}
+
+/**
+ * Update txout of confidential transaction.
+ * param: handle              cfd handle
+ * param: txHex               transaction hex
+ * param: index               txout index
+ * param: asset               asset
+ * param: satoshiAmount       amount by satoshi
+ * param: valueCommitment     amount by commitment bytes.
+ * param: address             destination address
+ * param: directLockingScript  lockingScript for direct insert.
+ * param: nonce               confidential nonce
+ * return: outputTxHex        output transaction hex
+ * return: _swig_ret          error code
+ */
+func CfdGoUpdateConfidentialTxOut(handle uintptr, txHex string, index uint32, asset string, satoshiAmount int64, valueCommitment string, address string, directLockingScript string, nonce string) (outputTxHex string, _swig_ret int) {
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdUpdateConfidentialTxOut(handle, txHex, indexPtr, asset, satoshiPtr, valueCommitment, address, directLockingScript, nonce, &outputTxHex)
+	return outputTxHex, ret
+}
+
+/**
+ * Get txin on confidential transaction.
+ * param: handle        cfd handle
+ * param: txHex         transaction hex
+ * param: index         txin index
+ * return: txid         txid
+ * return: vout         vout
+ * return: sequence     sequence
+ * return: scriptSig    unlockingScript
+ * return: _swig_ret    error code
+ */
+func CfdGoGetConfidentialTxIn(handle uintptr, txHex string, index uint32) (txid string, vout uint32, sequence uint32, scriptSig string, _swig_ret int) {
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	sequencePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&sequence)))
+	ret := CfdGetConfidentialTxIn(handle, txHex, indexPtr, &txid, voutPtr, sequencePtr, &scriptSig)
+	return txid, vout, sequence, scriptSig, ret
+}
+
+/**
+ * Get txin issuance on confidential transaction.
+ * param: handle            cfd handle
+ * param: txHex             transaction hex
+ * param: index             txin index
+ * return: entropy          blinding asset entropy
+ * return: nonce            blinding nonce
+ * return: assetValue       asset amount
+ * return: tokenValue       token amount
+ * return: assetRangeproof  asset rangeproof
+ * return: tokenRangeproof  token rangeproof
+ * return: _swig_ret        error code
+ */
+func CfdGoGetTxInIssuanceInfo(handle uintptr, txHex string, index uint32) (entropy string, nonce string, assetValue string, tokenValue string, assetRangeproof string, tokenRangeproof string, _swig_ret int) {
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdGetTxInIssuanceInfo(handle, txHex, indexPtr, &entropy, &nonce, &assetValue, &tokenValue, &assetRangeproof, &tokenRangeproof)
+	return entropy, nonce, assetValue, tokenValue, assetRangeproof, tokenRangeproof, ret
+}
+
+/**
+ * Get txout on confidential transaction.
+ * param: handle        cfd handle
+ * param: txHex         transaction hex
+ * param: index         txin index
+ * return: asset            asset
+ * return: satoshiAmount    amount by satoshi
+ * return: valueCommitment  amount by commitment bytes.
+ * return: nonce            confidential nonce
+ * return: lockingScript    locking script
+ * return: surjectionProof  asset surjection proof.
+ * return: rangeproof       amount rangeproof.
+ * return: _swig_ret        error code
+ */
+func CfdGoGetConfidentialTxOut(handle uintptr, txHex string, index uint32) (asset string, satoshiAmount int64, valueCommitment string, nonce string, lockingScript string, surjectionProof string, rangeproof string, _swig_ret int) {
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdGetConfidentialTxOut(handle, txHex, indexPtr, &asset, satoshiPtr, &valueCommitment, &nonce, &lockingScript, &surjectionProof, &rangeproof)
+	return asset, satoshiAmount, valueCommitment, nonce, lockingScript, surjectionProof, rangeproof, ret
+}
+
+/**
+ * Get txin count on confidential transaction.
+ * param: handle        cfd handle
+ * param: txHex         transaction hex
+ * return: count        txin count
+ * return: _swig_ret    error code
+ */
+func CfdGoGetConfidentialTxInCount(handle uintptr, txHex string) (count uint32, _swig_ret int) {
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetConfidentialTxInCount(handle, txHex, countPtr)
+	return count, ret
+}
+
+/**
+ * Get txout count on confidential transaction.
+ * param: handle        cfd handle
+ * param: txHex         transaction hex
+ * return: count        txout count
+ * return: _swig_ret    error code
+ */
+func CfdGoGetConfidentialTxOutCount(handle uintptr, txHex string) (count uint32, _swig_ret int) {
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetConfidentialTxOutCount(handle, txHex, countPtr)
+	return count, ret
+}
+
+/**
+ * Set reissuance asset to confidential transaction.
+ * param: handle               cfd handle
+ * param: txHex                transaction hex
+ * param: txid                 txin txid
+ * param: vout                 txin vout
+ * param: assetSatoshiAmount   generate asset amount
+ * param: blindingNonce        blinding nonce
+ * param: entropy              entropy
+ * param: address              destination address
+ * param: directLockingScript  txout locking script on direct.
+ * return: asset               generate asset
+ * return: outputTxHex         output transaction hex
+ * return: _swig_ret           error code
+ */
+func CfdGoSetRawReissueAsset(handle uintptr, txHex string, txid string, vout uint32, assetSatoshiAmount int64, blindingNonce string, entropy string, address string, directLockingScript string) (asset string, outputTxHex string, _swig_ret int) {
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetSatoshiAmount)))
+	ret := CfdSetRawReissueAsset(handle, txHex, txid, voutPtr, satoshiPtr, blindingNonce, entropy, address, directLockingScript, &asset, &outputTxHex)
+	return asset, outputTxHex, ret
+}
+
+/**
+ * Get issuance blinding key.
+ * param: handle               cfd handle
+ * param: masterBlindingKey    master blinding key
+ * param: txid                 utxo txid
+ * param: vout                 utxo vout
+ * return: blindingKey         issuance blinding key
+ * return: _swig_ret           error code
+ */
+func CfdGoGetIssuanceBlindingKey(handle uintptr, masterBlindingKey string, txid string, vout uint32) (blindingKey string, _swig_ret int) {
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	ret := CfdGetIssuanceBlindingKey(handle, masterBlindingKey, txid, voutPtr, &blindingKey)
+	return blindingKey, ret
+}
+
+/**
+ * Get blind transaction handle.
+ * param: handle               cfd handle
+ * return: blindHandle         blindTx handle. release: CfdFreeBlindHandle
+ * return: _swig_ret           error code
+ */
+func CfdGoInitializeBlindTx(handle uintptr) (blindHandle uintptr, _swig_ret int) {
+	ret := CfdInitializeBlindTx(handle, &blindHandle)
+	return blindHandle, ret
+}
+
+/**
+ * Add blind transaction txin data.
+ * param: handle               cfd handle
+ * param: blindHandle          blindTx handle
+ * param: txid                 txin txid
+ * param: vout                 txin vout
+ * param: asset                utxo asset
+ * param: assetBlindFactor     utxo asset blind factor
+ * param: valueBlindFactor     utxo amount blind factor
+ * param: satoshiAmount        utxo amount
+ * param: assetKey             issuance asset blinding key
+ * param: tokenKey             issuance token blinding key
+ * return: _swig_ret           error code
+ */
+func CfdGoAddBlindTxInData(handle uintptr, blindHandle uintptr, txid string, vout uint32, asset string, assetBlindFactor string, valueBlindFactor string, satoshiAmount int64, assetKey string, tokenKey string) (_swig_ret int) {
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdAddBlindTxInData(handle, blindHandle, txid, voutPtr, asset, assetBlindFactor, valueBlindFactor, satoshiPtr, assetKey, tokenKey)
+	return ret
+}
+
+/**
+ * Add blind transaction txout data.
+ * param: handle               cfd handle
+ * param: blindHandle          blindTx handle
+ * param: index                txout index
+ * param: confidentialKey      confidential key
+ * return: _swig_ret           error code
+ */
+func CfdGoAddBlindTxOutData(handle uintptr, blindHandle uintptr, index uint32, confidentialKey string) (_swig_ret int) {
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdAddBlindTxOutData(handle, blindHandle, indexPtr, confidentialKey)
+	return ret
+}
+
+/**
+ * Generate blind transaction.
+ * param: handle               cfd handle
+ * param: blindHandle          blindTx handle
+ * param: txHex                transaction hex
+ * return: outputTxHex         output transaction hex
+ * return: _swig_ret           error code
+ */
+func CfdGoFinalizeBlindTx(handle uintptr, blindHandle uintptr, txHex string) (outputTxHex string, _swig_ret int) {
+	ret := CfdFinalizeBlindTx(handle, blindHandle, txHex, &outputTxHex)
+	return outputTxHex, ret
+}
+
+/**
+ * Add sign data to confidential transaction.
+ * param: handle               cfd handle
+ * param: txHex                transaction hex
+ * param: txid                 txin txid
+ * param: vout                 txin vout
+ * param: isWitness            insert sign data to witness stack
+ * param: signDataHex          sign data hex
+ * return: outputTxHex         output transaction hex
+ * return: _swig_ret           error code
+ */
+func CfdGoAddConfidentialTxSign(handle uintptr, txHex string, txid string, vout uint32, isWitness bool, signDataHex string) (outputTxHex string, _swig_ret int) {
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	ret := CfdAddConfidentialTxSign(handle, txHex, txid, voutPtr, isWitness, signDataHex, &outputTxHex)
+	return outputTxHex, ret
+}
+
+/**
+ * Convert to der encode, and add sign data to confidential transaction.
+ * param: handle               cfd handle
+ * param: txHex                transaction hex
+ * param: txid                 txin txid
+ * param: vout                 txin vout
+ * param: isWitness            insert sign data to witness stack
+ * param: signDataHex          sign data hex
+ * param: sighashType          sighash type
+ * param: sighashAnyoneCanPay  sighash anyone can pay flag
+ * return: outputTxHex         output transaction hex
+ * return: _swig_ret           error code
+ */
+func CfdGoAddConfidentialTxDerSign(handle uintptr, txHex string, txid string, vout uint32, isWitness bool, signDataHex string, sighashType int, sighashAnyoneCanPay bool) (outputTxHex string, _swig_ret int) {
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	ret := CfdAddConfidentialTxDerSign(handle, txHex, txid, voutPtr, isWitness, signDataHex, sighashType, sighashAnyoneCanPay, &outputTxHex)
+	return outputTxHex, ret
+}
+
+/**
+ * Add multisig sign data to confidential transaction.
+ * param: handle               cfd handle
+ * param: multiSignHandle      multisig sign handle
+ * param: txHex                transaction hex
+ * param: txid                 txin txid
+ * param: vout                 txin vout
+ * param: hashType             hash type
+ * param: witnessScript        witness script (p2wsh, p2sh-p2wsh)
+ * param: redeemScript         redeem script (p2sh, p2sh-p2wsh)
+ * return: outputTxHex         output transaction hex
+ * return: _swig_ret           error code
+ */
+func CfdGoFinalizeElementsMultisigSign(handle uintptr, multiSignHandle uintptr, txHex string, txid string, vout uint32, hashType int, witnessScript string, redeemScript string) (outputTxHex string, _swig_ret int) {
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	ret := CfdFinalizeElementsMultisigSign(handle, multiSignHandle, txHex, txid, voutPtr, hashType, witnessScript, redeemScript, &outputTxHex)
+	return outputTxHex, ret
+}
+
+/**
+ * Create sighash from confidential transaction.
+ * param: handle               cfd handle
+ * param: txHex                transaction hex
+ * param: txid                 txin txid
+ * param: vout                 txin vout
+ * param: hashType             hash type
+ * param: pubkey               pubkey (p2pkh, p2wpkh, p2sh-p2wpkh)
+ * param: redeemScript         redeem script (p2Sh, p2wsh, p2sh-p2wsh)
+ * return: outputTxHex         output transaction hex
+ * return: _swig_ret           error code
+ */
+func CfdGoCreateConfidentialSighash(handle uintptr, txHex string, txid string, vout uint32, hashType int, pubkey string, redeemScript string, satoshiAmount int64, valueCommitment string, sighashType int, sighashAnyoneCanPay bool) (sighash string, _swig_ret int) {
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdCreateConfidentialSighash(handle, txHex, txid, voutPtr, hashType, pubkey, redeemScript, satoshiPtr, valueCommitment, sighashType, sighashAnyoneCanPay, &sighash)
+	return sighash, ret
+}
+
+/**
+ * Unblind txout on confidential transaction.
+ * param: handle               cfd handle
+ * param: txHex                transaction hex
+ * param: index                txout index
+ * param: blindingKey          blinding key
+ * return: asset               asset
+ * return: satoshiAmount       satoshi amount
+ * return: assetBlindFactor    asset blind factor
+ * return: valueBlindFactor    amount blind factor
+ * return: _swig_ret           error code
+ */
+func CfdGoUnblindTxOut(handle uintptr, txHex string, index uint32, blindingKey string) (asset string, satoshiAmount int64, assetBlindFactor string, valueBlindFactor string, _swig_ret int) {
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdUnblindTxOut(handle, txHex, indexPtr, blindingKey, &asset, satoshiPtr, &assetBlindFactor, &valueBlindFactor)
+	return asset, satoshiAmount, assetBlindFactor, valueBlindFactor, ret
+}
+
+/**
+ * Unblind txin issuance on confidential transaction.
+ * param: handle                  cfd handle
+ * param: txHex                   transaction hex
+ * param: index                   txin index
+ * param: assetBlindingKey        asset blinding key
+ * param: tokenBlindingKey        token blinding key
+ * return: asset                  asset
+ * return: assetAmount            asset amount
+ * return: assetBlindFactor       issueAsset asset blind factor
+ * return: assetValueBlindFactor  issueAsset value blind factor
+ * return: token                  token
+ * return: tokenAmount            token amount
+ * return: tokenBlindFactor       issueToken asset blind factor
+ * return: tokenValueBlindFactor  issueToken value blind factor
+ * return: _swig_ret           error code
+ */
+func CfdGoUnblindIssuance(handle uintptr, txHex string, index uint32, assetBlindingKey string, tokenBlindingKey string) (asset string, assetAmount int64, assetBlindFactor string, assetValueBlindFactor string, token string, tokenAmount int64, tokenBlindFactor string, tokenValueBlindFactor string, _swig_ret int) {
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	assetSatoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetAmount)))
+	tokenSatoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&tokenAmount)))
+	ret := CfdUnblindIssuance(handle, txHex, indexPtr, assetBlindingKey, tokenBlindingKey, &asset, assetSatoshiPtr, &assetBlindFactor, &assetValueBlindFactor, &token, tokenSatoshiPtr, &tokenBlindFactor, &tokenValueBlindFactor)
+	return asset, assetAmount, assetBlindFactor, assetValueBlindFactor, token, tokenAmount, tokenBlindFactor, tokenValueBlindFactor, ret
+}
+
+/**
+ * Generate multisig sign handle.
+ * param: handle               cfd handle
+ * return: multisigSignHandle  multisig sign handle
+ * return: _swig_ret           error code
+ */
+func CfdGoInitializeMultisigSign(handle uintptr) (multisigSignHandle uintptr, _swig_ret int) {
+	ret := CfdInitializeMultisigSign(handle, &multisigSignHandle)
+	return multisigSignHandle, ret
+}
+
+/**
+ * Add multisig sign data.
+ * param: handle                  cfd handle
+ * param: multisigSignHandle      multisig sign handle
+ * param: signature            signature
+ * param: relatedPubkey        signature related pubkey
+ * return: _swig_ret           error code
+ */
+func CfdGoAddMultisigSignData(handle uintptr, multisigSignHandle uintptr, signature string, relatedPubkey string) (_swig_ret int) {
+	return CfdAddMultisigSignData(handle, multisigSignHandle, signature, relatedPubkey)
+}
+
+/**
+ * Convert to der encode, and add multisig sign data.
+ * param: handle               cfd handle
+ * param: multisigSignHandle      multisig sign handle
+ * param: signature            signature
+ * param: sighashType          sighash type
+ * param: sighashAnyoneCanPay  sighash anyone can pay flag
+ * param: relatedPubkey        signature related pubkey
+ * return: _swig_ret           error code
+ */
+func CfdGoAddMultisigSignDataToDer(handle uintptr, multisigSignHandle uintptr, signature string, sighashType int, sighashAnyoneCanPay bool, relatedPubkey string) (_swig_ret int) {
+	return CfdAddMultisigSignDataToDer(handle, multisigSignHandle, signature, sighashType, sighashAnyoneCanPay, relatedPubkey)
 }
 
 %}
