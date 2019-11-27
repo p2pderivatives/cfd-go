@@ -4,6 +4,7 @@
 #include "cfdc/cfdcapi_address.h"
 #include "cfdc/cfdcapi_elements_transaction.h"
 #include "cfdc/cfdcapi_transaction.h"
+#include "cfdc/cfdcapi_key.h"
 %}
 
 %typemap(argout) (char **) {
@@ -21,6 +22,7 @@
 %include "external/cfd/include/cfdc/cfdcapi_address.h"
 %include "external/cfd/include/cfdc/cfdcapi_elements_transaction.h"
 %include "external/cfd/include/cfdc/cfdcapi_transaction.h"
+%include "external/cfd/include/cfdc/cfdcapi_key.h"
 
 %insert(go_wrapper) %{
 /**
@@ -498,12 +500,13 @@ func CfdGoFinalizeBlindTx(handle uintptr, blindHandle uintptr, txHex string) (ou
  * param: vout                 txin vout
  * param: isWitness            insert sign data to witness stack
  * param: signDataHex          sign data hex
+ * param: clearStack           cleanup stack
  * return: outputTxHex         output transaction hex
  * return: _swig_ret           error code
  */
-func CfdGoAddConfidentialTxSign(handle uintptr, txHex string, txid string, vout uint32, isWitness bool, signDataHex string) (outputTxHex string, _swig_ret int) {
+func CfdGoAddConfidentialTxSign(handle uintptr, txHex string, txid string, vout uint32, isWitness bool, signDataHex string, clearStack bool) (outputTxHex string, _swig_ret int) {
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
-	ret := CfdAddConfidentialTxSign(handle, txHex, txid, voutPtr, isWitness, signDataHex, &outputTxHex)
+	ret := CfdAddConfidentialTxSign(handle, txHex, txid, voutPtr, isWitness, signDataHex, clearStack, &outputTxHex)
 	return outputTxHex, ret
 }
 
@@ -517,12 +520,13 @@ func CfdGoAddConfidentialTxSign(handle uintptr, txHex string, txid string, vout 
  * param: signDataHex          sign data hex
  * param: sighashType          sighash type
  * param: sighashAnyoneCanPay  sighash anyone can pay flag
+ * param: clearStack           cleanup stack
  * return: outputTxHex         output transaction hex
  * return: _swig_ret           error code
  */
-func CfdGoAddConfidentialTxDerSign(handle uintptr, txHex string, txid string, vout uint32, isWitness bool, signDataHex string, sighashType int, sighashAnyoneCanPay bool) (outputTxHex string, _swig_ret int) {
+func CfdGoAddConfidentialTxDerSign(handle uintptr, txHex string, txid string, vout uint32, isWitness bool, signDataHex string, sighashType int, sighashAnyoneCanPay bool, clearStack bool) (outputTxHex string, _swig_ret int) {
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
-	ret := CfdAddConfidentialTxDerSign(handle, txHex, txid, voutPtr, isWitness, signDataHex, sighashType, sighashAnyoneCanPay, &outputTxHex)
+	ret := CfdAddConfidentialTxDerSign(handle, txHex, txid, voutPtr, isWitness, signDataHex, sighashType, sighashAnyoneCanPay, clearStack, &outputTxHex)
 	return outputTxHex, ret
 }
 
@@ -536,12 +540,13 @@ func CfdGoAddConfidentialTxDerSign(handle uintptr, txHex string, txid string, vo
  * param: hashType             hash type
  * param: witnessScript        witness script (p2wsh, p2sh-p2wsh)
  * param: redeemScript         redeem script (p2sh, p2sh-p2wsh)
+ * param: clearStack           cleanup stack
  * return: outputTxHex         output transaction hex
  * return: _swig_ret           error code
  */
-func CfdGoFinalizeElementsMultisigSign(handle uintptr, multiSignHandle uintptr, txHex string, txid string, vout uint32, hashType int, witnessScript string, redeemScript string) (outputTxHex string, _swig_ret int) {
+func CfdGoFinalizeElementsMultisigSign(handle uintptr, multiSignHandle uintptr, txHex string, txid string, vout uint32, hashType int, witnessScript string, redeemScript string, clearStack bool) (outputTxHex string, _swig_ret int) {
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
-	ret := CfdFinalizeElementsMultisigSign(handle, multiSignHandle, txHex, txid, voutPtr, hashType, witnessScript, redeemScript, &outputTxHex)
+	ret := CfdFinalizeElementsMultisigSign(handle, multiSignHandle, txHex, txid, voutPtr, hashType, witnessScript, redeemScript, clearStack, &outputTxHex)
 	return outputTxHex, ret
 }
 
@@ -643,6 +648,22 @@ func CfdGoAddMultisigSignData(handle uintptr, multisigSignHandle uintptr, signat
  */
 func CfdGoAddMultisigSignDataToDer(handle uintptr, multisigSignHandle uintptr, signature string, sighashType int, sighashAnyoneCanPay bool, relatedPubkey string) (_swig_ret int) {
 	return CfdAddMultisigSignDataToDer(handle, multisigSignHandle, signature, sighashType, sighashAnyoneCanPay, relatedPubkey)
+}
+
+/**
+ * Calculate ec-signature from privkey.
+ * param: handle               cfd handle
+ * param: sighash              signatufe hash
+ * param: privkeyHex           privkey hex (Specify either privkeyHex or privkeyWif)
+ * param: privkeyWif           privkey WIF (Specify either privkeyHex or privkeyWif)
+ * param: wifNetworkType       network type (for privkey WIF)
+ * param: hasGrindR            grind-r flag
+ * return: signature           signature
+ * return: _swig_ret           error code
+ */
+func CfdGoCalculateEcSignature(handle uintptr, sighash string, privkeyHex string, privkeyWif string, wifNetworkType int, hasGrindR bool) (signature string, _swig_ret int) {
+	ret := CfdCalculateEcSignature(handle, sighash, privkeyHex, privkeyWif, wifNetworkType, hasGrindR, &signature)
+	return signature, ret
 }
 
 %}
