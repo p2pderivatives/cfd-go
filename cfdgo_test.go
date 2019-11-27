@@ -712,6 +712,147 @@ func TestCfdAddMultisigSignConfidentialTx(t *testing.T) {
 	fmt.Print("TestCfdAddMultisigSignConfidentialTx test done.\n")
 }
 
+func TestCfdConfidentialAddress(t *testing.T) {
+	handle, ret := CfdGoCreateHandle()
+	assert.Equal(t, (int)(KCfdSuccess), ret)
+
+	kAddress := "Q7wegLt2qMGhm28vch6VTzvpzs8KXvs4X7"
+	kConfidentialKey := "025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357"
+	kConfidentialAddr := "VTpvKKc1SNmLG4H8CnR1fGJdHdyWGEQEvdP9gfeneJR7n81S5kiwNtgF7vrZjC8mp63HvwxM81nEbTxU"
+	kNetworkType := (int)(KCfdNetworkLiquidv1)
+
+	confidentialAddr, cfdRet := CfdGoCreateConfidentialAddress(handle, kAddress, kConfidentialKey)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, kConfidentialAddr, confidentialAddr)
+
+	addr, key, netType, cfdRet := CfdGoParseConfidentialAddress(handle, confidentialAddr)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, kAddress, addr)
+	assert.Equal(t, kConfidentialKey, key)
+	assert.Equal(t, kNetworkType, netType)
+
+	if cfdRet != (int)(KCfdSuccess) {
+		errStr, _ := CfdGoGetLastErrorMessage(handle)
+		fmt.Print("[error message] " + errStr + "\n")
+	}
+
+	ret = CfdFreeHandle(handle)
+	assert.Equal(t, (int)(KCfdSuccess), ret)
+	fmt.Print("TestCfdConfidentialAddress test done.\n")
+}
+
+func TestCfdCalculateEcSignature(t *testing.T) {
+	handle, ret := CfdGoCreateHandle()
+	assert.Equal(t, (int)(KCfdSuccess), ret)
+
+	kSighash := "9b169f5af064cc2a0dac08d8be3c9e8bc3d3e1a3f3e2a44f0c3e4ecf23d56cf2"
+	kPrivkey := "cU4KjNUT7GjHm7CkjRjG46SzLrXHXoH3ekXmqa2jTCFPMkQ64sw1"
+	kExtSignature := "0bc7f08a2a8a5446e7483db1b46184ba3cc79d78a3452a72c5bc712cc7efb51f58af044d646c1fd4f755d49db26faa203937bc66c569047a7d3d3da531826060"
+	kNetwork := (int)(KCfdNetworkRegtest)
+
+	signature, cfdRet := CfdGoCalculateEcSignature(handle, kSighash, "", kPrivkey, kNetwork, true)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, kExtSignature, signature)
+
+	if cfdRet != (int)(KCfdSuccess) {
+		errStr, _ := CfdGoGetLastErrorMessage(handle)
+		fmt.Print("[error message] " + errStr + "\n")
+	}
+
+	ret = CfdFreeHandle(handle)
+	assert.Equal(t, (int)(KCfdSuccess), ret)
+	fmt.Print("TestCfdCalculateEcSignature test done.\n")
+}
+
+func TestCfdPrivkeyAndPubkey(t *testing.T) {
+	handle, ret := CfdGoCreateHandle()
+	assert.Equal(t, (int)(KCfdSuccess), ret)
+
+	kNetwork := (int)(KCfdNetworkRegtest)
+
+	// compress
+	pubkey, privkey, wif, cfdRet := CfdGoCreateKeyPair(handle, true, kNetwork)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, 66, len(pubkey))
+	assert.Equal(t, 64, len(privkey))
+	assert.Equal(t, 52, len(wif))
+
+	privkey2, cfdRet := CfdGoGetPrivkeyFromWif(handle, wif, kNetwork)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, privkey, privkey2)
+
+	pubkey2 := ""
+	pubkey2, cfdRet = CfdGoGetPubkeyFromPrivkey(handle, privkey, "", true)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, pubkey, pubkey2)
+
+	// uncompress
+	pubkey, privkey, wif, cfdRet = CfdGoCreateKeyPair(handle, false, kNetwork)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, 130, len(pubkey))
+	assert.Equal(t, 64, len(privkey))
+	assert.Equal(t, 51, len(wif))
+
+	privkey2, cfdRet = CfdGoGetPrivkeyFromWif(handle, wif, kNetwork)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, privkey, privkey2)
+
+	pubkey2, cfdRet = CfdGoGetPubkeyFromPrivkey(handle, privkey, "", false)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, pubkey, pubkey2)
+
+	if cfdRet != (int)(KCfdSuccess) {
+		errStr, _ := CfdGoGetLastErrorMessage(handle)
+		fmt.Print("[error message] " + errStr + "\n")
+	}
+
+	ret = CfdFreeHandle(handle)
+	assert.Equal(t, (int)(KCfdSuccess), ret)
+	fmt.Print("TestCfdPrivkeyAndPubkey test done.\n")
+}
+
+func TestCfdExtkey(t *testing.T) {
+	handle, ret := CfdGoCreateHandle()
+	assert.Equal(t, (int)(KCfdSuccess), ret)
+
+	kSeed := "0e09fbdd00e575b654d480ae979f24da45ef4dee645c7dc2e3b30b2e093d38dda0202357754cc856f8920b8e31dd02e9d34f6a2b20dc825c6ba90f90009085e1"
+	kNetwork := (int)(KCfdNetworkMainnet)
+
+	extprivkey1, cfdRet := CfdGoCreateExtkeyFromSeed(handle, kSeed, kNetwork, (int)(KCfdExtPrivkey))
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, "xprv9s21ZrQH143K38XAstQ4D3hCGbgydJgNff6CcwmkrWTBxksb2G4CsqAywJCKbTdywfCpmpJyxqf77iKK1ju1J982iP2PriifaNZLMbyPQCx", extprivkey1)
+
+	extprivkey2, cfdRet := CfdGoCreateExtkeyFromParentPath(handle, extprivkey1, "m/44'", kNetwork, (int)(KCfdExtPrivkey))
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, "xprv9tviYANkXM1CY831VtMFKFn6LP6aMHf1kvtCZyTL9YbyMwTR2BSmJaEoqw59BZdQhLSx9ZxyKsRUeCetxA2xZ34eupBqZUsifnWyLJJ16j3", extprivkey2)
+
+	extpubkey1, cfdRet := CfdGoCreateExtPubkey(handle, extprivkey2, kNetwork)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, "xpub67v4wfueMiZVkc7UbutFgPiptQw4kkNs89ooNMrwht8xEjnZZim1rNZHhEdrLejB99fiBdnWNNAB8hmUK7tCo5Ua6UtHzwVLj2Bzpch7vB2", extpubkey1)
+
+	extprivkey3, cfdRet := CfdGoCreateExtkeyFromParentPath(handle, extprivkey2, "0h/0h/2", kNetwork, (int)(KCfdExtPrivkey))
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, "xprvA1YYKkMiZaDHRY4dmXjcP3js7ATJQAwt9gozTvi69etziyBAAENQN4w7sS3uBaF7rgXvP3sUtKFju7p3PosjNkRDuqqSFfxTjjEhgx6ejVZ", extprivkey3)
+
+	privkey, wif, cfdRet := CfdGoGetPrivkeyFromExtkey(handle, extprivkey3, kNetwork)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, "597da1afc4218445ba9428c1c790a30fd21d5c4a932fa580b99dda7ec0887472", privkey)
+	assert.Equal(t, "KzDfmSzt1XqZh5m4sQPBqhpiTGncQ2xvXuWnKGMqR9gVHGSbVJP2", wif)
+
+	pubkey, cfdRet := CfdGoGetPubkeyFromExtkey(handle, extprivkey3, kNetwork)
+	assert.Equal(t, (int)(KCfdSuccess), cfdRet)
+	assert.Equal(t, "031d7463018f867de51a27db866f869ceaf52abab71827a6051bab8a0fd020f4c1", pubkey)
+
+	if cfdRet != (int)(KCfdSuccess) {
+		errStr, _ := CfdGoGetLastErrorMessage(handle)
+		fmt.Print("[error message] " + errStr + "\n")
+	}
+
+	ret = CfdFreeHandle(handle)
+	assert.Equal(t, (int)(KCfdSuccess), ret)
+	fmt.Print("TestCfdExtkey test done.\n")
+}
+
 // last test
 /* comment out.
 func TestFinalize(t *testing.T) {
