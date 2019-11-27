@@ -2,6 +2,7 @@
 %{
 #include "cfdc/cfdcapi_common.h"
 #include "cfdc/cfdcapi_address.h"
+#include "cfdc/cfdcapi_elements_address.h"
 #include "cfdc/cfdcapi_elements_transaction.h"
 #include "cfdc/cfdcapi_transaction.h"
 #include "cfdc/cfdcapi_key.h"
@@ -20,6 +21,7 @@
 
 %include "external/cfd/include/cfdc/cfdcapi_common.h"
 %include "external/cfd/include/cfdc/cfdcapi_address.h"
+%include "external/cfd/include/cfdc/cfdcapi_elements_address.h"
 %include "external/cfd/include/cfdc/cfdcapi_elements_transaction.h"
 %include "external/cfd/include/cfdc/cfdcapi_transaction.h"
 %include "external/cfd/include/cfdc/cfdcapi_key.h"
@@ -111,7 +113,12 @@ func CfdGoCreateMultisigScript(handle uintptr, networkType int, hashType int, pu
 			ret = freeRet
 		}
 	}
-	return address, redeemScript, witnessScript, ret
+
+	if ret == (int)(KCfdSuccess) {
+		return address, redeemScript, witnessScript, ret
+	} else {
+		return "", "", "", ret
+	}
 }
 
 /**
@@ -197,7 +204,11 @@ func CfdGoParseDescriptor(handle uintptr, descriptor string, networkType int, bi
 			ret = freeRet
 		}
 	}
-	return descriptorDataList, multisigList, ret
+	if ret == (int)(KCfdSuccess) {
+		return descriptorDataList, multisigList, ret
+	} else {
+		return []CfdDescriptorData{}, []CfdDescriptorKeyData{}, ret
+	}
 }
 
 /**
@@ -236,7 +247,11 @@ func CfdGoGetAddressesFromMultisig(handle uintptr, redeemScript string, networkT
 			ret = freeRet
 		}
 	}
-	return addressList, pubkeyList, ret
+	if ret == (int)(KCfdSuccess) {
+		return addressList, pubkeyList, ret
+	} else {
+		return []string{}, []string{}, ret
+	}
 }
 
 /**
@@ -651,6 +666,34 @@ func CfdGoAddMultisigSignDataToDer(handle uintptr, multisigSignHandle uintptr, s
 }
 
 /**
+ * Create confidential address.
+ * param: handle                cfd handle
+ * param: address               address
+ * param: confidentialKey       confidential key
+ * return: confidentialAddress  confidential address
+ * return: _swig_ret            error code
+ */
+func CfdGoCreateConfidentialAddress(handle uintptr, address string, confidentialKey string) (confidentialAddress string, _swig_ret int) {
+	ret := CfdCreateConfidentialAddress(handle, address, confidentialKey, &confidentialAddress)
+	return confidentialAddress, ret
+}
+
+/**
+ * Get address and confidentialKey from confidentialAddress.
+ * param: handle               cfd handle
+ * param: confidentialAddress  confidential address
+ * return: address             address
+ * return: confidentialKey     confidential key
+ * return: networkType         network type
+ * return: _swig_ret           error code
+ */
+func CfdGoParseConfidentialAddress(handle uintptr, confidentialAddress string) (address string, confidentialKey string, networkType int, _swig_ret int) {
+	ret := CfdParseConfidentialAddress(handle, confidentialAddress,
+			&address, &confidentialKey, &networkType)
+	return address, confidentialKey, networkType, ret
+}
+
+/**
  * Calculate ec-signature from privkey.
  * param: handle               cfd handle
  * param: sighash              signatufe hash
@@ -664,6 +707,117 @@ func CfdGoAddMultisigSignDataToDer(handle uintptr, multisigSignHandle uintptr, s
 func CfdGoCalculateEcSignature(handle uintptr, sighash string, privkeyHex string, privkeyWif string, wifNetworkType int, hasGrindR bool) (signature string, _swig_ret int) {
 	ret := CfdCalculateEcSignature(handle, sighash, privkeyHex, privkeyWif, wifNetworkType, hasGrindR, &signature)
 	return signature, ret
+}
+
+/**
+ * Create key pair.
+ * param: handle          cfd handle.
+ * param: isCompress      pubkey compressed.
+ * param: networkType     privkey wif network type.
+ * return: pubkey         pubkey.
+ * return: privkeyHex     privkey hex.
+ * return: privkeyWif     privkey wif.
+ * return: _swig_ret      error code
+ */
+func CfdGoCreateKeyPair(handle uintptr, isCompress bool, networkType int) (pubkey string, privkeyHex string, privkeyWif string, _swig_ret int) {
+	ret := CfdCreateKeyPair(handle, isCompress, networkType, &pubkey, &privkeyHex, &privkeyWif)
+	return pubkey, privkeyHex, privkeyWif, ret
+}
+
+/**
+ * Get privkey from WIF.
+ * param: handle          cfd handle.
+ * param: privkeyWif      privkey wif.
+ * param: networkType     privkey wif network type.
+ * return: privkeyHex     privkey hex.
+ * return: _swig_ret      error code
+ */
+func CfdGoGetPrivkeyFromWif(handle uintptr, privkeyWif string, networkType int) (privkeyHex string, _swig_ret int) {
+	ret := CfdGetPrivkeyFromWif(handle, privkeyWif, networkType, &privkeyHex)
+	return privkeyHex, ret
+}
+
+/**
+ * Get pubkey from privkey.
+ * param: handle          cfd handle.
+ * param: privkeyHex      privkey hex. (or privkeyWif)
+ * param: privkeyWif      privkey wif. (or privkeyHex)
+ * param: isCompress      pubkey compressed.
+ * return: pubkey         pubkey hex.
+ * return: _swig_ret      error code
+ */
+func CfdGoGetPubkeyFromPrivkey(handle uintptr, privkeyHex string, privkeyWif string, isCompress bool) (pubkey string, _swig_ret int) {
+	ret := CfdGetPubkeyFromPrivkey(handle, privkeyHex, privkeyWif, isCompress, &pubkey)
+	return pubkey, ret
+}
+
+/**
+ * Create extkey from seed.
+ * param: handle          cfd handle.
+ * param: seed            seed data(hex).
+ * param: networkType     network type.
+ * param: keyType         extkey type.
+ * return: extkey         extkey.
+ * return: _swig_ret      error code
+ */
+func CfdGoCreateExtkeyFromSeed(handle uintptr, seed string, networkType int, keyType int) (extkey string, _swig_ret int) {
+	ret := CfdCreateExtkeyFromSeed(handle, seed, networkType, keyType, &extkey)
+	return extkey, ret
+}
+
+/**
+ * Create extkey from parent path.
+ * param: handle          cfd handle.
+ * param: extkey          parent extkey.
+ * param: path            bip32 key path.(ex: 0/0h/0'/0)
+ * param: networkType     network type.
+ * param: keyType         extkey type.
+ * return: childExtkey    child extkey.
+ * return: _swig_ret      error code
+ */
+func CfdGoCreateExtkeyFromParentPath(handle uintptr, extkey string, path string, networkType int, keyType int) (childExtkey string, _swig_ret int) {
+	ret := CfdCreateExtkeyFromParentPath(handle, extkey, path, networkType, keyType, &childExtkey)
+	return childExtkey, ret
+}
+
+/**
+ * Create extpubkey from extprivkey.
+ * param: handle          cfd handle.
+ * param: extkey          ext privkey.
+ * param: networkType     network type.
+ * return: extPubkey      ext pubkey.
+ * return: _swig_ret      error code
+ */
+func CfdGoCreateExtPubkey(handle uintptr, extkey string, networkType int) (extPubkey string, _swig_ret int) {
+	ret := CfdCreateExtPubkey(handle, extkey, networkType, &extPubkey)
+	return extPubkey, ret
+}
+
+/**
+ * Get privkey from extprivkey.
+ * param: handle          cfd handle.
+ * param: extkey          ext privkey.
+ * param: networkType     network type.
+ * return: privkeyHex     privkey hex.
+ * return: privkeyWif     privkey wif.
+ * return: _swig_ret      error code
+ */
+func CfdGoGetPrivkeyFromExtkey(handle uintptr, extkey string, networkType int) (privkeyHex string, privkeyWif string, _swig_ret int) {
+	ret := CfdGetPrivkeyFromExtkey(handle, extkey, networkType, &privkeyHex, &privkeyWif)
+	return privkeyHex, privkeyWif, ret
+}
+
+/**
+ * Get pubkey from extkey.
+ * param: handle          cfd handle.
+ * param: extkey          extkey.
+ * param: networkType     network type.
+ * return: pubkey         pubkey.
+ * return: _swig_ret      error code
+ */
+func CfdGoGetPubkeyFromExtkey(handle uintptr, extkey string, networkType int) (pubkey string, _swig_ret int) {
+	ret := CfdGetPubkeyFromExtkey(handle, extkey, networkType, &pubkey)
+	return pubkey, ret
 }
 
 %}

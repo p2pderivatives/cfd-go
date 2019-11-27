@@ -713,8 +713,10 @@ func TestCfdAddMultisigSignConfidentialTx(t *testing.T) {
 }
 
 // last test
+/* comment out.
 func TestFinalize(t *testing.T) {
 	ret := CfdFinalize(false)
 	assert.Equal(t, (int)(KCfdSuccess), ret)
 	fmt.Print("TestFinalize test done.\n")
 }
+*/
