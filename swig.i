@@ -4,8 +4,9 @@
 #include "cfdc/cfdcapi_address.h"
 #include "cfdc/cfdcapi_elements_address.h"
 #include "cfdc/cfdcapi_elements_transaction.h"
-#include "cfdc/cfdcapi_transaction.h"
 #include "cfdc/cfdcapi_key.h"
+#include "cfdc/cfdcapi_script.h"
+#include "cfdc/cfdcapi_transaction.h"
 %}
 
 %typemap(argout) (char **) {
@@ -23,8 +24,9 @@
 %include "external/cfd/include/cfdc/cfdcapi_address.h"
 %include "external/cfd/include/cfdc/cfdcapi_elements_address.h"
 %include "external/cfd/include/cfdc/cfdcapi_elements_transaction.h"
-%include "external/cfd/include/cfdc/cfdcapi_transaction.h"
 %include "external/cfd/include/cfdc/cfdcapi_key.h"
+%include "external/cfd/include/cfdc/cfdcapi_script.h"
+%include "external/cfd/include/cfdc/cfdcapi_transaction.h"
 
 %insert(go_wrapper) %{
 /**
@@ -60,9 +62,6 @@ func CfdGoGetLastErrorMessage(handle uintptr) (message string, _swig_ret int) {
 	return message, ret
 }
 
-%}
-
-%insert(go_wrapper) %{
 /**
  * Create Address.
  * param: handle        cfd handle
@@ -853,6 +852,38 @@ func CfdGoGetPrivkeyFromExtkey(handle uintptr, extkey string, networkType int) (
 func CfdGoGetPubkeyFromExtkey(handle uintptr, extkey string, networkType int) (pubkey string, _swig_ret int) {
 	ret := CfdGetPubkeyFromExtkey(handle, extkey, networkType, &pubkey)
 	return pubkey, ret
+}
+
+/**
+ * Parse script items from script.
+ * param: handle          cfd handle.
+ * param: script          script.
+ * return: scriptItems    script items.
+ * return: _swig_ret      error code
+ */
+func CfdGoParseScript(handle uintptr, script string) (scriptItems []string, _swig_ret int) {
+	var scriptItemHandle uintptr
+	var itemNum uint32
+	itemNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&itemNum)))
+	
+	if _swig_ret = CfdParseScript(handle, script, &scriptItemHandle, itemNumPtr); _swig_ret != (int)(KCfdSuccess) {
+		return nil, _swig_ret
+	}
+	scriptItems = make([]string, 0, itemNum)
+	for i := uint32(0); i < itemNum; i++ {
+		var item string
+		index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
+		if _swig_ret =  CfdGetScriptItem(handle, scriptItemHandle, index, &item); _swig_ret != (int)(KCfdSuccess) {
+			return nil, _swig_ret
+		}
+		scriptItems = append(scriptItems, item)
+	}
+
+	if _swig_ret = CfdFreeScriptItemHandle(handle, scriptItemHandle); _swig_ret != (int)(KCfdSuccess) {
+		return nil, _swig_ret
+	}
+	
+	return
 }
 
 %}
