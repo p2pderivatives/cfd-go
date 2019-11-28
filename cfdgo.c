@@ -1702,16 +1702,63 @@ intgo _wrap_CfdGetConfidentialTxIn_cfdgo_7c8dbf2af26f3671(void *_swig_go_0, _gos
 }
 
 
-intgo _wrap_CfdGetTxInIssuanceInfo_cfdgo_7c8dbf2af26f3671(void *_swig_go_0, _gostring_ _swig_go_1, uint32_t *_swig_go_2, _gostring_* _swig_go_3, _gostring_* _swig_go_4, _gostring_* _swig_go_5, _gostring_* _swig_go_6, _gostring_* _swig_go_7, _gostring_* _swig_go_8) {
+intgo _wrap_CfdGetConfidentialTxInWitness_cfdgo_7c8dbf2af26f3671(void *_swig_go_0, _gostring_ _swig_go_1, uint32_t *_swig_go_2, uint32_t *_swig_go_3, _gostring_* _swig_go_4) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  uint32_t arg3 ;
+  uint32_t arg4 ;
+  char **arg5 = (char **) 0 ;
+  uint32_t *argp3 ;
+  uint32_t *argp4 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  
+  argp3 = (uint32_t *)_swig_go_2;
+  if (argp3 == NULL) {
+    _swig_gopanic("Attempt to dereference null uint32_t");
+  }
+  arg3 = (uint32_t)*argp3;
+  
+  
+  argp4 = (uint32_t *)_swig_go_3;
+  if (argp4 == NULL) {
+    _swig_gopanic("Attempt to dereference null uint32_t");
+  }
+  arg4 = (uint32_t)*argp4;
+  
+  arg5 = *(char ***)&_swig_go_4; 
+  
+  result = (int)CfdGetConfidentialTxInWitness(arg1,(char const *)arg2,arg3,arg4,arg5);
+  _swig_go_result = result; 
+  {
+    if (arg5 && *arg5) {
+      _swig_go_4->n = strlen(*arg5);
+    }
+  }
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdGetTxInIssuanceInfo_cfdgo_7c8dbf2af26f3671(void *_swig_go_0, _gostring_ _swig_go_1, uint32_t *_swig_go_2, _gostring_* _swig_go_3, _gostring_* _swig_go_4, int64_t *_swig_go_5, _gostring_* _swig_go_6, int64_t *_swig_go_7, _gostring_* _swig_go_8, _gostring_* _swig_go_9, _gostring_* _swig_go_10) {
   void *arg1 = (void *) 0 ;
   char *arg2 = (char *) 0 ;
   uint32_t arg3 ;
   char **arg4 = (char **) 0 ;
   char **arg5 = (char **) 0 ;
-  char **arg6 = (char **) 0 ;
+  int64_t *arg6 = (int64_t *) 0 ;
   char **arg7 = (char **) 0 ;
-  char **arg8 = (char **) 0 ;
+  int64_t *arg8 = (int64_t *) 0 ;
   char **arg9 = (char **) 0 ;
+  char **arg10 = (char **) 0 ;
+  char **arg11 = (char **) 0 ;
   uint32_t *argp3 ;
   int result;
   intgo _swig_go_result;
@@ -1731,12 +1778,14 @@ intgo _wrap_CfdGetTxInIssuanceInfo_cfdgo_7c8dbf2af26f3671(void *_swig_go_0, _gos
   
   arg4 = *(char ***)&_swig_go_3; 
   arg5 = *(char ***)&_swig_go_4; 
-  arg6 = *(char ***)&_swig_go_5; 
+  arg6 = *(int64_t **)&_swig_go_5; 
   arg7 = *(char ***)&_swig_go_6; 
-  arg8 = *(char ***)&_swig_go_7; 
+  arg8 = *(int64_t **)&_swig_go_7; 
   arg9 = *(char ***)&_swig_go_8; 
+  arg10 = *(char ***)&_swig_go_9; 
+  arg11 = *(char ***)&_swig_go_10; 
   
-  result = (int)CfdGetTxInIssuanceInfo(arg1,(char const *)arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
+  result = (int)CfdGetTxInIssuanceInfo(arg1,(char const *)arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11);
   _swig_go_result = result; 
   {
     if (arg4 && *arg4) {
@@ -1749,23 +1798,23 @@ intgo _wrap_CfdGetTxInIssuanceInfo_cfdgo_7c8dbf2af26f3671(void *_swig_go_0, _gos
     }
   }
   {
-    if (arg6 && *arg6) {
-      _swig_go_5->n = strlen(*arg6);
-    }
-  }
-  {
     if (arg7 && *arg7) {
       _swig_go_6->n = strlen(*arg7);
     }
   }
   {
-    if (arg8 && *arg8) {
-      _swig_go_7->n = strlen(*arg8);
+    if (arg9 && *arg9) {
+      _swig_go_8->n = strlen(*arg9);
     }
   }
   {
-    if (arg9 && *arg9) {
-      _swig_go_8->n = strlen(*arg9);
+    if (arg10 && *arg10) {
+      _swig_go_9->n = strlen(*arg10);
+    }
+  }
+  {
+    if (arg11 && *arg11) {
+      _swig_go_10->n = strlen(*arg11);
     }
   }
   free(arg2); 
@@ -1862,6 +1911,37 @@ intgo _wrap_CfdGetConfidentialTxInCount_cfdgo_7c8dbf2af26f3671(void *_swig_go_0,
   arg3 = *(uint32_t **)&_swig_go_2; 
   
   result = (int)CfdGetConfidentialTxInCount(arg1,(char const *)arg2,arg3);
+  _swig_go_result = result; 
+  free(arg2); 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_CfdGetConfidentialTxInWitnessCount_cfdgo_7c8dbf2af26f3671(void *_swig_go_0, _gostring_ _swig_go_1, uint32_t *_swig_go_2, uint32_t *_swig_go_3) {
+  void *arg1 = (void *) 0 ;
+  char *arg2 = (char *) 0 ;
+  uint32_t arg3 ;
+  uint32_t *arg4 = (uint32_t *) 0 ;
+  uint32_t *argp3 ;
+  int result;
+  intgo _swig_go_result;
+  
+  arg1 = *(void **)&_swig_go_0; 
+  
+  arg2 = (char *)malloc(_swig_go_1.n + 1);
+  memcpy(arg2, _swig_go_1.p, _swig_go_1.n);
+  arg2[_swig_go_1.n] = '\0';
+  
+  
+  argp3 = (uint32_t *)_swig_go_2;
+  if (argp3 == NULL) {
+    _swig_gopanic("Attempt to dereference null uint32_t");
+  }
+  arg3 = (uint32_t)*argp3;
+  
+  arg4 = *(uint32_t **)&_swig_go_3; 
+  
+  result = (int)CfdGetConfidentialTxInWitnessCount(arg1,(char const *)arg2,arg3,arg4);
   _swig_go_result = result; 
   free(arg2); 
   return _swig_go_result;
