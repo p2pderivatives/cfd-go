@@ -863,6 +863,34 @@ func TestCfdExtkey(t *testing.T) {
 	fmt.Print("TestCfdExtkey test done.\n")
 }
 
+func TestCfdParseScript(t *testing.T) {
+	handle, ret := CfdGoCreateHandle()
+	assert.Equal(t, (int)(KCfdSuccess), ret)
+
+	t.Run("PKH Locking Script", func(t *testing.T) {
+		script := "76a9142e3f2c7e30abce5b22451184c5e531a1e23c6e1288ac"
+		items, ret := CfdGoParseScript(handle, script)
+		assert.Equal(t, (int)(KCfdSuccess), ret)
+		assert.Equal(t, int(5), len(items))
+		assert.Equal(t, "76", items[0])
+		assert.Equal(t, "a9", items[1])
+		assert.Equal(t, "2e3f2c7e30abce5b22451184c5e531a1e23c6e12", items[2])
+		assert.Equal(t, "88", items[3])
+		assert.Equal(t, "ac", items[4])
+	})
+
+	t.Run("PKH UnlockingScript", func(t *testing.T) {
+		script := "47304402204b922f2dafdd926b22b0e669fd774a2d5f10f969b8089a1c3a0384ba7ce95f6e02204e71c2a620cf430fa6d7ceaeb40d5298f20eebae3ecb783714a6adc03c66717d0121038f5d4ee5a661c04de7b715c6b9ac935456419fa9f484470275d1d489f2793301"
+		items, ret := CfdGoParseScript(handle, script)
+		assert.Equal(t, (int)(KCfdSuccess), ret)
+		assert.Equal(t, int(2), len(items))
+		assert.Equal(t, "304402204b922f2dafdd926b22b0e669fd774a2d5f10f969b8089a1c3a0384ba7ce95f6e02204e71c2a620cf430fa6d7ceaeb40d5298f20eebae3ecb783714a6adc03c66717d01", items[0])
+		assert.Equal(t, "038f5d4ee5a661c04de7b715c6b9ac935456419fa9f484470275d1d489f2793301", items[1])
+	})
+
+	fmt.Print("TestCfdParseScript test done.\n")
+}
+
 // last test
 /* comment out.
 func TestFinalize(t *testing.T) {
