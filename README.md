@@ -86,9 +86,11 @@ go build
 **CMake options**
 
 - `-DENABLE_ELEMENTS`: Enable functionalies for elements sidechain. [ON/OFF] (default:ON)
-- `-DENABLE_DEBUG`: Enable debug loggings and log files. [ON/OFF] (default:OFF)
 - `-DENABLE_SHARED`: Enable building a shared library. [ON/OFF] (default:OFF)
 - `-DENABLE_TESTS`: Enable building a testing codes. If enables this option, builds testing framework submodules(google test) automatically. [ON/OFF] (default:ON)
+- `-DCMAKE_BUILD_TYPE=Release`: Enable release build.
+- `-DCMAKE_BUILD_TYPE=Debug`: Enable debug build.
+- `-DCFDCORE_DEBUG=on`: Enable cfd debug mode and loggings log files. [ON/OFF] (default:OFF)
 
 ---
 
