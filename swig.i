@@ -346,22 +346,42 @@ func CfdGoGetConfidentialTxIn(handle uintptr, txHex string, index uint32) (txid 
 }
 
 /**
+ * Get witness stack on confidential transaction input.
+ * param: handle        cfd handle
+ * param: txHex         transaction hex
+ * param: txinIndex     txin index
+ * param: stackIndex    witness stack index
+ * return: stackData    witness stack data
+ * return: _swig_ret    error code
+ */
+func CfdGoGetConfidentialTxInWitness(handle uintptr, txHex string, txinIndex uint32, stackIndex uint32) (stackData string, _swig_ret int) {
+	txinIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinIndex)))
+	stackIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&stackIndex)))
+	ret := CfdGetConfidentialTxInWitness(handle, txHex, txinIndexPtr, stackIndexPtr, &stackData)
+	return stackData, ret
+}
+
+/**
  * Get txin issuance on confidential transaction.
  * param: handle            cfd handle
  * param: txHex             transaction hex
  * param: index             txin index
  * return: entropy          blinding asset entropy
  * return: nonce            blinding nonce
- * return: assetValue       asset amount
- * return: tokenValue       token amount
+ * return: assetAmount      asset amount value
+ * return: assetValue       asset commitment value
+ * return: tokenAmount      token amount value
+ * return: tokenValue       token commitment value
  * return: assetRangeproof  asset rangeproof
  * return: tokenRangeproof  token rangeproof
  * return: _swig_ret        error code
  */
-func CfdGoGetTxInIssuanceInfo(handle uintptr, txHex string, index uint32) (entropy string, nonce string, assetValue string, tokenValue string, assetRangeproof string, tokenRangeproof string, _swig_ret int) {
+func CfdGoGetTxInIssuanceInfo(handle uintptr, txHex string, index uint32) (entropy string, nonce string, assetAmount int64, assetValue string, tokenAmount int64, tokenValue string, assetRangeproof string, tokenRangeproof string, _swig_ret int) {
 	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
-	ret := CfdGetTxInIssuanceInfo(handle, txHex, indexPtr, &entropy, &nonce, &assetValue, &tokenValue, &assetRangeproof, &tokenRangeproof)
-	return entropy, nonce, assetValue, tokenValue, assetRangeproof, tokenRangeproof, ret
+	assetAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetAmount)))
+	tokenAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&tokenAmount)))
+	ret := CfdGetTxInIssuanceInfo(handle, txHex, indexPtr, &entropy, &nonce, assetAmountPtr, &assetValue, tokenAmountPtr, &tokenValue, &assetRangeproof, &tokenRangeproof)
+	return entropy, nonce, assetAmount, assetValue, tokenAmount, tokenValue, assetRangeproof, tokenRangeproof, ret
 }
 
 /**
@@ -395,6 +415,21 @@ func CfdGoGetConfidentialTxOut(handle uintptr, txHex string, index uint32) (asse
 func CfdGoGetConfidentialTxInCount(handle uintptr, txHex string) (count uint32, _swig_ret int) {
 	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
 	ret := CfdGetConfidentialTxInCount(handle, txHex, countPtr)
+	return count, ret
+}
+
+/**
+ * Get witness stack count on confidential transaction input.
+ * param: handle        cfd handle
+ * param: txHex         transaction hex
+ * param: txinIndex     txin index
+ * return: count        witness stack count
+ * return: _swig_ret    error code
+ */
+func CfdGoGetConfidentialTxInWitnessCount(handle uintptr, txHex string, txinIndex uint32) (count uint32, _swig_ret int) {
+	txinIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinIndex)))
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetConfidentialTxInWitnessCount(handle, txHex, txinIndexPtr, countPtr)
 	return count, ret
 }
 
