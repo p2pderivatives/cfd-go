@@ -54,7 +54,7 @@ apt-get install -y build-essential golang cmake python nodejs
 cmake version 3.14.2 or lower, download from website and install cmake.
 (https://cmake.org/download/)
 
-go version 1.11 or later, get `golang.org/dl/go1.13` or higher.
+go version 1.11 or lower, get `golang.org/dl/go1.13` or higher.
 (https://www.mazn.net/blog/2019/02/03/1704.html)
 
 ---
