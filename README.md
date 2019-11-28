@@ -16,16 +16,21 @@
 - Python 3.x
 - node.js (stable version)
 
+<!--
+
 ### Windows (MinGW)
 
-- attention: Cgo can only be used on the `make` platform.
+attention: Cgo can only be used on the `make` platform.
 
 - MinGW (http://www.mingw.org/)
   - download and install files.
     - go (1.12 or higher)
     - MinGW
+      - 
 
-- future: After supporting autotools, it can be run on MSYS2.
+future: After supporting autotools, it can be run on MSYS2.
+
+-->
 
 ### MacOS
 
