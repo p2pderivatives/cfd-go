@@ -30,6 +30,28 @@
 
 %insert(go_wrapper) %{
 /**
+ * Convert error code to error struct.
+ * param: errorCode 	error code from Cfd
+ * return: error struct
+ */
+func convertCfdError(errorCode int) (err error) {
+	var errorMessage string
+	switch errorCode {
+		case (int)(KCfdSuccess):
+			return fmt.Errorf("")
+		case (int)(KCfdUnknownError):
+		case (int)(KCfdInternalError):
+		case (int)(KCfdMemoryFullError):
+		case (int)(KCfdIllegalArgumentError):
+		case (int)(KCfdIllegalStateError):
+		case (int)(KCfdOutOfRangeError):
+		case (int)(KCfdInvalidSettingError):
+		case (int)(KCfdConnectionError):
+		case (int)(KCfdDiskAccessError):
+	}
+}
+
+/**
  * Get supported function.
  * return: funcFlag    function flag.
  * return: _swig_ret   error code
@@ -866,23 +888,22 @@ func CfdGoParseScript(handle uintptr, script string) (scriptItems []string, _swi
 	var itemNum uint32
 	itemNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&itemNum)))
 	
-	if _swig_ret = CfdParseScript(handle, script, &scriptItemHandle, itemNumPtr); _swig_ret != (int)(KCfdSuccess) {
-		return nil, _swig_ret
-	}
-	scriptItems = make([]string, 0, itemNum)
-	for i := uint32(0); i < itemNum; i++ {
-		var item string
-		index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
-		if _swig_ret =  CfdGetScriptItem(handle, scriptItemHandle, index, &item); _swig_ret != (int)(KCfdSuccess) {
-			return nil, _swig_ret
+	if _swig_ret = CfdParseScript(handle, script, &scriptItemHandle, itemNumPtr); _swig_ret == (int)(KCfdSuccess) {
+		scriptItems = make([]string, 0, itemNum)
+		for i := uint32(0); i < itemNum; i++ {
+			var item string
+			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
+			if _swig_ret = CfdGetScriptItem(handle, scriptItemHandle, index, &item); _swig_ret == (int)(KCfdSuccess) {
+				scriptItems = append(scriptItems, item)
+			}
 		}
-		scriptItems = append(scriptItems, item)
-	}
 
-	if _swig_ret = CfdFreeScriptItemHandle(handle, scriptItemHandle); _swig_ret != (int)(KCfdSuccess) {
-		return nil, _swig_ret
+		_swig_ret = CfdFreeScriptItemHandle(handle, scriptItemHandle);
 	}
 	
+	if _swig_ret != (int)(KCfdSuccess) {
+		return []string{}, _swig_ret
+	}
 	return
 }
 
