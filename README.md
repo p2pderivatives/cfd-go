@@ -67,7 +67,7 @@ When using the cmake-js package and npm script, the options for compilation are 
 
 ```Shell
 npm install
-npm run cmake_all
+npm run cmake_release
 go build
 ```
 
