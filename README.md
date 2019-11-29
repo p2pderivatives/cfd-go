@@ -109,6 +109,31 @@ cd build && sudo make install
 cd build && sudo make uninstall
 ```
 
+---
+
+## How to use cfd-go as go module
+
+1. Once, clone this repository.
+2. Build & install cfd-go(and dependencies).
+3. Modify `go.mod` file adding cfd-go as go moudle
+
+go.mod
+
+```
+require (
+  github.com/cryptogarageinc/cfd-go latest
+  ...
+)
+```
+
+4. Download cfd-go module
+
+```Shell
+go mod download
+```
+
+---
+
 ## Example
 
 ### Test
