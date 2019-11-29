@@ -162,7 +162,7 @@ test-driver
 /test/test_wallet.log
 /test/test_wallet.trs
 /pc/*.pc
-!/pc/cfd-go.pc.in
+!/pc/*.in
 
 external/*
 !external/CMakeLists.txt
