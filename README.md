@@ -121,7 +121,7 @@ go.mod
 
 ```
 require (
-  github.com/cryptogarageinc/cfd-go latest
+  github.com/cryptogarageinc/cfd-go v0.0.2
   ...
 )
 ```
