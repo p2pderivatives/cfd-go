@@ -1,4 +1,4 @@
-module cfdgo
+module github.com/cryptogarageinc/cfd-go
 
 go 1.13
 
