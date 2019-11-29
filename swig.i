@@ -98,13 +98,24 @@ func CfdGoGetSupportedFunction() (funcFlag uint64, err error) {
 
 /**
  * Create cfd handle.
- * return: handle      cfd handle
+ * return: handle      cfd handle. release: CfdGoFreeHandle
  * return: err         error struct
  */
 func CfdGoCreateHandle() (handle uintptr, err error) {
 	ret := CfdCreateHandle(&handle)
 	err = convertCfdError(ret, handle)
 	return handle, err
+}
+
+/**
+ * Free cfd handle.
+ * param: handle       cfd handle
+ * return: err         error struct
+ */
+func CfdGoFreeHandle(handle uintptr) (err error) {
+	ret := CfdFreeHandle(handle)
+	err = convertCfdError(ret, uintptr(0))
+	return
 }
 
 /**
@@ -560,7 +571,7 @@ func CfdGoGetIssuanceBlindingKey(handle uintptr, masterBlindingKey string, txid 
 /**
  * Get blind transaction handle.
  * param: handle               cfd handle
- * return: blindHandle         blindTx handle. release: CfdFreeBlindHandle
+ * return: blindHandle         blindTx handle. release: CfdGoFreeBlindHandle
  * return: err                 error
  */
 func CfdGoInitializeBlindTx(handle uintptr) (blindHandle uintptr, err error) {
@@ -618,6 +629,18 @@ func CfdGoFinalizeBlindTx(handle uintptr, blindHandle uintptr, txHex string) (ou
 	ret := CfdFinalizeBlindTx(handle, blindHandle, txHex, &outputTxHex)
 	err = convertCfdError(ret, handle)
 	return outputTxHex, err
+}
+
+/**
+ * Free blind handle.
+ * param: handle               cfd handle
+ * param: blindHandle          blindTx handle
+ * return: err                 error
+ */
+func CfdGoFreeBlindHandle(handle uintptr, blindHandle uintptr) (err error) {
+	ret := CfdFreeBlindHandle(handle, blindHandle)
+	err = convertCfdError(ret, handle)
+	return
 }
 
 /**
@@ -750,7 +773,7 @@ func CfdGoUnblindIssuance(handle uintptr, txHex string, index uint32, assetBlind
 /**
  * Generate multisig sign handle.
  * param: handle               cfd handle
- * return: multisigSignHandle  multisig sign handle
+ * return: multisigSignHandle  multisig sign handle. release: CfdGoFreeMultisigSignHandle
  * return: err                 error
  */
 func CfdGoInitializeMultisigSign(handle uintptr) (multisigSignHandle uintptr, err error) {
@@ -785,6 +808,18 @@ func CfdGoAddMultisigSignData(handle uintptr, multisigSignHandle uintptr, signat
  */
 func CfdGoAddMultisigSignDataToDer(handle uintptr, multisigSignHandle uintptr, signature string, sighashType int, sighashAnyoneCanPay bool, relatedPubkey string) (err error) {
 	ret := CfdAddMultisigSignDataToDer(handle, multisigSignHandle, signature, sighashType, sighashAnyoneCanPay, relatedPubkey)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+/**
+ * Free multisig sign handle.
+ * param: handle               cfd handle
+ * param: multisigSignHandle   multisig sign handle
+ * return: err                 error
+ */
+func CfdGoFreeMultisigSignHandle(handle uintptr, multisigSignHandle uintptr) (err error) {
+	ret := CfdFreeMultisigSignHandle(handle, multisigSignHandle)
 	err = convertCfdError(ret, handle)
 	return
 }

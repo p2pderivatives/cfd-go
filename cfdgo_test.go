@@ -20,8 +20,8 @@ func TestCfdCreateHandle(t *testing.T) {
 	handle, err := CfdGoCreateHandle()
 	assert.NoError(t, err)
 
-	ret = CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdCreateHandle test done.\n")
 }
 
@@ -43,8 +43,8 @@ func TestCfdGetLastError(t *testing.T) {
 	errMsg, _ = CfdGoGetLastErrorMessage(handle)
 	assert.Equal(t, "Illegal network type.", errMsg)
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdGetLastError test done.\n")
 }
 
@@ -56,8 +56,8 @@ func TestCfdGetSupportedFunction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(1), (flag & 0x01))
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdGetSupportedFunction test done.\n")
 }
 
@@ -118,8 +118,8 @@ func TestCfdGoCreateAddress(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdGoCreateAddress test done.\n")
 }
 
@@ -140,8 +140,8 @@ func TestCfdGoCreateMultisigScript(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdGoCreateMultisigScript test done.\n")
 }
 
@@ -169,8 +169,8 @@ func TestCfdGoGetAddressesFromMultisig(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdGoGetAddressesFromMultisig test done.\n")
 }
 
@@ -293,8 +293,8 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdGoParseDescriptor test done.\n")
 }
 
@@ -359,8 +359,8 @@ func TestCfdCreateRawTransaction(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdCreateRawTransaction test done.\n")
 }
 
@@ -417,8 +417,8 @@ func TestCfdGetTransaction(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdGetTransaction test done.\n")
 }
 
@@ -444,8 +444,8 @@ func TestCfdSetRawReissueAsset(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdSetRawReissueAsset test done.\n")
 }
 
@@ -464,8 +464,8 @@ func TestCfdGetIssuanceBlindingKey(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdGetIssuanceBlindingKey test done.\n")
 }
 
@@ -528,7 +528,8 @@ func TestCfdBlindTransaction(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	CfdFreeBlindHandle(handle, blindHandle) // release
+	err2 := CfdGoFreeBlindHandle(handle, blindHandle) // release
+	assert.NoError(t, err2)
 
 	// unblind test
 	if err == nil {
@@ -585,8 +586,8 @@ func TestCfdBlindTransaction(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdBlindTransaction test done.\n")
 }
 
@@ -644,8 +645,8 @@ func TestCfdAddSignConfidentialTx(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdAddSignConfidentialTx test done.\n")
 }
 
@@ -708,8 +709,8 @@ func TestCfdAddMultisigSignConfidentialTx(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "0200000000020f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a15700000000d90047304402206fc4cc7e489208a2f4d24f5d35466debab2ce7aa34b5d00e0a9426c9d63529cf02202ec744939ef0b4b629c7d87bc2d017714b52bb86dccb0fd0f10148f62b7a09ba01473044022073ea24720b24c736bcb305a5de2fd8117ca2f0a85d7da378fae5b90dc361d227022004c0088bf1b73a56ae5ec407cf9c330d7206ffbcd0c9bb1c72661726fd4990390147522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52aeffffffff0f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570100008000ffffffffd8bbe31bc590cbb6a47d2e53a956ec25d8890aefd60dcfc93efd34727554890b0683fe0819a4f9770c8a7cd5824e82975c825e017aff8ba0d6a5eb4959cf9c6f010000000023c346000004017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000003b947f6002200d8510dfcf8e2330c0795c771d1e6064daab2f274ac32a6e2708df9bfa893d17a914ef3e40882e17d6e477082fcafeb0f09dc32d377b87010bad521bafdac767421d45b71b29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b9270002cc645552109331726c0ffadccab21620dd7a5a33260c6ac7bd1c78b98cb1e35a1976a9146c22e209d36612e0d9d2a20b814d7d8648cc7a7788ac017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000000000c350000001cdb0ed311810e61036ac9255674101497850f5eee5e4320be07479c05473cbac010000000023c3460003ce4c4eac09fe317f365e45c00ffcf2e9639bc0fd792c10f72cdc173c4e5ed8791976a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac00000000", txHex)
 
-		ret := CfdFreeMultisigSignHandle(handle, multiSignHandle)
-		assert.Equal(t, (int)(KCfdSuccess), ret)
+		err = CfdGoFreeMultisigSignHandle(handle, multiSignHandle)
+		assert.NoError(t, err)
 	}
 
 	if err != nil {
@@ -717,8 +718,8 @@ func TestCfdAddMultisigSignConfidentialTx(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdAddMultisigSignConfidentialTx test done.\n")
 }
 
@@ -746,8 +747,8 @@ func TestCfdConfidentialAddress(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdConfidentialAddress test done.\n")
 }
 
@@ -769,8 +770,8 @@ func TestCfdCalculateEcSignature(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdCalculateEcSignature test done.\n")
 }
 
@@ -816,8 +817,8 @@ func TestCfdPrivkeyAndPubkey(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdPrivkeyAndPubkey test done.\n")
 }
 
@@ -858,8 +859,8 @@ func TestCfdExtkey(t *testing.T) {
 		fmt.Print("[error message] " + errMsg + "\n")
 	}
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdExtkey test done.\n")
 }
 
@@ -888,8 +889,8 @@ func TestCfdParseScript(t *testing.T) {
 		assert.Equal(t, "038f5d4ee5a661c04de7b715c6b9ac935456419fa9f484470275d1d489f2793301", items[1])
 	})
 
-	ret := CfdFreeHandle(handle)
-	assert.Equal(t, (int)(KCfdSuccess), ret)
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
 	fmt.Print("TestCfdParseScript test done.\n")
 }
 
