@@ -74,7 +74,7 @@ func convertCfdError(retCode int, handle uintptr) (err error) {
 	}
 
 	var errorMsg string
-	if handle ==  uintptr(0) {  // TODO(fujita-cg): uintptrのチェックがゼロ値で問題ないか確認
+	if handle ==  uintptr(0) {
 		err = convertCfdErrorCode(retCode)
 	} else if ret := CfdGetLastErrorMessage(handle, &errorMsg); ret != (int)(KCfdSuccess) {
 		err = convertCfdErrorCode(retCode)
