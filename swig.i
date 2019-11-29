@@ -4,8 +4,9 @@
 #include "cfdc/cfdcapi_address.h"
 #include "cfdc/cfdcapi_elements_address.h"
 #include "cfdc/cfdcapi_elements_transaction.h"
-#include "cfdc/cfdcapi_transaction.h"
 #include "cfdc/cfdcapi_key.h"
+#include "cfdc/cfdcapi_script.h"
+#include "cfdc/cfdcapi_transaction.h"
 %}
 
 %typemap(argout) (char **) {
@@ -23,46 +24,113 @@
 %include "external/cfd/include/cfdc/cfdcapi_address.h"
 %include "external/cfd/include/cfdc/cfdcapi_elements_address.h"
 %include "external/cfd/include/cfdc/cfdcapi_elements_transaction.h"
-%include "external/cfd/include/cfdc/cfdcapi_transaction.h"
 %include "external/cfd/include/cfdc/cfdcapi_key.h"
+%include "external/cfd/include/cfdc/cfdcapi_script.h"
+%include "external/cfd/include/cfdc/cfdcapi_transaction.h"
 
+%go_import("fmt")
 %insert(go_wrapper) %{
+/**
+ * Convert return code to golang built-in error struct.
+ * param: retCode   return code from cfd
+ * return: err      built-in error struct.
+ */
+func convertCfdErrorCode(retCode int) (err error) {
+	switch retCode {
+		case (int)(KCfdSuccess):
+			return nil
+		case (int)(KCfdUnknownError):
+			err = fmt.Errorf("CFD Error: Unknown error occered.: errorCode=[%d]", retCode)
+		case (int)(KCfdInternalError):
+			err = fmt.Errorf("CFD Error: Internal error occered.: errorCode=[%d]", retCode)
+		case (int)(KCfdMemoryFullError):
+			err = fmt.Errorf("CFD Error: Memory is full.: errorCode=[%d]", retCode)
+		case (int)(KCfdIllegalArgumentError):
+			err = fmt.Errorf("CFD Error: Illegal argument passed.: errorCode=[%d]", retCode)
+		case (int)(KCfdIllegalStateError):
+			err = fmt.Errorf("CFD Error: Illegal state api call.: errorCode=[%d]", retCode)
+		case (int)(KCfdOutOfRangeError):
+			err = fmt.Errorf("CFD Error: Out of range access occered.: errorCode=[%d]", retCode)
+		case (int)(KCfdInvalidSettingError):
+			err = fmt.Errorf("CFD Error: Invalid setting api call.: errorCode=[%d]", retCode)
+		case (int)(KCfdConnectionError):
+			err = fmt.Errorf("CFD Error: Connection error occered.: errorCode=[%d]", retCode)
+		case (int)(KCfdDiskAccessError):
+			err = fmt.Errorf("CFD Error: Disk access error occered.: errorCode=[%d]", retCode)
+	}
+	return
+}
+
+/**
+ * Convert handle and error code to Golang built-in error.
+ * detail: if handle is nil, return fixed message by the error code.
+ * param: retCode   cfd return code.
+ * param: handle    cfd handle.
+ * return: err      built-in error struct.
+ */
+func convertCfdError(retCode int, handle uintptr) (err error) {
+	if retCode == (int)(KCfdSuccess) {
+		return
+	}
+
+	var errorMsg string
+	if handle ==  uintptr(0) {
+		err = convertCfdErrorCode(retCode)
+	} else if ret := CfdGetLastErrorMessage(handle, &errorMsg); ret != (int)(KCfdSuccess) {
+		err = convertCfdErrorCode(retCode)
+	} else {
+		err = fmt.Errorf("CFD Error: messaga=[%s], code=[%d]", errorMsg, retCode)
+	}
+	return
+}
+
 /**
  * Get supported function.
  * return: funcFlag    function flag.
- * return: _swig_ret   error code
+ * return: err         error struct
  */
-func CfdGoGetSupportedFunction() (funcFlag uint64, _swig_ret int) {
+func CfdGoGetSupportedFunction() (funcFlag uint64, err error) {
 	funcFlagValue := SwigcptrUint64_t(uintptr(unsafe.Pointer(&funcFlag)))
 	ret := CfdGetSupportedFunction(funcFlagValue)
-	return funcFlag, ret
+	err = convertCfdError(ret, uintptr(0))
+	return funcFlag, err
 }
 
 /**
  * Create cfd handle.
- * return: handle      cfd handle
- * return: _swig_ret   error code
+ * return: handle      cfd handle. release: CfdGoFreeHandle
+ * return: err         error struct
  */
-func CfdGoCreateHandle() (handle uintptr, _swig_ret int) {
+func CfdGoCreateHandle() (handle uintptr, err error) {
 	ret := CfdCreateHandle(&handle)
-	return handle, ret
+	err = convertCfdError(ret, handle)
+	return handle, err
+}
+
+/**
+ * Free cfd handle.
+ * param: handle       cfd handle
+ * return: err         error struct
+ */
+func CfdGoFreeHandle(handle uintptr) (err error) {
+	ret := CfdFreeHandle(handle)
+	err = convertCfdError(ret, uintptr(0))
+	return
 }
 
 /**
  * Get last error message.
  * param: handle   cfd handle
  * return: message     last error message
- * return: _swig_ret   error code
+ * return: err         error
  */
-func CfdGoGetLastErrorMessage(handle uintptr) (message string, _swig_ret int) {
+func CfdGoGetLastErrorMessage(handle uintptr) (message string, err error) {
 	ret := CfdGetLastErrorMessage(handle, &message)
 	// Do not use the Free API as it will be released by Go-GC.
-	return message, ret
+	err = convertCfdError(ret, handle)
+	return message, err
 }
 
-%}
-
-%insert(go_wrapper) %{
 /**
  * Create Address.
  * param: handle        cfd handle
@@ -73,11 +141,12 @@ func CfdGoGetLastErrorMessage(handle uintptr) (message string, _swig_ret int) {
  * return: address                  address string
  * return: lockingScript            locking script
  * return: p2shSegwitLockingScript  p2sh-segwit witness program
- * return: _swig_ret                error code
+ * return: err                      error
  */
-func CfdGoCreateAddress(handle uintptr, hashType int, pubkey string, redeemScript string, networkType int) (address string, lockingScript string, p2shSegwitLockingScript string, _swig_ret int) {
-    ret := CfdCreateAddress(handle, hashType, pubkey, redeemScript, networkType, &address, &lockingScript, &p2shSegwitLockingScript)
-    return address, lockingScript, p2shSegwitLockingScript, ret
+func CfdGoCreateAddress(handle uintptr, hashType int, pubkey string, redeemScript string, networkType int) (address string, lockingScript string, p2shSegwitLockingScript string, err error) {
+	ret := CfdCreateAddress(handle, hashType, pubkey, redeemScript, networkType, &address, &lockingScript, &p2shSegwitLockingScript)
+	err = convertCfdError(ret, handle)
+	return address, lockingScript, p2shSegwitLockingScript, err
 }
 
 /**
@@ -90,9 +159,9 @@ func CfdGoCreateAddress(handle uintptr, hashType int, pubkey string, redeemScrip
  * return: address        address string
  * return: redeemScript   redeem script
  * return: witnessScript  witness script
- * return: _swig_ret      error code
+ * return: err            error
  */
-func CfdGoCreateMultisigScript(handle uintptr, networkType int, hashType int, pubkeys []string, requireNum uint32) (address string, redeemScript string, witnessScript string, _swig_ret int) {
+func CfdGoCreateMultisigScript(handle uintptr, networkType int, hashType int, pubkeys []string, requireNum uint32) (address string, redeemScript string, witnessScript string, err error) {
 	var multisigHandle uintptr
 	ret := CfdInitializeMultisigScript(handle, networkType, hashType, &multisigHandle)
 	if ret == (int)(KCfdSuccess) {
@@ -115,9 +184,10 @@ func CfdGoCreateMultisigScript(handle uintptr, networkType int, hashType int, pu
 	}
 
 	if ret == (int)(KCfdSuccess) {
-		return address, redeemScript, witnessScript, ret
+		return address, redeemScript, witnessScript, err
 	} else {
-		return "", "", "", ret
+		err = convertCfdError(ret, handle)
+		return "", "", "", err
 	}
 }
 
@@ -156,9 +226,9 @@ type CfdDescriptorKeyData struct {
  * param: bip32DerivationPath  derive path
  * return: descriptorDataList  descriptor data struct list
  * return: multisigList        multisig key struct list
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoParseDescriptor(handle uintptr, descriptor string, networkType int, bip32DerivationPath string) (descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, _swig_ret int) {
+func CfdGoParseDescriptor(handle uintptr, descriptor string, networkType int, bip32DerivationPath string) (descriptorDataList []CfdDescriptorData, multisigList []CfdDescriptorKeyData, err error) {
 	var descriptorHandle uintptr
 	var maxIndex uint32
 	maxIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxIndex)))
@@ -205,9 +275,10 @@ func CfdGoParseDescriptor(handle uintptr, descriptor string, networkType int, bi
 		}
 	}
 	if ret == (int)(KCfdSuccess) {
-		return descriptorDataList, multisigList, ret
+		return descriptorDataList, multisigList, err
 	} else {
-		return []CfdDescriptorData{}, []CfdDescriptorKeyData{}, ret
+		err = convertCfdError(ret, handle)
+		return []CfdDescriptorData{}, []CfdDescriptorKeyData{}, err
 	}
 }
 
@@ -219,9 +290,9 @@ func CfdGoParseDescriptor(handle uintptr, descriptor string, networkType int, bi
  * param: hashType      hash type (p2sh, p2wsh, etc...)
  * return: addressList  address list
  * return: pubkeyList   pubkey list
- * return: _swig_ret    error code
+ * return: err          error
  */
-func CfdGoGetAddressesFromMultisig(handle uintptr, redeemScript string, networkType int, hashType int) (addressList []string, pubkeyList []string, _swig_ret int) {
+func CfdGoGetAddressesFromMultisig(handle uintptr, redeemScript string, networkType int, hashType int) (addressList []string, pubkeyList []string, err error) {
 	var multisigHandle uintptr
 	var maxKeyNum uint32
 	maxKeyNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxKeyNum)))
@@ -248,9 +319,10 @@ func CfdGoGetAddressesFromMultisig(handle uintptr, redeemScript string, networkT
 		}
 	}
 	if ret == (int)(KCfdSuccess) {
-		return addressList, pubkeyList, ret
+		return addressList, pubkeyList, err
 	} else {
-		return []string{}, []string{}, ret
+		err = convertCfdError(ret, handle)
+		return []string{}, []string{}, err
 	}
 }
 
@@ -260,13 +332,14 @@ func CfdGoGetAddressesFromMultisig(handle uintptr, redeemScript string, networkT
  * param: version       transaction version
  * param: locktime      locktime
  * return: txHex        transaction hex
- * return: _swig_ret    error code
+ * return: err          error
  */
-func CfdGoInitializeConfidentialTx(handle uintptr, version uint32, locktime uint32) (txHex string, _swig_ret int) {
+func CfdGoInitializeConfidentialTx(handle uintptr, version uint32, locktime uint32) (txHex string, err error) {
 	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&version)))
 	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&locktime)))
 	ret := CfdInitializeConfidentialTx(handle, versionPtr, locktimePtr, &txHex)
-	return txHex, ret
+	err = convertCfdError(ret, handle)
+	return txHex, err
 }
 
 /**
@@ -277,13 +350,14 @@ func CfdGoInitializeConfidentialTx(handle uintptr, version uint32, locktime uint
  * param: vout          vout
  * param: sequence      sequence
  * return: outputTxHex  output transaction hex
- * return: _swig_ret    error code
+ * return: err          error
  */
-func CfdGoAddConfidentialTxIn(handle uintptr, txHex string, txid string, vout uint32, sequence uint32) (outputTxHex string, _swig_ret int) {
+func CfdGoAddConfidentialTxIn(handle uintptr, txHex string, txid string, vout uint32, sequence uint32) (outputTxHex string, err error) {
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
 	sequencePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&sequence)))
 	ret := CfdAddConfidentialTxIn(handle, txHex, txid, voutPtr, sequencePtr, &outputTxHex)
-	return outputTxHex, ret
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
 }
 
 /**
@@ -297,12 +371,13 @@ func CfdGoAddConfidentialTxIn(handle uintptr, txHex string, txid string, vout ui
  * param: directLockingScript  locking script for direct insert.
  * param: nonce               confidential nonce
  * return: outputTxHex        output transaction hex
- * return: _swig_ret          error code
+ * return: err                error
  */
-func CfdGoAddConfidentialTxOut(handle uintptr, txHex string, asset string, satoshiAmount int64, valueCommitment string, address string, directLockingScript string, nonce string) (outputTxHex string, _swig_ret int) {
+func CfdGoAddConfidentialTxOut(handle uintptr, txHex string, asset string, satoshiAmount int64, valueCommitment string, address string, directLockingScript string, nonce string) (outputTxHex string, err error) {
 	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
 	ret := CfdAddConfidentialTxOut(handle, txHex, asset, satoshiPtr, valueCommitment, address, directLockingScript, nonce, &outputTxHex)
-	return outputTxHex, ret
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
 }
 
 /**
@@ -317,13 +392,14 @@ func CfdGoAddConfidentialTxOut(handle uintptr, txHex string, asset string, satos
  * param: directLockingScript  lockingScript for direct insert.
  * param: nonce               confidential nonce
  * return: outputTxHex        output transaction hex
- * return: _swig_ret          error code
+ * return: err                error
  */
-func CfdGoUpdateConfidentialTxOut(handle uintptr, txHex string, index uint32, asset string, satoshiAmount int64, valueCommitment string, address string, directLockingScript string, nonce string) (outputTxHex string, _swig_ret int) {
+func CfdGoUpdateConfidentialTxOut(handle uintptr, txHex string, index uint32, asset string, satoshiAmount int64, valueCommitment string, address string, directLockingScript string, nonce string) (outputTxHex string, err error) {
 	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
 	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
 	ret := CfdUpdateConfidentialTxOut(handle, txHex, indexPtr, asset, satoshiPtr, valueCommitment, address, directLockingScript, nonce, &outputTxHex)
-	return outputTxHex, ret
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
 }
 
 /**
@@ -335,14 +411,15 @@ func CfdGoUpdateConfidentialTxOut(handle uintptr, txHex string, index uint32, as
  * return: vout         vout
  * return: sequence     sequence
  * return: scriptSig    unlockingScript
- * return: _swig_ret    error code
+ * return: err          error
  */
-func CfdGoGetConfidentialTxIn(handle uintptr, txHex string, index uint32) (txid string, vout uint32, sequence uint32, scriptSig string, _swig_ret int) {
+func CfdGoGetConfidentialTxIn(handle uintptr, txHex string, index uint32) (txid string, vout uint32, sequence uint32, scriptSig string, err error) {
 	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
 	sequencePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&sequence)))
 	ret := CfdGetConfidentialTxIn(handle, txHex, indexPtr, &txid, voutPtr, sequencePtr, &scriptSig)
-	return txid, vout, sequence, scriptSig, ret
+	err = convertCfdError(ret, handle)
+	return txid, vout, sequence, scriptSig, err
 }
 
 /**
@@ -352,13 +429,14 @@ func CfdGoGetConfidentialTxIn(handle uintptr, txHex string, index uint32) (txid 
  * param: txinIndex     txin index
  * param: stackIndex    witness stack index
  * return: stackData    witness stack data
- * return: _swig_ret    error code
+ * return: err          error
  */
-func CfdGoGetConfidentialTxInWitness(handle uintptr, txHex string, txinIndex uint32, stackIndex uint32) (stackData string, _swig_ret int) {
+func CfdGoGetConfidentialTxInWitness(handle uintptr, txHex string, txinIndex uint32, stackIndex uint32) (stackData string, err error) {
 	txinIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinIndex)))
 	stackIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&stackIndex)))
 	ret := CfdGetConfidentialTxInWitness(handle, txHex, txinIndexPtr, stackIndexPtr, &stackData)
-	return stackData, ret
+	err = convertCfdError(ret, handle)
+	return stackData, err
 }
 
 /**
@@ -374,14 +452,15 @@ func CfdGoGetConfidentialTxInWitness(handle uintptr, txHex string, txinIndex uin
  * return: tokenValue       token commitment value
  * return: assetRangeproof  asset rangeproof
  * return: tokenRangeproof  token rangeproof
- * return: _swig_ret        error code
+ * return: err              error
  */
-func CfdGoGetTxInIssuanceInfo(handle uintptr, txHex string, index uint32) (entropy string, nonce string, assetAmount int64, assetValue string, tokenAmount int64, tokenValue string, assetRangeproof string, tokenRangeproof string, _swig_ret int) {
+func CfdGoGetTxInIssuanceInfo(handle uintptr, txHex string, index uint32) (entropy string, nonce string, assetAmount int64, assetValue string, tokenAmount int64, tokenValue string, assetRangeproof string, tokenRangeproof string, err error) {
 	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
 	assetAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetAmount)))
 	tokenAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&tokenAmount)))
 	ret := CfdGetTxInIssuanceInfo(handle, txHex, indexPtr, &entropy, &nonce, assetAmountPtr, &assetValue, tokenAmountPtr, &tokenValue, &assetRangeproof, &tokenRangeproof)
-	return entropy, nonce, assetAmount, assetValue, tokenAmount, tokenValue, assetRangeproof, tokenRangeproof, ret
+	err = convertCfdError(ret, handle)
+	return entropy, nonce, assetAmount, assetValue, tokenAmount, tokenValue, assetRangeproof, tokenRangeproof, err
 }
 
 /**
@@ -396,13 +475,14 @@ func CfdGoGetTxInIssuanceInfo(handle uintptr, txHex string, index uint32) (entro
  * return: lockingScript    locking script
  * return: surjectionProof  asset surjection proof.
  * return: rangeproof       amount rangeproof.
- * return: _swig_ret        error code
+ * return: err              error
  */
-func CfdGoGetConfidentialTxOut(handle uintptr, txHex string, index uint32) (asset string, satoshiAmount int64, valueCommitment string, nonce string, lockingScript string, surjectionProof string, rangeproof string, _swig_ret int) {
+func CfdGoGetConfidentialTxOut(handle uintptr, txHex string, index uint32) (asset string, satoshiAmount int64, valueCommitment string, nonce string, lockingScript string, surjectionProof string, rangeproof string, err error) {
 	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
 	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
 	ret := CfdGetConfidentialTxOut(handle, txHex, indexPtr, &asset, satoshiPtr, &valueCommitment, &nonce, &lockingScript, &surjectionProof, &rangeproof)
-	return asset, satoshiAmount, valueCommitment, nonce, lockingScript, surjectionProof, rangeproof, ret
+	err = convertCfdError(ret, handle)
+	return asset, satoshiAmount, valueCommitment, nonce, lockingScript, surjectionProof, rangeproof, err
 }
 
 /**
@@ -410,12 +490,13 @@ func CfdGoGetConfidentialTxOut(handle uintptr, txHex string, index uint32) (asse
  * param: handle        cfd handle
  * param: txHex         transaction hex
  * return: count        txin count
- * return: _swig_ret    error code
+ * return: err          error
  */
-func CfdGoGetConfidentialTxInCount(handle uintptr, txHex string) (count uint32, _swig_ret int) {
+func CfdGoGetConfidentialTxInCount(handle uintptr, txHex string) (count uint32, err error) {
 	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
 	ret := CfdGetConfidentialTxInCount(handle, txHex, countPtr)
-	return count, ret
+	err = convertCfdError(ret, handle)
+	return count, err
 }
 
 /**
@@ -424,13 +505,14 @@ func CfdGoGetConfidentialTxInCount(handle uintptr, txHex string) (count uint32, 
  * param: txHex         transaction hex
  * param: txinIndex     txin index
  * return: count        witness stack count
- * return: _swig_ret    error code
+ * return: err          error
  */
-func CfdGoGetConfidentialTxInWitnessCount(handle uintptr, txHex string, txinIndex uint32) (count uint32, _swig_ret int) {
+func CfdGoGetConfidentialTxInWitnessCount(handle uintptr, txHex string, txinIndex uint32) (count uint32, err error) {
 	txinIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinIndex)))
 	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
 	ret := CfdGetConfidentialTxInWitnessCount(handle, txHex, txinIndexPtr, countPtr)
-	return count, ret
+	err = convertCfdError(ret, handle)
+	return count, err
 }
 
 /**
@@ -438,12 +520,13 @@ func CfdGoGetConfidentialTxInWitnessCount(handle uintptr, txHex string, txinInde
  * param: handle        cfd handle
  * param: txHex         transaction hex
  * return: count        txout count
- * return: _swig_ret    error code
+ * return: err          error
  */
-func CfdGoGetConfidentialTxOutCount(handle uintptr, txHex string) (count uint32, _swig_ret int) {
+func CfdGoGetConfidentialTxOutCount(handle uintptr, txHex string) (count uint32, err error) {
 	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
 	ret := CfdGetConfidentialTxOutCount(handle, txHex, countPtr)
-	return count, ret
+	err = convertCfdError(ret, handle)
+	return count, err
 }
 
 /**
@@ -459,13 +542,14 @@ func CfdGoGetConfidentialTxOutCount(handle uintptr, txHex string) (count uint32,
  * param: directLockingScript  txout locking script on direct.
  * return: asset               generate asset
  * return: outputTxHex         output transaction hex
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoSetRawReissueAsset(handle uintptr, txHex string, txid string, vout uint32, assetSatoshiAmount int64, blindingNonce string, entropy string, address string, directLockingScript string) (asset string, outputTxHex string, _swig_ret int) {
+func CfdGoSetRawReissueAsset(handle uintptr, txHex string, txid string, vout uint32, assetSatoshiAmount int64, blindingNonce string, entropy string, address string, directLockingScript string) (asset string, outputTxHex string, err error) {
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
 	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetSatoshiAmount)))
 	ret := CfdSetRawReissueAsset(handle, txHex, txid, voutPtr, satoshiPtr, blindingNonce, entropy, address, directLockingScript, &asset, &outputTxHex)
-	return asset, outputTxHex, ret
+	err = convertCfdError(ret, handle)
+	return asset, outputTxHex, err
 }
 
 /**
@@ -475,23 +559,25 @@ func CfdGoSetRawReissueAsset(handle uintptr, txHex string, txid string, vout uin
  * param: txid                 utxo txid
  * param: vout                 utxo vout
  * return: blindingKey         issuance blinding key
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoGetIssuanceBlindingKey(handle uintptr, masterBlindingKey string, txid string, vout uint32) (blindingKey string, _swig_ret int) {
+func CfdGoGetIssuanceBlindingKey(handle uintptr, masterBlindingKey string, txid string, vout uint32) (blindingKey string, err error) {
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
 	ret := CfdGetIssuanceBlindingKey(handle, masterBlindingKey, txid, voutPtr, &blindingKey)
-	return blindingKey, ret
+	err = convertCfdError(ret, handle)
+	return blindingKey, err
 }
 
 /**
  * Get blind transaction handle.
  * param: handle               cfd handle
- * return: blindHandle         blindTx handle. release: CfdFreeBlindHandle
- * return: _swig_ret           error code
+ * return: blindHandle         blindTx handle. release: CfdGoFreeBlindHandle
+ * return: err                 error
  */
-func CfdGoInitializeBlindTx(handle uintptr) (blindHandle uintptr, _swig_ret int) {
+func CfdGoInitializeBlindTx(handle uintptr) (blindHandle uintptr, err error) {
 	ret := CfdInitializeBlindTx(handle, &blindHandle)
-	return blindHandle, ret
+	err = convertCfdError(ret, handle)
+	return blindHandle, err
 }
 
 /**
@@ -506,13 +592,14 @@ func CfdGoInitializeBlindTx(handle uintptr) (blindHandle uintptr, _swig_ret int)
  * param: satoshiAmount        utxo amount
  * param: assetKey             issuance asset blinding key
  * param: tokenKey             issuance token blinding key
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoAddBlindTxInData(handle uintptr, blindHandle uintptr, txid string, vout uint32, asset string, assetBlindFactor string, valueBlindFactor string, satoshiAmount int64, assetKey string, tokenKey string) (_swig_ret int) {
+func CfdGoAddBlindTxInData(handle uintptr, blindHandle uintptr, txid string, vout uint32, asset string, assetBlindFactor string, valueBlindFactor string, satoshiAmount int64, assetKey string, tokenKey string) (err error) {
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
 	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
 	ret := CfdAddBlindTxInData(handle, blindHandle, txid, voutPtr, asset, assetBlindFactor, valueBlindFactor, satoshiPtr, assetKey, tokenKey)
-	return ret
+	err = convertCfdError(ret, handle)
+	return err
 }
 
 /**
@@ -521,12 +608,13 @@ func CfdGoAddBlindTxInData(handle uintptr, blindHandle uintptr, txid string, vou
  * param: blindHandle          blindTx handle
  * param: index                txout index
  * param: confidentialKey      confidential key
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoAddBlindTxOutData(handle uintptr, blindHandle uintptr, index uint32, confidentialKey string) (_swig_ret int) {
+func CfdGoAddBlindTxOutData(handle uintptr, blindHandle uintptr, index uint32, confidentialKey string) (err error) {
 	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
 	ret := CfdAddBlindTxOutData(handle, blindHandle, indexPtr, confidentialKey)
-	return ret
+	err = convertCfdError(ret, handle)
+	return err
 }
 
 /**
@@ -535,11 +623,24 @@ func CfdGoAddBlindTxOutData(handle uintptr, blindHandle uintptr, index uint32, c
  * param: blindHandle          blindTx handle
  * param: txHex                transaction hex
  * return: outputTxHex         output transaction hex
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoFinalizeBlindTx(handle uintptr, blindHandle uintptr, txHex string) (outputTxHex string, _swig_ret int) {
+func CfdGoFinalizeBlindTx(handle uintptr, blindHandle uintptr, txHex string) (outputTxHex string, err error) {
 	ret := CfdFinalizeBlindTx(handle, blindHandle, txHex, &outputTxHex)
-	return outputTxHex, ret
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
+}
+
+/**
+ * Free blind handle.
+ * param: handle               cfd handle
+ * param: blindHandle          blindTx handle
+ * return: err                 error
+ */
+func CfdGoFreeBlindHandle(handle uintptr, blindHandle uintptr) (err error) {
+	ret := CfdFreeBlindHandle(handle, blindHandle)
+	err = convertCfdError(ret, handle)
+	return
 }
 
 /**
@@ -552,12 +653,13 @@ func CfdGoFinalizeBlindTx(handle uintptr, blindHandle uintptr, txHex string) (ou
  * param: signDataHex          sign data hex
  * param: clearStack           cleanup stack
  * return: outputTxHex         output transaction hex
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoAddConfidentialTxSign(handle uintptr, txHex string, txid string, vout uint32, isWitness bool, signDataHex string, clearStack bool) (outputTxHex string, _swig_ret int) {
+func CfdGoAddConfidentialTxSign(handle uintptr, txHex string, txid string, vout uint32, isWitness bool, signDataHex string, clearStack bool) (outputTxHex string, err error) {
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
 	ret := CfdAddConfidentialTxSign(handle, txHex, txid, voutPtr, isWitness, signDataHex, clearStack, &outputTxHex)
-	return outputTxHex, ret
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
 }
 
 /**
@@ -572,12 +674,13 @@ func CfdGoAddConfidentialTxSign(handle uintptr, txHex string, txid string, vout 
  * param: sighashAnyoneCanPay  sighash anyone can pay flag
  * param: clearStack           cleanup stack
  * return: outputTxHex         output transaction hex
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoAddConfidentialTxDerSign(handle uintptr, txHex string, txid string, vout uint32, isWitness bool, signDataHex string, sighashType int, sighashAnyoneCanPay bool, clearStack bool) (outputTxHex string, _swig_ret int) {
+func CfdGoAddConfidentialTxDerSign(handle uintptr, txHex string, txid string, vout uint32, isWitness bool, signDataHex string, sighashType int, sighashAnyoneCanPay bool, clearStack bool) (outputTxHex string, err error) {
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
 	ret := CfdAddConfidentialTxDerSign(handle, txHex, txid, voutPtr, isWitness, signDataHex, sighashType, sighashAnyoneCanPay, clearStack, &outputTxHex)
-	return outputTxHex, ret
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
 }
 
 /**
@@ -592,12 +695,13 @@ func CfdGoAddConfidentialTxDerSign(handle uintptr, txHex string, txid string, vo
  * param: redeemScript         redeem script (p2sh, p2sh-p2wsh)
  * param: clearStack           cleanup stack
  * return: outputTxHex         output transaction hex
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoFinalizeElementsMultisigSign(handle uintptr, multiSignHandle uintptr, txHex string, txid string, vout uint32, hashType int, witnessScript string, redeemScript string, clearStack bool) (outputTxHex string, _swig_ret int) {
+func CfdGoFinalizeElementsMultisigSign(handle uintptr, multiSignHandle uintptr, txHex string, txid string, vout uint32, hashType int, witnessScript string, redeemScript string, clearStack bool) (outputTxHex string, err error) {
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
 	ret := CfdFinalizeElementsMultisigSign(handle, multiSignHandle, txHex, txid, voutPtr, hashType, witnessScript, redeemScript, clearStack, &outputTxHex)
-	return outputTxHex, ret
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
 }
 
 /**
@@ -610,13 +714,14 @@ func CfdGoFinalizeElementsMultisigSign(handle uintptr, multiSignHandle uintptr, 
  * param: pubkey               pubkey (p2pkh, p2wpkh, p2sh-p2wpkh)
  * param: redeemScript         redeem script (p2Sh, p2wsh, p2sh-p2wsh)
  * return: outputTxHex         output transaction hex
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoCreateConfidentialSighash(handle uintptr, txHex string, txid string, vout uint32, hashType int, pubkey string, redeemScript string, satoshiAmount int64, valueCommitment string, sighashType int, sighashAnyoneCanPay bool) (sighash string, _swig_ret int) {
+func CfdGoCreateConfidentialSighash(handle uintptr, txHex string, txid string, vout uint32, hashType int, pubkey string, redeemScript string, satoshiAmount int64, valueCommitment string, sighashType int, sighashAnyoneCanPay bool) (sighash string, err error) {
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
 	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
 	ret := CfdCreateConfidentialSighash(handle, txHex, txid, voutPtr, hashType, pubkey, redeemScript, satoshiPtr, valueCommitment, sighashType, sighashAnyoneCanPay, &sighash)
-	return sighash, ret
+	err = convertCfdError(ret, handle)
+	return sighash, err
 }
 
 /**
@@ -629,13 +734,14 @@ func CfdGoCreateConfidentialSighash(handle uintptr, txHex string, txid string, v
  * return: satoshiAmount       satoshi amount
  * return: assetBlindFactor    asset blind factor
  * return: valueBlindFactor    amount blind factor
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoUnblindTxOut(handle uintptr, txHex string, index uint32, blindingKey string) (asset string, satoshiAmount int64, assetBlindFactor string, valueBlindFactor string, _swig_ret int) {
+func CfdGoUnblindTxOut(handle uintptr, txHex string, index uint32, blindingKey string) (asset string, satoshiAmount int64, assetBlindFactor string, valueBlindFactor string, err error) {
 	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
 	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
 	ret := CfdUnblindTxOut(handle, txHex, indexPtr, blindingKey, &asset, satoshiPtr, &assetBlindFactor, &valueBlindFactor)
-	return asset, satoshiAmount, assetBlindFactor, valueBlindFactor, ret
+	err = convertCfdError(ret, handle)
+	return asset, satoshiAmount, assetBlindFactor, valueBlindFactor, err
 }
 
 /**
@@ -653,25 +759,27 @@ func CfdGoUnblindTxOut(handle uintptr, txHex string, index uint32, blindingKey s
  * return: tokenAmount            token amount
  * return: tokenBlindFactor       issueToken asset blind factor
  * return: tokenValueBlindFactor  issueToken value blind factor
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoUnblindIssuance(handle uintptr, txHex string, index uint32, assetBlindingKey string, tokenBlindingKey string) (asset string, assetAmount int64, assetBlindFactor string, assetValueBlindFactor string, token string, tokenAmount int64, tokenBlindFactor string, tokenValueBlindFactor string, _swig_ret int) {
+func CfdGoUnblindIssuance(handle uintptr, txHex string, index uint32, assetBlindingKey string, tokenBlindingKey string) (asset string, assetAmount int64, assetBlindFactor string, assetValueBlindFactor string, token string, tokenAmount int64, tokenBlindFactor string, tokenValueBlindFactor string, err error) {
 	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
 	assetSatoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&assetAmount)))
 	tokenSatoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&tokenAmount)))
 	ret := CfdUnblindIssuance(handle, txHex, indexPtr, assetBlindingKey, tokenBlindingKey, &asset, assetSatoshiPtr, &assetBlindFactor, &assetValueBlindFactor, &token, tokenSatoshiPtr, &tokenBlindFactor, &tokenValueBlindFactor)
-	return asset, assetAmount, assetBlindFactor, assetValueBlindFactor, token, tokenAmount, tokenBlindFactor, tokenValueBlindFactor, ret
+	err = convertCfdError(ret, handle)
+	return asset, assetAmount, assetBlindFactor, assetValueBlindFactor, token, tokenAmount, tokenBlindFactor, tokenValueBlindFactor, err
 }
 
 /**
  * Generate multisig sign handle.
  * param: handle               cfd handle
- * return: multisigSignHandle  multisig sign handle
- * return: _swig_ret           error code
+ * return: multisigSignHandle  multisig sign handle. release: CfdGoFreeMultisigSignHandle
+ * return: err                 error
  */
-func CfdGoInitializeMultisigSign(handle uintptr) (multisigSignHandle uintptr, _swig_ret int) {
+func CfdGoInitializeMultisigSign(handle uintptr) (multisigSignHandle uintptr, err error) {
 	ret := CfdInitializeMultisigSign(handle, &multisigSignHandle)
-	return multisigSignHandle, ret
+	err = convertCfdError(ret, handle)
+	return multisigSignHandle, err
 }
 
 /**
@@ -680,10 +788,12 @@ func CfdGoInitializeMultisigSign(handle uintptr) (multisigSignHandle uintptr, _s
  * param: multisigSignHandle      multisig sign handle
  * param: signature            signature
  * param: relatedPubkey        signature related pubkey
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoAddMultisigSignData(handle uintptr, multisigSignHandle uintptr, signature string, relatedPubkey string) (_swig_ret int) {
-	return CfdAddMultisigSignData(handle, multisigSignHandle, signature, relatedPubkey)
+func CfdGoAddMultisigSignData(handle uintptr, multisigSignHandle uintptr, signature string, relatedPubkey string) (err error) {
+	ret := CfdAddMultisigSignData(handle, multisigSignHandle, signature, relatedPubkey)
+	err = convertCfdError(ret, handle)
+	return
 }
 
 /**
@@ -694,10 +804,24 @@ func CfdGoAddMultisigSignData(handle uintptr, multisigSignHandle uintptr, signat
  * param: sighashType          sighash type
  * param: sighashAnyoneCanPay  sighash anyone can pay flag
  * param: relatedPubkey        signature related pubkey
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoAddMultisigSignDataToDer(handle uintptr, multisigSignHandle uintptr, signature string, sighashType int, sighashAnyoneCanPay bool, relatedPubkey string) (_swig_ret int) {
-	return CfdAddMultisigSignDataToDer(handle, multisigSignHandle, signature, sighashType, sighashAnyoneCanPay, relatedPubkey)
+func CfdGoAddMultisigSignDataToDer(handle uintptr, multisigSignHandle uintptr, signature string, sighashType int, sighashAnyoneCanPay bool, relatedPubkey string) (err error) {
+	ret := CfdAddMultisigSignDataToDer(handle, multisigSignHandle, signature, sighashType, sighashAnyoneCanPay, relatedPubkey)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+/**
+ * Free multisig sign handle.
+ * param: handle               cfd handle
+ * param: multisigSignHandle   multisig sign handle
+ * return: err                 error
+ */
+func CfdGoFreeMultisigSignHandle(handle uintptr, multisigSignHandle uintptr) (err error) {
+	ret := CfdFreeMultisigSignHandle(handle, multisigSignHandle)
+	err = convertCfdError(ret, handle)
+	return
 }
 
 /**
@@ -706,11 +830,12 @@ func CfdGoAddMultisigSignDataToDer(handle uintptr, multisigSignHandle uintptr, s
  * param: address               address
  * param: confidentialKey       confidential key
  * return: confidentialAddress  confidential address
- * return: _swig_ret            error code
+ * return: err                  error
  */
-func CfdGoCreateConfidentialAddress(handle uintptr, address string, confidentialKey string) (confidentialAddress string, _swig_ret int) {
+func CfdGoCreateConfidentialAddress(handle uintptr, address string, confidentialKey string) (confidentialAddress string, err error) {
 	ret := CfdCreateConfidentialAddress(handle, address, confidentialKey, &confidentialAddress)
-	return confidentialAddress, ret
+	err = convertCfdError(ret, handle)
+	return confidentialAddress, err
 }
 
 /**
@@ -720,12 +845,13 @@ func CfdGoCreateConfidentialAddress(handle uintptr, address string, confidential
  * return: address             address
  * return: confidentialKey     confidential key
  * return: networkType         network type
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoParseConfidentialAddress(handle uintptr, confidentialAddress string) (address string, confidentialKey string, networkType int, _swig_ret int) {
+func CfdGoParseConfidentialAddress(handle uintptr, confidentialAddress string) (address string, confidentialKey string, networkType int, err error) {
 	ret := CfdParseConfidentialAddress(handle, confidentialAddress,
 			&address, &confidentialKey, &networkType)
-	return address, confidentialKey, networkType, ret
+	err = convertCfdError(ret, handle)
+	return address, confidentialKey, networkType, err
 }
 
 /**
@@ -737,11 +863,12 @@ func CfdGoParseConfidentialAddress(handle uintptr, confidentialAddress string) (
  * param: wifNetworkType       network type (for privkey WIF)
  * param: hasGrindR            grind-r flag
  * return: signature           signature
- * return: _swig_ret           error code
+ * return: err                 error
  */
-func CfdGoCalculateEcSignature(handle uintptr, sighash string, privkeyHex string, privkeyWif string, wifNetworkType int, hasGrindR bool) (signature string, _swig_ret int) {
+func CfdGoCalculateEcSignature(handle uintptr, sighash string, privkeyHex string, privkeyWif string, wifNetworkType int, hasGrindR bool) (signature string, err error) {
 	ret := CfdCalculateEcSignature(handle, sighash, privkeyHex, privkeyWif, wifNetworkType, hasGrindR, &signature)
-	return signature, ret
+	err = convertCfdError(ret, handle)
+	return signature, err
 }
 
 /**
@@ -752,11 +879,12 @@ func CfdGoCalculateEcSignature(handle uintptr, sighash string, privkeyHex string
  * return: pubkey         pubkey.
  * return: privkeyHex     privkey hex.
  * return: privkeyWif     privkey wif.
- * return: _swig_ret      error code
+ * return: err            error
  */
-func CfdGoCreateKeyPair(handle uintptr, isCompress bool, networkType int) (pubkey string, privkeyHex string, privkeyWif string, _swig_ret int) {
+func CfdGoCreateKeyPair(handle uintptr, isCompress bool, networkType int) (pubkey string, privkeyHex string, privkeyWif string, err error) {
 	ret := CfdCreateKeyPair(handle, isCompress, networkType, &pubkey, &privkeyHex, &privkeyWif)
-	return pubkey, privkeyHex, privkeyWif, ret
+	err = convertCfdError(ret, handle)
+	return pubkey, privkeyHex, privkeyWif, err
 }
 
 /**
@@ -765,11 +893,12 @@ func CfdGoCreateKeyPair(handle uintptr, isCompress bool, networkType int) (pubke
  * param: privkeyWif      privkey wif.
  * param: networkType     privkey wif network type.
  * return: privkeyHex     privkey hex.
- * return: _swig_ret      error code
+ * return: err            error
  */
-func CfdGoGetPrivkeyFromWif(handle uintptr, privkeyWif string, networkType int) (privkeyHex string, _swig_ret int) {
+func CfdGoGetPrivkeyFromWif(handle uintptr, privkeyWif string, networkType int) (privkeyHex string, err error) {
 	ret := CfdGetPrivkeyFromWif(handle, privkeyWif, networkType, &privkeyHex)
-	return privkeyHex, ret
+	err = convertCfdError(ret, handle)
+	return privkeyHex, err
 }
 
 /**
@@ -779,11 +908,12 @@ func CfdGoGetPrivkeyFromWif(handle uintptr, privkeyWif string, networkType int) 
  * param: privkeyWif      privkey wif. (or privkeyHex)
  * param: isCompress      pubkey compressed.
  * return: pubkey         pubkey hex.
- * return: _swig_ret      error code
+ * return: err            error
  */
-func CfdGoGetPubkeyFromPrivkey(handle uintptr, privkeyHex string, privkeyWif string, isCompress bool) (pubkey string, _swig_ret int) {
+func CfdGoGetPubkeyFromPrivkey(handle uintptr, privkeyHex string, privkeyWif string, isCompress bool) (pubkey string, err error) {
 	ret := CfdGetPubkeyFromPrivkey(handle, privkeyHex, privkeyWif, isCompress, &pubkey)
-	return pubkey, ret
+	err = convertCfdError(ret, handle)
+	return pubkey, err
 }
 
 /**
@@ -793,11 +923,12 @@ func CfdGoGetPubkeyFromPrivkey(handle uintptr, privkeyHex string, privkeyWif str
  * param: networkType     network type.
  * param: keyType         extkey type.
  * return: extkey         extkey.
- * return: _swig_ret      error code
+ * return: err            error
  */
-func CfdGoCreateExtkeyFromSeed(handle uintptr, seed string, networkType int, keyType int) (extkey string, _swig_ret int) {
+func CfdGoCreateExtkeyFromSeed(handle uintptr, seed string, networkType int, keyType int) (extkey string, err error) {
 	ret := CfdCreateExtkeyFromSeed(handle, seed, networkType, keyType, &extkey)
-	return extkey, ret
+	err = convertCfdError(ret, handle)
+	return extkey, err
 }
 
 /**
@@ -808,11 +939,12 @@ func CfdGoCreateExtkeyFromSeed(handle uintptr, seed string, networkType int, key
  * param: networkType     network type.
  * param: keyType         extkey type.
  * return: childExtkey    child extkey.
- * return: _swig_ret      error code
+ * return: err            error
  */
-func CfdGoCreateExtkeyFromParentPath(handle uintptr, extkey string, path string, networkType int, keyType int) (childExtkey string, _swig_ret int) {
+func CfdGoCreateExtkeyFromParentPath(handle uintptr, extkey string, path string, networkType int, keyType int) (childExtkey string, err error) {
 	ret := CfdCreateExtkeyFromParentPath(handle, extkey, path, networkType, keyType, &childExtkey)
-	return childExtkey, ret
+	err = convertCfdError(ret, handle)
+	return childExtkey, err
 }
 
 /**
@@ -821,11 +953,12 @@ func CfdGoCreateExtkeyFromParentPath(handle uintptr, extkey string, path string,
  * param: extkey          ext privkey.
  * param: networkType     network type.
  * return: extPubkey      ext pubkey.
- * return: _swig_ret      error code
+ * return: err            error
  */
-func CfdGoCreateExtPubkey(handle uintptr, extkey string, networkType int) (extPubkey string, _swig_ret int) {
+func CfdGoCreateExtPubkey(handle uintptr, extkey string, networkType int) (extPubkey string, err error) {
 	ret := CfdCreateExtPubkey(handle, extkey, networkType, &extPubkey)
-	return extPubkey, ret
+	err = convertCfdError(ret, handle)
+	return extPubkey, err
 }
 
 /**
@@ -835,11 +968,12 @@ func CfdGoCreateExtPubkey(handle uintptr, extkey string, networkType int) (extPu
  * param: networkType     network type.
  * return: privkeyHex     privkey hex.
  * return: privkeyWif     privkey wif.
- * return: _swig_ret      error code
+ * return: err            error
  */
-func CfdGoGetPrivkeyFromExtkey(handle uintptr, extkey string, networkType int) (privkeyHex string, privkeyWif string, _swig_ret int) {
+func CfdGoGetPrivkeyFromExtkey(handle uintptr, extkey string, networkType int) (privkeyHex string, privkeyWif string, err error) {
 	ret := CfdGetPrivkeyFromExtkey(handle, extkey, networkType, &privkeyHex, &privkeyWif)
-	return privkeyHex, privkeyWif, ret
+	err = convertCfdError(ret, handle)
+	return privkeyHex, privkeyWif, err
 }
 
 /**
@@ -848,11 +982,47 @@ func CfdGoGetPrivkeyFromExtkey(handle uintptr, extkey string, networkType int) (
  * param: extkey          extkey.
  * param: networkType     network type.
  * return: pubkey         pubkey.
- * return: _swig_ret      error code
+ * return: err            error
  */
-func CfdGoGetPubkeyFromExtkey(handle uintptr, extkey string, networkType int) (pubkey string, _swig_ret int) {
+func CfdGoGetPubkeyFromExtkey(handle uintptr, extkey string, networkType int) (pubkey string, err error) {
 	ret := CfdGetPubkeyFromExtkey(handle, extkey, networkType, &pubkey)
-	return pubkey, ret
+	err = convertCfdError(ret, handle)
+	return pubkey, err
+}
+
+/**
+ * Parse script items from script.
+ * param: handle          cfd handle.
+ * param: script          script.
+ * return: scriptItems    script items.
+ * return: err            error
+ */
+func CfdGoParseScript(handle uintptr, script string) (scriptItems []string, err error) {
+	var scriptItemHandle uintptr
+	var itemNum uint32
+	itemNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&itemNum)))
+	var ret int
+
+	if ret = CfdParseScript(handle, script, &scriptItemHandle, itemNumPtr); ret == (int)(KCfdSuccess) {
+		scriptItems = make([]string, 0, itemNum)
+		for i := uint32(0); i < itemNum; i++ {
+			var item string
+			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
+			if ret = CfdGetScriptItem(handle, scriptItemHandle, index, &item); ret == (int)(KCfdSuccess) {
+				scriptItems = append(scriptItems, item)
+			}
+		}
+
+		if freeRet := CfdFreeScriptItemHandle(handle, scriptItemHandle); ret == (int)(KCfdSuccess) {
+			ret = freeRet
+		}
+	}
+	
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		scriptItems = nil
+	}
+	return
 }
 
 %}
