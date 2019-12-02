@@ -57,7 +57,7 @@ endfunction()
 ####################
 # test
 ####################
-if(ENABLE_TESTS)
+if(MSVC OR ENABLE_TESTS)
 enable_testing()
 endif()		# ENABLE_TESTS
 
