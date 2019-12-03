@@ -713,6 +713,10 @@ func CfdGoFinalizeElementsMultisigSign(handle uintptr, multiSignHandle uintptr, 
  * param: hashType             hash type
  * param: pubkey               pubkey (p2pkh, p2wpkh, p2sh-p2wpkh)
  * param: redeemScript         redeem script (p2Sh, p2wsh, p2sh-p2wsh)
+ * param: satoshiAmount        amount by satoshi
+ * param: valueCommitment      amount by commitment bytes.
+ * param: sighashType          sighash type
+ * param: sighashAnyoneCanPay  sighash anyone can pay flag
  * return: outputTxHex         output transaction hex
  * return: err                 error
  */
