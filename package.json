@@ -78,8 +78,8 @@
     "ctest_quiet": "cd build && ctest --quiet -C Release",
     "go_test": "run-script-os",
     "go_test:win32": "go_test.bat",
-    "go_test:linux": "go_test.sh",
-    "go_test:darwin": "go_test.sh",
+    "go_test:linux": "./go_test.sh",
+    "go_test:darwin": "./go_test.sh",
     "git_subm_update": "git submodule -q foreach git fetch -q && git submodule -q update -i",
     "check": "run-s ctest_quiet go_test",
     "check_all": "run-s cmake_clean git_subm_update cmake_quiet ctest_quiet go_test"
