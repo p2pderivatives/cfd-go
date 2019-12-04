@@ -3073,6 +3073,30 @@ intgo _wrap_CfdFreeScriptItemHandle_cfdgo_fb08de514f84fba1(void *_swig_go_0, voi
 }
 
 
+intgo _wrap_kCfdSequenceLockTimeDisable_cfdgo_fb08de514f84fba1() {
+  enum CfdSequenceLockTime result;
+  intgo _swig_go_result;
+  
+  
+  result = kCfdSequenceLockTimeDisable;
+  
+  _swig_go_result = (intgo)result; 
+  return _swig_go_result;
+}
+
+
+intgo _wrap_kCfdSequenceLockTimeEnableMax_cfdgo_fb08de514f84fba1() {
+  enum CfdSequenceLockTime result;
+  intgo _swig_go_result;
+  
+  
+  result = kCfdSequenceLockTimeEnableMax;
+  
+  _swig_go_result = (intgo)result; 
+  return _swig_go_result;
+}
+
+
 intgo _wrap_CfdInitializeMultisigSign_cfdgo_fb08de514f84fba1(void *_swig_go_0, void **_swig_go_1) {
   void *arg1 = (void *) 0 ;
   void **arg2 = (void **) 0 ;

@@ -225,6 +225,8 @@ extern swig_intgo _wrap_CfdGetPubkeyFromExtkey_cfdgo_fb08de514f84fba1(uintptr_t 
 extern swig_intgo _wrap_CfdParseScript_cfdgo_fb08de514f84fba1(uintptr_t arg1, swig_type_79 arg2, swig_voidp arg3, uintptr_t arg4);
 extern swig_intgo _wrap_CfdGetScriptItem_cfdgo_fb08de514f84fba1(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, swig_voidp arg4);
 extern swig_intgo _wrap_CfdFreeScriptItemHandle_cfdgo_fb08de514f84fba1(uintptr_t arg1, uintptr_t arg2);
+extern swig_intgo _wrap_kCfdSequenceLockTimeDisable_cfdgo_fb08de514f84fba1(void);
+extern swig_intgo _wrap_kCfdSequenceLockTimeEnableMax_cfdgo_fb08de514f84fba1(void);
 extern swig_intgo _wrap_CfdInitializeMultisigSign_cfdgo_fb08de514f84fba1(uintptr_t arg1, swig_voidp arg2);
 extern swig_intgo _wrap_CfdAddMultisigSignData_cfdgo_fb08de514f84fba1(uintptr_t arg1, uintptr_t arg2, swig_type_80 arg3, swig_type_81 arg4);
 extern swig_intgo _wrap_CfdAddMultisigSignDataToDer_cfdgo_fb08de514f84fba1(uintptr_t arg1, uintptr_t arg2, swig_type_82 arg3, swig_intgo arg4, _Bool arg5, swig_type_83 arg6);
@@ -1520,6 +1522,21 @@ func CfdFreeScriptItemHandle(arg1 uintptr, arg2 uintptr) (_swig_ret int) {
 	return swig_r
 }
 
+type Enum_SS_CfdSequenceLockTime int
+func _swig_getkCfdSequenceLockTimeDisable() (_swig_ret Enum_SS_CfdSequenceLockTime) {
+	var swig_r Enum_SS_CfdSequenceLockTime
+	swig_r = (Enum_SS_CfdSequenceLockTime)(C._wrap_kCfdSequenceLockTimeDisable_cfdgo_fb08de514f84fba1())
+	return swig_r
+}
+
+var KCfdSequenceLockTimeDisable Enum_SS_CfdSequenceLockTime = _swig_getkCfdSequenceLockTimeDisable()
+func _swig_getkCfdSequenceLockTimeEnableMax() (_swig_ret Enum_SS_CfdSequenceLockTime) {
+	var swig_r Enum_SS_CfdSequenceLockTime
+	swig_r = (Enum_SS_CfdSequenceLockTime)(C._wrap_kCfdSequenceLockTimeEnableMax_cfdgo_fb08de514f84fba1())
+	return swig_r
+}
+
+var KCfdSequenceLockTimeEnableMax Enum_SS_CfdSequenceLockTime = _swig_getkCfdSequenceLockTimeEnableMax()
 func CfdInitializeMultisigSign(arg1 uintptr, arg2 *uintptr) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
