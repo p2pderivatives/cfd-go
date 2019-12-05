@@ -306,11 +306,12 @@ func TestCfdCreateRawTransaction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "0200000000000000000000", txHex)
 
+	sequence := (uint32)(KCfdSequenceLockTimeDisable)
 	if err == nil {
 		txHex, err = CfdGoAddConfidentialTxIn(
 			handle, txHex,
 			"7461b02405414d79e79a5050684a333c922c1136f4bdff5fb94b551394edebbd", 0,
-			uint32(4294967295))
+			sequence)
 		assert.NoError(t, err)
 		assert.Equal(t, "020000000001bdebed9413554bb95fffbdf436112c923c334a6850509ae7794d410524b061740000000000ffffffff0000000000", txHex)
 	}
@@ -319,7 +320,7 @@ func TestCfdCreateRawTransaction(t *testing.T) {
 		txHex, err = CfdGoAddConfidentialTxIn(
 			handle, txHex,
 			"1497e1f146bc5fe00b6268ea16a7069ecb90a2a41a183446d5df8965d2356dc1", 1,
-			uint32(4294967295))
+			sequence)
 		assert.NoError(t, err)
 		assert.Equal(t, "020000000002bdebed9413554bb95fffbdf436112c923c334a6850509ae7794d410524b061740000000000ffffffffc16d35d26589dfd54634181aa4a290cb9e06a716ea68620be05fbc46f1e197140100000000ffffffff0000000000", txHex)
 	}
