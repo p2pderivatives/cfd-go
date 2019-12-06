@@ -15,22 +15,18 @@
 - CMake (3.14.3 or higher)
 - Python 3.x
 - node.js (stable version)
-
-<!--
+  - for cmake-js
 
 ### Windows (MinGW)
 
 attention: Cgo can only be used on the `make` platform.
 
-- MinGW (http://www.mingw.org/)
+(Recommended to use wsl(Windows Subsystem for Linux), because it can be cumbersome.)
+
+- MinGW (http://mingw-w64.org/doku.php)
   - download and install files.
     - go (1.12 or higher)
-    - MinGW
-      - 
-
-future: After supporting autotools, it can be run on MSYS2.
-
--->
+    - MinGW (Add to PATH after install)
 
 ### MacOS
 
@@ -41,14 +37,14 @@ future: After supporting autotools, it can be run on MSYS2.
 xcode-select --install
 
 # install dependencies using Homebrew
-brew install cmake python node
+brew install cmake go node
 ```
 
 ### Linux(Ubuntu)
 
 ```Shell
 # install dependencies using APT package Manager
-apt-get install -y build-essential golang cmake python nodejs
+apt-get install -y build-essential golang cmake nodejs
 ```
 
 cmake version 3.14.2 or lower, download from website and install cmake.
@@ -63,6 +59,8 @@ go version 1.11 or lower, get `golang.org/dl/go1.13` or higher.
 
 ### Using cmake-js
 
+(If you want to install, [see the installation](#Using-cmake-js-install). Introduces build and install command.)
+
 When using the cmake-js package and npm script, the options for compilation are already set.
 
 ```Shell
@@ -71,13 +69,13 @@ npm run cmake_release
 go build
 ```
 
-### Use CMake
+### Using CMake
 
 ```Shell
 # recommend out of source build
 mkdir build && cd $_
 # configure & build
-cmake .. (CMake options)
+cmake .. (CMake options) -DENABLE_JS_WRAPPER=off
 make
 cd ..
 go build
@@ -96,17 +94,44 @@ go build
 
 ## install / uninstall
 
+On Linux or MacOS, can use install / uninstall.
+
 ### install (after build)
 
 install for `/usr/local/lib`.
 
+#### Using cmake-js install
+
+When using the cmake-js package and npm script, the options for compilation are already set.
+
+```Shell
+npm cmake_make_install
+(Enter the password when prompted to use the sudo command.)
+```
+
+cmake version is 3.15 or higher:
+```Shell
+npm cmake_install
+(Enter the password when prompted to use the sudo command.)
+```
+
+#### Using CMake install
+
 ```Shell
 cd build && sudo make install
+
+(Using ninja:)
+cd build && sudo ninja install
 ```
+
+cmake version is 3.15 or higher: `cmake --install build`
 
 ### uninstall
 ```Shell
 cd build && sudo make uninstall
+
+(Using ninja:)
+cd build && sudo ninja uninstall
 ```
 
 ---
@@ -125,6 +150,15 @@ require (
   ...
 )
 ```
+
+Reference github commit:
+```
+require (
+  github.com/cryptogarageinc/cfd-go v1.0.0-0.20191205091101-a48a6a8b1a24
+  ...
+)
+```
+(version format: UnknownVersionTag-UtcDate-CommitHash)
 
 4. Download cfd-go module
 
