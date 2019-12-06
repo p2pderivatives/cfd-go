@@ -15,6 +15,7 @@
 - CMake (3.14.3 or higher)
 - Python 3.x
 - node.js (stable version)
+  - for cmake-js
 
 ### Windows (MinGW)
 
@@ -36,14 +37,14 @@ attention: Cgo can only be used on the `make` platform.
 xcode-select --install
 
 # install dependencies using Homebrew
-brew install cmake go
+brew install cmake go node
 ```
 
 ### Linux(Ubuntu)
 
 ```Shell
 # install dependencies using APT package Manager
-apt-get install -y build-essential golang cmake
+apt-get install -y build-essential golang cmake nodejs
 ```
 
 cmake version 3.14.2 or lower, download from website and install cmake.
@@ -93,6 +94,8 @@ go build
 
 ## install / uninstall
 
+On Linux or MacOS, can use install / uninstall.
+
 ### install (after build)
 
 install for `/usr/local/lib`.
@@ -116,6 +119,9 @@ npm cmake_install
 
 ```Shell
 cd build && sudo make install
+
+(Using ninja:)
+cd build && sudo ninja install
 ```
 
 cmake version is 3.15 or higher: `cmake --install build`
@@ -123,6 +129,9 @@ cmake version is 3.15 or higher: `cmake --install build`
 ### uninstall
 ```Shell
 cd build && sudo make uninstall
+
+(Using ninja:)
+cd build && sudo ninja uninstall
 ```
 
 ---
