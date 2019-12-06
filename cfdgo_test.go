@@ -971,11 +971,11 @@ func TestCfdParseScript(t *testing.T) {
 		items, err := CfdGoParseScript(handle, script)
 		assert.NoError(t, err)
 		assert.Equal(t, int(5), len(items))
-		assert.Equal(t, "76", items[0])
-		assert.Equal(t, "a9", items[1])
+		assert.Equal(t, "OP_DUP", items[0])
+		assert.Equal(t, "OP_HASH160", items[1])
 		assert.Equal(t, "2e3f2c7e30abce5b22451184c5e531a1e23c6e12", items[2])
-		assert.Equal(t, "88", items[3])
-		assert.Equal(t, "ac", items[4])
+		assert.Equal(t, "OP_EQUALVERIFY", items[3])
+		assert.Equal(t, "OP_CHECKSIG", items[4])
 	})
 
 	t.Run("PKH UnlockingScript", func(t *testing.T) {
