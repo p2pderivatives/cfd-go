@@ -11,7 +11,7 @@ RUN git clone https://github.com/cryptogarageinc/cfd-go.git \
   && git checkout refs/tags/$CFDGO_VER \
   && mkdir build \
   && cd build \
-  && cmake .. -DENABLE_SHARED=on -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=off -DTARGET_RPATH=/usr/local/lib/ \
+  && cmake .. -DENABLE_SHARED=on -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DENABLE_CAPI=on -DTARGET_RPATH=/usr/local/lib/ \
   && make
 
 RUN mkdir /workspace/dist \

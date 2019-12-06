@@ -142,6 +142,15 @@ require (
 )
 ```
 
+Reference github commit:
+```
+require (
+  github.com/cryptogarageinc/cfd-go v1.0.0-0.20191205091101-a48a6a8b1a24
+  ...
+)
+```
+(version format: UnknownVersionTag-UtcDate-CommitHash)
+
 4. Download cfd-go module
 
 ```Shell
