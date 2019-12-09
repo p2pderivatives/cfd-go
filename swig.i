@@ -102,7 +102,7 @@ func CfdGoGetSupportedFunction() (funcFlag uint64, err error) {
  * return: err         error struct
  */
 func CfdGoCreateHandle() (handle uintptr, err error) {
-	ret := CfdCreateHandle(&handle)
+	ret := CfdCreateSimpleHandle(&handle)
 	err = convertCfdError(ret, handle)
 	return handle, err
 }
