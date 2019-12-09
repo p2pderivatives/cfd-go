@@ -195,27 +195,27 @@ func CfdGoCreateMultisigScript(handle uintptr, networkType int, hashType int, pu
  * Descriptor data struct.
  */
 type CfdDescriptorData struct {
-	depth uint32
-	scriptType int
-	lockingScript string
-	address string
-	hashType int
-	redeemScript string
-	keyType int
-	pubkey string
-	extPubkey string
-	extPrivkey string
-	isMultisig bool
+	Depth uint32
+	ScriptType int
+	LockingScript string
+	Address string
+	HashType int
+	RedeemScript string
+	KeyType int
+	Pubkey string
+	ExtPubkey string
+	ExtPrivkey string
+	IsMultisig bool
 }
 
 /**
  * Descriptor key data struct.
  */
 type CfdDescriptorKeyData struct {
-	keyType int
-	pubkey string
-	extPubkey string
-	extPrivkey string
+	KeyType int
+	Pubkey string
+	ExtPubkey string
+	ExtPrivkey string
 }
 
 /**
@@ -241,18 +241,18 @@ func CfdGoParseDescriptor(handle uintptr, descriptor string, networkType int, bi
 			var data CfdDescriptorData
 			var maxNum uint32
 			maxNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxNum)))
-			depthPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&(data.depth))))
+			depthPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&(data.Depth))))
 			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
 			ret = CfdGetDescriptorData(handle, descriptorHandle, index, maxNumPtr,
-					depthPtr, &data.scriptType, &data.lockingScript,
-					&data.address, &data.hashType, &data.redeemScript,
-					&data.keyType, &data.pubkey, &data.extPubkey, &data.extPrivkey,
-					&data.isMultisig, keyNumPtr)
+					depthPtr, &data.ScriptType, &data.LockingScript,
+					&data.Address, &data.HashType, &data.RedeemScript,
+					&data.KeyType, &data.Pubkey, &data.ExtPubkey, &data.ExtPrivkey,
+					&data.IsMultisig, keyNumPtr)
 			if ret != (int)(KCfdSuccess) {
 				break
 			}
 			descriptorDataList = append(descriptorDataList, data)
-			lastMultisigFlag = data.isMultisig
+			lastMultisigFlag = data.IsMultisig
 		}
 
 		if lastMultisigFlag && (ret == (int)(KCfdSuccess)) {
@@ -260,8 +260,8 @@ func CfdGoParseDescriptor(handle uintptr, descriptor string, networkType int, bi
 				var keyData CfdDescriptorKeyData
 				index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
 				ret = CfdGetDescriptorMultisigKey(handle, descriptorHandle,
-						index, &keyData.keyType, &keyData.pubkey,
-						&keyData.extPubkey, &keyData.extPrivkey)
+						index, &keyData.KeyType, &keyData.Pubkey,
+						&keyData.ExtPubkey, &keyData.ExtPrivkey)
 				if ret != (int)(KCfdSuccess) {
 					break
 				}
