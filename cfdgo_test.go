@@ -215,7 +215,7 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 	assert.Equal(t, 0, len(multisigList))
 	if len(descriptorDataList) == 3 {
 		// 0
-		assert.Equal(t, uint32(0), descriptorDataList[0].Eepth)
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
 		assert.Equal(t, (int)(KCfdDescriptorScriptSh), descriptorDataList[0].ScriptType)
 		assert.Equal(t, "a91455e8d5e8ee4f3604aba23c71c2684fa0a56a3a1287", descriptorDataList[0].LockingScript)
 		assert.Equal(t, "Gq1mmExLuSEwfzzk6YtUxJ769grv6T5Tak", descriptorDataList[0].Address)
