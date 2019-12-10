@@ -9,8 +9,8 @@ on:
     - features/sprint*
 
 jobs:
-  cmake-win:
-    name: cmake build-win
+  cmake-build:
+    name: cmake build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
