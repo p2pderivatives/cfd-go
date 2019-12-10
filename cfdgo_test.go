@@ -174,6 +174,36 @@ func TestCfdGoGetAddressesFromMultisig(t *testing.T) {
 	fmt.Print("TestCfdGoGetAddressesFromMultisig test done.\n")
 }
 
+func TestCfdGoGetAddressFromLockingScript(t *testing.T) {
+	handle, err := CfdGoCreateHandle()
+	assert.NoError(t, err)
+
+	networkType := (int)(KCfdNetworkLiquidv1)
+	lockingScript := "76a91449a011f97ba520dab063f309bad59daeb30de10188ac"
+	address, err := CfdGoGetAddressFromLockingScript(handle, lockingScript, networkType)
+	assert.NoError(t, err)
+	assert.Equal(t, "Q3ygD4rfNT2npj341csKqxcgDkBMwyD5Z6", address)
+
+	lockingScript = "a914f1b3a2cc24eba8a741f963b309a7686f3bb6bfb487"
+	address, err = CfdGoGetAddressFromLockingScript(handle, lockingScript, networkType)
+	assert.NoError(t, err)
+	assert.Equal(t, "H5DXSnmWy4WuUU7Yr8bvtLa5nXgukNc3Z6", address)
+
+	lockingScript = "0014925d4028880bd0c9d68fbc7fc7dfee976698629c"
+	address, err = CfdGoGetAddressFromLockingScript(handle, lockingScript, networkType)
+	assert.NoError(t, err)
+	assert.Equal(t, "ex1qjfw5q2ygp0gvn450h3lu0hlwjanfsc5uh0r5gq", address)
+
+	lockingScript = "002087cb0bc07de5b5befd7565b2c63fb1681efd8af7bd85a3f0f98a529a5c50a437"
+	address, err = CfdGoGetAddressFromLockingScript(handle, lockingScript, networkType)
+	assert.NoError(t, err)
+	assert.Equal(t, "ex1qsl9shsrauk6malt4vkevv0a3dq00mzhhhkz68u8e3fff5hzs5sms77zw4m", address)
+
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
+	fmt.Print("TestCfdGoGetAddressesFromMultisig test done.\n")
+}
+
 func TestCfdGoParseDescriptor(t *testing.T) {
 	handle, err := CfdGoCreateHandle()
 	assert.NoError(t, err)
@@ -380,6 +410,19 @@ func TestCfdGetTransaction(t *testing.T) {
 	assert.Equal(t, uint32(4), count)
 
 	if err == nil {
+		txData, err := CfdGoGetConfidentialTxData(handle, txHex)
+		assert.NoError(t, err)
+		assert.Equal(t, "cf7783b2b1de646e35186df988a219a17f0317b5c3f3c47fa4ab2d7463ea3992", txData.Txid)
+		assert.Equal(t, "cf7783b2b1de646e35186df988a219a17f0317b5c3f3c47fa4ab2d7463ea3992", txData.Wtxid)
+		assert.Equal(t, "938e3a9b5bac410e812d08db74c4ef2bc58d1ed99d94b637cab0ac2e9eb59df8", txData.WitHash)
+		assert.Equal(t, uint32(512), txData.Size)
+		assert.Equal(t, uint32(512), txData.Vsize)
+		assert.Equal(t, uint32(2048), txData.Weight)
+		assert.Equal(t, uint32(2), txData.Version)
+		assert.Equal(t, uint32(0), txData.LockTime)
+	}
+
+	if err == nil {
 		txid, vout, sequence, scriptSig, err := CfdGoGetConfidentialTxIn(handle, txHex, uint32(1))
 		assert.NoError(t, err)
 		assert.Equal(t, "57a15002d066ce52573d674df925c9bc0f1164849420705f2cfad8a68111230f", txid)
@@ -531,6 +574,19 @@ func TestCfdBlindTransaction(t *testing.T) {
 
 	err2 := CfdGoFreeBlindHandle(handle, blindHandle) // release
 	assert.NoError(t, err2)
+
+	if err == nil {
+		txData, err := CfdGoGetConfidentialTxData(handle, txHex)
+		assert.NoError(t, err)
+		assert.Equal(t, 64, len(txData.Txid))
+		assert.Equal(t, 64, len(txData.Wtxid))
+		assert.Equal(t, 64, len(txData.WitHash))
+		assert.Equal(t, uint32(12589), txData.Size)
+		assert.Equal(t, uint32(3604), txData.Vsize)
+		assert.Equal(t, uint32(14413), txData.Weight)
+		assert.Equal(t, uint32(2), txData.Version)
+		assert.Equal(t, uint32(0), txData.LockTime)
+	}
 
 	// unblind test
 	if err == nil {
