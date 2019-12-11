@@ -327,6 +327,21 @@ func CfdGoGetAddressesFromMultisig(handle uintptr, redeemScript string, networkT
 }
 
 /**
+ * Get address from locking script.
+ * param: handle         cfd handle
+ * param: lockingScript  locking script
+ * param: networkType    network type
+ * param: hashType       hash type (p2sh, p2wsh, etc...)
+ * return: address       address
+ * return: err           error
+ */
+func CfdGoGetAddressFromLockingScript(handle uintptr, lockingScript string, networkType int) (address string, err error) {
+	ret := CfdGetAddressFromLockingScript(handle, lockingScript, networkType, &address)
+	err = convertCfdError(ret, handle)
+	return address, err
+}
+
+/**
  * Get initialized confidential transaction.
  * param: handle        cfd handle
  * param: version       transaction version
@@ -400,6 +415,38 @@ func CfdGoUpdateConfidentialTxOut(handle uintptr, txHex string, index uint32, as
 	ret := CfdUpdateConfidentialTxOut(handle, txHex, indexPtr, asset, satoshiPtr, valueCommitment, address, directLockingScript, nonce, &outputTxHex)
 	err = convertCfdError(ret, handle)
 	return outputTxHex, err
+}
+
+/**
+ * TxData data struct.
+ */
+type CfdTxData struct {
+	Txid string
+	Wtxid string
+	WitHash string
+	Size uint32
+	Vsize uint32
+	Weight uint32
+	Version uint32
+	LockTime uint32
+}
+
+/**
+ * Get confidential transaction data.
+ * param: handle        cfd handle
+ * param: txHex         transaction hex
+ * return: data         transaction data
+ * return: err          error
+ */
+func CfdGoGetConfidentialTxData(handle uintptr, txHex string) (data CfdTxData, err error) {
+	sizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Size)))
+	vsizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Vsize)))
+	weightPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Weight)))
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Version)))
+	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.LockTime)))
+	ret := CfdGetConfidentialTxInfo(handle, txHex, &data.Txid, &data.Wtxid, &data.WitHash, sizePtr, vsizePtr, weightPtr, versionPtr, locktimePtr)
+	err = convertCfdError(ret, handle)
+	return data, err
 }
 
 /**
