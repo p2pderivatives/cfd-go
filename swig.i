@@ -876,7 +876,7 @@ func CfdGoCalculateEcSignature(handle uintptr, sighash string, privkeyHex string
 }
 
 /**
- * Get pubkey from extkey.
+ * Encode ec signature by der encoding.
  * param: handle                  cfd handle.
  * param: signature               compact format signature.
  * param: sighashType             sighash type.
