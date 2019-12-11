@@ -1004,7 +1004,7 @@ func TestCfdEncodeSignatureToDer(t *testing.T) {
 
 	err = CfdGoFreeHandle(handle)
 	assert.NoError(t, err)
-	fmt.Print("TestCfdParseScript test done.\n")
+	fmt.Print("TestCfdEncodeSignatureToDer test done.\n")
 }
 
 // last test
