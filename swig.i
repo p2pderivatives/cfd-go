@@ -923,6 +923,21 @@ func CfdGoCalculateEcSignature(handle uintptr, sighash string, privkeyHex string
 }
 
 /**
+ * Encode ec signature by der encoding.
+ * param: handle                  cfd handle.
+ * param: signature               compact format signature.
+ * param: sighashType             sighash type.
+ * param: sighash_anyone_can_pay  flag of signing only the current input.
+ * return: derSignature   signature encoded by der encodeing.
+ * return: err            error
+ */
+func CfdGoEncodeSignatureByDer(handle uintptr, signature string, sighashType int, sighash_anyone_can_pay bool) (derSignature string, err error) {
+	ret := CfdEncodeSignatureByDer(handle, signature, sighashType, sighash_anyone_can_pay, &derSignature)
+	err = convertCfdError(ret, handle)
+	return
+}
+
+/**
  * Create key pair.
  * param: handle          cfd handle.
  * param: isCompress      pubkey compressed.

@@ -1048,6 +1048,21 @@ func TestCfdParseScript(t *testing.T) {
 	fmt.Print("TestCfdParseScript test done.\n")
 }
 
+func TestCfdEncodeSignatureToDer(t *testing.T) {
+	handle, err := CfdGoCreateHandle()
+	assert.NoError(t, err)
+
+	signature := "47ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb"
+
+	derSignature, err := CfdGoEncodeSignatureByDer(handle, signature, (int)(KCfdSigHashAll), false)
+	assert.NoError(t, err)
+	assert.Equal(t, derSignature, "3044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb01")
+
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
+	fmt.Print("TestCfdEncodeSignatureToDer test done.\n")
+}
+
 // last test
 /* comment out.
 func TestFinalize(t *testing.T) {
