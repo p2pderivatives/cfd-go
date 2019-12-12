@@ -55,8 +55,13 @@ jobs:
           - Second Change
         draft: false
         prerelease: false
+      continue-on-error: true
+    - name: dump upload url
+      if: success()
+      run: echo ${{ steps.create_release.outputs.upload_url }}
     - name: Upload Release Asset
       id: upload-release-asset 
+      if: success()
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -65,4 +70,3 @@ jobs:
         asset_path: /tmp/cfd/cfd.zip
         asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-alpine_x86_64.zip
         asset_content_type: application/zip
-
