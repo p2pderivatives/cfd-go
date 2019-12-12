@@ -1091,12 +1091,18 @@ func CfdGoParseScript(handle uintptr, script string) (scriptItems []string, err 
 	return
 }
 
-func CfdGoCreateScript(handle uintptr, scriptItems []string) (script string, err error) {
-	scriptAsm := strings.Join(scriptItems, " ");
+func CfdGoConvertScriptAsmToHex(handle uintptr, scriptAsm string) (script string, err error) {
 	if ret := CfdConvertScriptAsmToHex(handle, scriptAsm, &script); ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, handle)
 		script = ""
 	}
+
+	return
+}
+
+func CfdGoCreateScript(handle uintptr, scriptItems []string) (script string, err error) {
+	scriptAsm := strings.Join(scriptItems, " ");
+	script, err = CfdGoConvertScriptAsmToHex(handle, scriptAsm);
 
 	return
 }
