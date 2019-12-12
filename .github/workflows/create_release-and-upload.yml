@@ -56,9 +56,6 @@ jobs:
         draft: false
         prerelease: false
       continue-on-error: true
-    - name: dump upload url
-      if: success()
-      run: echo ${{ steps.create_release.outputs.upload_url }}
     - name: Upload Release Asset
       id: upload-release-asset 
       if: success()
