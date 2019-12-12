@@ -28,7 +28,7 @@
 %include "external/cfd/include/cfdc/cfdcapi_script.h"
 %include "external/cfd/include/cfdc/cfdcapi_transaction.h"
 
-%go_import("fmt")
+%go_import("fmt", "strings")
 %insert(go_wrapper) %{
 /**
  * Convert return code to golang built-in error struct.
@@ -1088,6 +1088,16 @@ func CfdGoParseScript(handle uintptr, script string) (scriptItems []string, err 
 		err = convertCfdError(ret, handle)
 		scriptItems = nil
 	}
+	return
+}
+
+func CfdGoCreateScript(handle uintptr, scriptItems []string) (script string, err error) {
+	scriptAsm := strings.Join(scriptItems, " ");
+	if ret := CfdConvertScriptAsmToHex(handle, scriptAsm, &script); ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		script = ""
+	}
+
 	return
 }
 

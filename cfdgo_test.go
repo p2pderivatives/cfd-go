@@ -3,6 +3,7 @@ package cfdgo
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"strconv"
 	"testing"
 )
 
@@ -1061,6 +1062,32 @@ func TestCfdEncodeSignatureToDer(t *testing.T) {
 	err = CfdGoFreeHandle(handle)
 	assert.NoError(t, err)
 	fmt.Print("TestCfdEncodeSignatureToDer test done.\n")
+}
+
+func TestCfdGoCreateScript(t *testing.T) {
+	handle, err := CfdGoCreateHandle()
+	assert.NoError(t, err)
+
+	t.Run("TestCfdGoCreateScript_UnlockingScript_pkh", func(t *testing.T) {
+		var scriptItems = make([]string, 0, 2)
+		scriptItems = append(scriptItems, "304402204b922f2dafdd926b22b0e669fd774a2d5f10f969b8089a1c3a0384ba7ce95f6e02204e71c2a620cf430fa6d7ceaeb40d5298f20eebae3ecb783714a6adc03c66717d01")
+		scriptItems = append(scriptItems, "038f5d4ee5a661c04de7b715c6b9ac935456419fa9f484470275d1d489f2793301")
+		script, err := CfdGoCreateScript(handle, scriptItems)
+		assert.NoError(t, err)
+		assert.Equal(t, script, "47304402204b922f2dafdd926b22b0e669fd774a2d5f10f969b8089a1c3a0384ba7ce95f6e02204e71c2a620cf430fa6d7ceaeb40d5298f20eebae3ecb783714a6adc03c66717d0121038f5d4ee5a661c04de7b715c6b9ac935456419fa9f484470275d1d489f2793301")
+	})
+
+	t.Run("TestCfdGoCreateScript_SimpleScript", func(t *testing.T) {
+		var scriptItems = make([]string, 0, 2)
+		scriptItems = append(scriptItems, "OP_9")
+		scriptItems = append(scriptItems, "OP_15")
+		scriptItems = append(scriptItems, "OP_ADD")
+		scriptItems = append(scriptItems, strconv.Itoa(24))
+		scriptItems = append(scriptItems, "OP_EQUAL")
+		script, err := CfdGoCreateScript(handle, scriptItems)
+		assert.NoError(t, err)
+		assert.Equal(t, script, "595f93011887")
+	})
 }
 
 // last test
