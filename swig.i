@@ -1091,6 +1091,13 @@ func CfdGoParseScript(handle uintptr, script string) (scriptItems []string, err 
 	return
 }
 
+/**
+ * Convert script asm to hex.
+ * param: handle          cfd handle.
+ * param: scriptAsm       script assembly string.
+ * return: script         hex encodeed script.
+ * return: err            error
+ */
 func CfdGoConvertScriptAsmToHex(handle uintptr, scriptAsm string) (script string, err error) {
 	if ret := CfdConvertScriptAsmToHex(handle, scriptAsm, &script); ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, handle)
@@ -1100,6 +1107,13 @@ func CfdGoConvertScriptAsmToHex(handle uintptr, scriptAsm string) (script string
 	return
 }
 
+/**
+ * Create script from script items.
+ * param: handle          cfd handle.
+ * param: scriptItems     array of script element string.
+ * return: script         hex encoded script.
+ * return: err            error
+ */
 func CfdGoCreateScript(handle uintptr, scriptItems []string) (script string, err error) {
 	scriptAsm := strings.Join(scriptItems, " ");
 	script, err = CfdGoConvertScriptAsmToHex(handle, scriptAsm);
