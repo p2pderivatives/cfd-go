@@ -2,8 +2,8 @@ FROM golang:1.13-alpine
 
 WORKDIR /workspace
 
-ARG CFDGO_DOMAIN=cryptogarageinc
-ARG CFDGO_VER=v0.0.1001
+ARG CFDGO_DOMAIN=p2pderivatives
+ARG CFDGO_VER=v0.0.3
 
 RUN apk add --update --no-cache musl gcc g++ make unzip wget \
   && echo "---- download cfd binary ----" \
