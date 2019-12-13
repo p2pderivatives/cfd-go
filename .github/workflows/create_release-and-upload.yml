@@ -1,0 +1,69 @@
+name: create-release-upload
+
+on: 
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  docker-build:
+    name: docker-build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v1
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    - name: list
+      run: ls -a $GITHUB_WORKSPACE
+    - name: docker setup
+      uses: docker://alpine:3.10
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+    - name: create archive file
+      run: |
+        echo "---- dump output data ----"
+        ls -l $GITHUB_WORKSPACE/dist/usr/local/*
+        mkdir -p /tmp/cfd
+        sudo chmod 777 /tmp/cfd
+        sudo chown runner /tmp/cfd
+        sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd
+        cd /tmp/cfd
+        sudo zip -r /tmp/cfd/cfd.zip usr
+        sudo chmod 777 /tmp/cfd/cfd.zip
+        sudo chown runner /tmp/cfd/cfd.zip
+        sudo cp -rp /tmp/cfd/cfd.zip $GITHUB_WORKSPACE/dist/cfd.zip
+        echo "---- dump zip file ----"
+        sudo ls -l /tmp/cfd
+    - name: pre-release-test
+      uses: docker://golang:1.13-alpine
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_test_entrypoint.sh
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          Changes in this Release
+          - First Change
+          - Second Change
+        draft: false
+        prerelease: false
+      continue-on-error: true
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      if: success()
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: /tmp/cfd/cfd.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-alpine_x86_64.zip
+        asset_content_type: application/zip
