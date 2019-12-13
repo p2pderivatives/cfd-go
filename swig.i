@@ -1064,28 +1064,37 @@ func CfdGoGetPubkeyFromExtkey(handle uintptr, extkey string, networkType int) (p
  * return: err            error
  */
 func CfdGoParseScript(handle uintptr, script string) (scriptItems []string, err error) {
+	cfdErrHandle := handle
+	if handle == uintptr(0) {
+		errHandle, err := CfdGoCreateHandle()
+		if err != nil {
+			return nil, err
+		}
+		defer CfdGoFreeHandle(errHandle)
+		cfdErrHandle = errHandle
+	}
 	var scriptItemHandle uintptr
 	var itemNum uint32
 	itemNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&itemNum)))
 	var ret int
 
-	if ret = CfdParseScript(handle, script, &scriptItemHandle, itemNumPtr); ret == (int)(KCfdSuccess) {
+	if ret = CfdParseScript(cfdErrHandle, script, &scriptItemHandle, itemNumPtr); ret == (int)(KCfdSuccess) {
 		scriptItems = make([]string, 0, itemNum)
 		for i := uint32(0); i < itemNum; i++ {
 			var item string
 			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
-			if ret = CfdGetScriptItem(handle, scriptItemHandle, index, &item); ret == (int)(KCfdSuccess) {
+			if ret = CfdGetScriptItem(cfdErrHandle, scriptItemHandle, index, &item); ret == (int)(KCfdSuccess) {
 				scriptItems = append(scriptItems, item)
 			}
 		}
 
-		if freeRet := CfdFreeScriptItemHandle(handle, scriptItemHandle); ret == (int)(KCfdSuccess) {
+		if freeRet := CfdFreeScriptItemHandle(cfdErrHandle, scriptItemHandle); ret == (int)(KCfdSuccess) {
 			ret = freeRet
 		}
 	}
 	
 	if ret != (int)(KCfdSuccess) {
-		err = convertCfdError(ret, handle)
+		err = convertCfdError(ret, cfdErrHandle)
 		scriptItems = nil
 	}
 	return
@@ -1121,4 +1130,61 @@ func CfdGoCreateScript(handle uintptr, scriptItems []string) (script string, err
 	return
 }
 
+/**
+ * Multisig sign data struct.
+ */
+type CfdMultisigSignData struct {
+	Signature string
+	IsDerEncode bool
+	SighashType int
+	SighashAnyoneCanPay bool
+	RelatedPubkey string
+}
+
+/**
+ * Create multisig scriptsig.
+ * param: handle          cfd handle.
+ * param: signItems       array of multisig sign data struct.
+ * param: redeemScript    hex encoded multisig script.
+ * return: scriptsig      hex encoded script.
+ * return: err            error
+ */
+func CfdGoCreateMultisigScriptSig(handle uintptr, signItems []CfdMultisigSignData, redeemScript string) (scriptsig string, err error) {
+	scriptsig = ""
+	cfdErrHandle := handle
+	if handle == uintptr(0) {
+		errHandle, err := CfdGoCreateHandle()
+		if err != nil {
+			return "", err
+		}
+		defer CfdGoFreeHandle(errHandle)
+		cfdErrHandle = errHandle
+	}
+
+	var multisigHandle uintptr
+	ret := CfdInitializeMultisigScriptSig(cfdErrHandle, &multisigHandle)
+	if ret != (int)(KCfdSuccess) {
+		return "", convertCfdError(ret, cfdErrHandle)
+	}
+	defer CfdFreeMultisigScriptSigHandle(cfdErrHandle, multisigHandle)
+
+	for i := 0; i < len(signItems); i++ {
+		if signItems[i].IsDerEncode {
+			ret = CfdAddMultisigScriptSigDataToDer(cfdErrHandle, multisigHandle,
+					signItems[i].Signature, signItems[i].SighashType,
+					signItems[i].SighashAnyoneCanPay, signItems[i].RelatedPubkey)
+		} else {
+			ret = CfdAddMultisigScriptSigData(cfdErrHandle, multisigHandle,
+					signItems[i].Signature, signItems[i].RelatedPubkey)
+		}
+		if ret != (int)(KCfdSuccess) {
+			break
+		}
+	}
+
+	if ret == (int)(KCfdSuccess) {
+		ret = CfdFinalizeMultisigScriptSig(cfdErrHandle, multisigHandle, redeemScript, &scriptsig)
+	}
+	return scriptsig, convertCfdError(ret, cfdErrHandle)
+}
 %}
