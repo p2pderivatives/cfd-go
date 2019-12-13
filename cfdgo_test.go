@@ -2,8 +2,11 @@ package cfdgo
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
+	"strconv"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // first test
@@ -174,6 +177,36 @@ func TestCfdGoGetAddressesFromMultisig(t *testing.T) {
 	fmt.Print("TestCfdGoGetAddressesFromMultisig test done.\n")
 }
 
+func TestCfdGoGetAddressFromLockingScript(t *testing.T) {
+	handle, err := CfdGoCreateHandle()
+	assert.NoError(t, err)
+
+	networkType := (int)(KCfdNetworkLiquidv1)
+	lockingScript := "76a91449a011f97ba520dab063f309bad59daeb30de10188ac"
+	address, err := CfdGoGetAddressFromLockingScript(handle, lockingScript, networkType)
+	assert.NoError(t, err)
+	assert.Equal(t, "Q3ygD4rfNT2npj341csKqxcgDkBMwyD5Z6", address)
+
+	lockingScript = "a914f1b3a2cc24eba8a741f963b309a7686f3bb6bfb487"
+	address, err = CfdGoGetAddressFromLockingScript(handle, lockingScript, networkType)
+	assert.NoError(t, err)
+	assert.Equal(t, "H5DXSnmWy4WuUU7Yr8bvtLa5nXgukNc3Z6", address)
+
+	lockingScript = "0014925d4028880bd0c9d68fbc7fc7dfee976698629c"
+	address, err = CfdGoGetAddressFromLockingScript(handle, lockingScript, networkType)
+	assert.NoError(t, err)
+	assert.Equal(t, "ex1qjfw5q2ygp0gvn450h3lu0hlwjanfsc5uh0r5gq", address)
+
+	lockingScript = "002087cb0bc07de5b5befd7565b2c63fb1681efd8af7bd85a3f0f98a529a5c50a437"
+	address, err = CfdGoGetAddressFromLockingScript(handle, lockingScript, networkType)
+	assert.NoError(t, err)
+	assert.Equal(t, "ex1qsl9shsrauk6malt4vkevv0a3dq00mzhhhkz68u8e3fff5hzs5sms77zw4m", address)
+
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
+	fmt.Print("TestCfdGoGetAddressesFromMultisig test done.\n")
+}
+
 func TestCfdGoParseDescriptor(t *testing.T) {
 	handle, err := CfdGoCreateHandle()
 	assert.NoError(t, err)
@@ -188,17 +221,17 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 	assert.Equal(t, 1, len(descriptorDataList))
 	assert.Equal(t, 0, len(multisigList))
 	if len(descriptorDataList) == 1 {
-		assert.Equal(t, uint32(0), descriptorDataList[0].depth)
-		assert.Equal(t, (int)(KCfdDescriptorScriptPkh), descriptorDataList[0].scriptType)
-		assert.Equal(t, "76a91406afd46bcdfd22ef94ac122aa11f241244a37ecc88ac", descriptorDataList[0].lockingScript)
-		assert.Equal(t, "PwsjpD1YkjcfZ95WGVZuvGfypkKmpogoA3", descriptorDataList[0].address)
-		assert.Equal(t, (int)(KCfdP2pkh), descriptorDataList[0].hashType)
-		assert.Equal(t, "", descriptorDataList[0].redeemScript)
-		assert.Equal(t, (int)(KCfdDescriptorKeyPublic), descriptorDataList[0].keyType)
-		assert.Equal(t, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5", descriptorDataList[0].pubkey)
-		assert.Equal(t, "", descriptorDataList[0].extPubkey)
-		assert.Equal(t, "", descriptorDataList[0].extPrivkey)
-		assert.Equal(t, false, descriptorDataList[0].isMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptPkh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "76a91406afd46bcdfd22ef94ac122aa11f241244a37ecc88ac", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "PwsjpD1YkjcfZ95WGVZuvGfypkKmpogoA3", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2pkh), descriptorDataList[0].HashType)
+		assert.Equal(t, "", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyPublic), descriptorDataList[0].KeyType)
+		assert.Equal(t, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
 	}
 	if err != nil {
 		errMsg, _ := CfdGoGetLastErrorMessage(handle)
@@ -215,41 +248,41 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 	assert.Equal(t, 0, len(multisigList))
 	if len(descriptorDataList) == 3 {
 		// 0
-		assert.Equal(t, uint32(0), descriptorDataList[0].depth)
-		assert.Equal(t, (int)(KCfdDescriptorScriptSh), descriptorDataList[0].scriptType)
-		assert.Equal(t, "a91455e8d5e8ee4f3604aba23c71c2684fa0a56a3a1287", descriptorDataList[0].lockingScript)
-		assert.Equal(t, "Gq1mmExLuSEwfzzk6YtUxJ769grv6T5Tak", descriptorDataList[0].address)
-		assert.Equal(t, (int)(KCfdP2shP2wsh), descriptorDataList[0].hashType)
-		assert.Equal(t, "0020fc5acc302aab97f821f9a61e1cc572e7968a603551e95d4ba12b51df6581482f", descriptorDataList[0].redeemScript)
-		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[0].keyType)
-		assert.Equal(t, "", descriptorDataList[0].pubkey)
-		assert.Equal(t, "", descriptorDataList[0].extPubkey)
-		assert.Equal(t, "", descriptorDataList[0].extPrivkey)
-		assert.Equal(t, false, descriptorDataList[0].isMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptSh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "a91455e8d5e8ee4f3604aba23c71c2684fa0a56a3a1287", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "Gq1mmExLuSEwfzzk6YtUxJ769grv6T5Tak", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2shP2wsh), descriptorDataList[0].HashType)
+		assert.Equal(t, "0020fc5acc302aab97f821f9a61e1cc572e7968a603551e95d4ba12b51df6581482f", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[0].KeyType)
+		assert.Equal(t, "", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
 		// 1
-		assert.Equal(t, uint32(1), descriptorDataList[1].depth)
-		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[1].scriptType)
-		assert.Equal(t, "0020fc5acc302aab97f821f9a61e1cc572e7968a603551e95d4ba12b51df6581482f", descriptorDataList[1].lockingScript)
-		assert.Equal(t, "ex1ql3dvcvp24wtlsg0e5c0pe3tju7tg5cp428546jap9dga7evpfqhs0htdlf", descriptorDataList[1].address)
-		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[1].hashType)
-		assert.Equal(t, "76a914c42e7ef92fdb603af844d064faad95db9bcdfd3d88ac", descriptorDataList[1].redeemScript)
-		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[1].keyType)
-		assert.Equal(t, "", descriptorDataList[1].pubkey)
-		assert.Equal(t, "", descriptorDataList[1].extPubkey)
-		assert.Equal(t, "", descriptorDataList[1].extPrivkey)
-		assert.Equal(t, false, descriptorDataList[1].isMultisig)
+		assert.Equal(t, uint32(1), descriptorDataList[1].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[1].ScriptType)
+		assert.Equal(t, "0020fc5acc302aab97f821f9a61e1cc572e7968a603551e95d4ba12b51df6581482f", descriptorDataList[1].LockingScript)
+		assert.Equal(t, "ex1ql3dvcvp24wtlsg0e5c0pe3tju7tg5cp428546jap9dga7evpfqhs0htdlf", descriptorDataList[1].Address)
+		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[1].HashType)
+		assert.Equal(t, "76a914c42e7ef92fdb603af844d064faad95db9bcdfd3d88ac", descriptorDataList[1].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[1].KeyType)
+		assert.Equal(t, "", descriptorDataList[1].Pubkey)
+		assert.Equal(t, "", descriptorDataList[1].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[1].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[1].IsMultisig)
 		// 2
-		assert.Equal(t, uint32(2), descriptorDataList[2].depth)
-		assert.Equal(t, (int)(KCfdDescriptorScriptPkh), descriptorDataList[2].scriptType)
-		assert.Equal(t, "76a914c42e7ef92fdb603af844d064faad95db9bcdfd3d88ac", descriptorDataList[2].lockingScript)
-		assert.Equal(t, "QF9hGPQMVAPc8RxTHALgSvNPWEjGbL9bse", descriptorDataList[2].address)
-		assert.Equal(t, (int)(KCfdP2pkh), descriptorDataList[2].hashType)
-		assert.Equal(t, "", descriptorDataList[2].redeemScript)
-		assert.Equal(t, (int)(KCfdDescriptorKeyPublic), descriptorDataList[2].keyType)
-		assert.Equal(t, "02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13", descriptorDataList[2].pubkey)
-		assert.Equal(t, "", descriptorDataList[2].extPubkey)
-		assert.Equal(t, "", descriptorDataList[2].extPrivkey)
-		assert.Equal(t, false, descriptorDataList[2].isMultisig)
+		assert.Equal(t, uint32(2), descriptorDataList[2].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptPkh), descriptorDataList[2].ScriptType)
+		assert.Equal(t, "76a914c42e7ef92fdb603af844d064faad95db9bcdfd3d88ac", descriptorDataList[2].LockingScript)
+		assert.Equal(t, "QF9hGPQMVAPc8RxTHALgSvNPWEjGbL9bse", descriptorDataList[2].Address)
+		assert.Equal(t, (int)(KCfdP2pkh), descriptorDataList[2].HashType)
+		assert.Equal(t, "", descriptorDataList[2].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyPublic), descriptorDataList[2].KeyType)
+		assert.Equal(t, "02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13", descriptorDataList[2].Pubkey)
+		assert.Equal(t, "", descriptorDataList[2].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[2].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[2].IsMultisig)
 	}
 	if err != nil {
 		errMsg, _ := CfdGoGetLastErrorMessage(handle)
@@ -266,27 +299,27 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 	assert.Equal(t, 1, len(descriptorDataList))
 	assert.Equal(t, 2, len(multisigList))
 	if len(descriptorDataList) == 1 {
-		assert.Equal(t, uint32(0), descriptorDataList[0].depth)
-		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[0].scriptType)
-		assert.Equal(t, "002064969d8cdca2aa0bb72cfe88427612878db98a5f07f9a7ec6ec87b85e9f9208b", descriptorDataList[0].lockingScript)
-		assert.Equal(t, "bc1qvjtfmrxu524qhdevl6yyyasjs7xmnzjlqlu60mrwepact60eyz9s9xjw0c", descriptorDataList[0].address)
-		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[0].hashType)
-		assert.Equal(t, "51210205f8f73d8a553ad3287a506dbd53ed176cadeb200c8e4f7d68a001b1aed871062102c04c4e03921809fcbef9a26da2d62b19b2b4eb383b3e6cfaaef6370e7514477452ae", descriptorDataList[0].redeemScript)
-		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[0].keyType)
-		assert.Equal(t, "", descriptorDataList[0].pubkey)
-		assert.Equal(t, "", descriptorDataList[0].extPubkey)
-		assert.Equal(t, "", descriptorDataList[0].extPrivkey)
-		assert.Equal(t, true, descriptorDataList[0].isMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "002064969d8cdca2aa0bb72cfe88427612878db98a5f07f9a7ec6ec87b85e9f9208b", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bc1qvjtfmrxu524qhdevl6yyyasjs7xmnzjlqlu60mrwepact60eyz9s9xjw0c", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[0].HashType)
+		assert.Equal(t, "51210205f8f73d8a553ad3287a506dbd53ed176cadeb200c8e4f7d68a001b1aed871062102c04c4e03921809fcbef9a26da2d62b19b2b4eb383b3e6cfaaef6370e7514477452ae", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[0].KeyType)
+		assert.Equal(t, "", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, true, descriptorDataList[0].IsMultisig)
 	}
 	if len(multisigList) == 2 {
-		assert.Equal(t, (int)(KCfdDescriptorKeyBip32), multisigList[0].keyType)
-		assert.Equal(t, "0205f8f73d8a553ad3287a506dbd53ed176cadeb200c8e4f7d68a001b1aed87106", multisigList[0].pubkey)
-		assert.Equal(t, "xpub6BgWskLoyHmAUeKWgUXCGfDdCMRXseEjRCMEMvjkedmHpnvWtpXMaCRm8qcADw9einPR8o2c49ZpeHRZP4uYwGeMU2T63G7uf2Y1qJavrWQ", multisigList[0].extPubkey)
-		assert.Equal(t, "", multisigList[0].extPrivkey)
-		assert.Equal(t, (int)(KCfdDescriptorKeyBip32), multisigList[1].keyType)
-		assert.Equal(t, "02c04c4e03921809fcbef9a26da2d62b19b2b4eb383b3e6cfaaef6370e75144774", multisigList[1].pubkey)
-		assert.Equal(t, "xpub6EKMC2gSMfKgQJ3iNMZVNB4GLH1Dc4hNPah1iMbbztxdUPRo84MMcTgkPATWNRyzr7WifKrt5VvQi4GEqRwybCP1LHoXBKLN6cB15HuBKPE", multisigList[1].extPubkey)
-		assert.Equal(t, "", multisigList[1].extPrivkey)
+		assert.Equal(t, (int)(KCfdDescriptorKeyBip32), multisigList[0].KeyType)
+		assert.Equal(t, "0205f8f73d8a553ad3287a506dbd53ed176cadeb200c8e4f7d68a001b1aed87106", multisigList[0].Pubkey)
+		assert.Equal(t, "xpub6BgWskLoyHmAUeKWgUXCGfDdCMRXseEjRCMEMvjkedmHpnvWtpXMaCRm8qcADw9einPR8o2c49ZpeHRZP4uYwGeMU2T63G7uf2Y1qJavrWQ", multisigList[0].ExtPubkey)
+		assert.Equal(t, "", multisigList[0].ExtPrivkey)
+		assert.Equal(t, (int)(KCfdDescriptorKeyBip32), multisigList[1].KeyType)
+		assert.Equal(t, "02c04c4e03921809fcbef9a26da2d62b19b2b4eb383b3e6cfaaef6370e75144774", multisigList[1].Pubkey)
+		assert.Equal(t, "xpub6EKMC2gSMfKgQJ3iNMZVNB4GLH1Dc4hNPah1iMbbztxdUPRo84MMcTgkPATWNRyzr7WifKrt5VvQi4GEqRwybCP1LHoXBKLN6cB15HuBKPE", multisigList[1].ExtPubkey)
+		assert.Equal(t, "", multisigList[1].ExtPrivkey)
 	}
 	if err != nil {
 		errMsg, _ := CfdGoGetLastErrorMessage(handle)
@@ -378,6 +411,19 @@ func TestCfdGetTransaction(t *testing.T) {
 	count, err = CfdGoGetConfidentialTxOutCount(handle, txHex)
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(4), count)
+
+	if err == nil {
+		txData, err := CfdGoGetConfidentialTxData(handle, txHex)
+		assert.NoError(t, err)
+		assert.Equal(t, "cf7783b2b1de646e35186df988a219a17f0317b5c3f3c47fa4ab2d7463ea3992", txData.Txid)
+		assert.Equal(t, "cf7783b2b1de646e35186df988a219a17f0317b5c3f3c47fa4ab2d7463ea3992", txData.Wtxid)
+		assert.Equal(t, "938e3a9b5bac410e812d08db74c4ef2bc58d1ed99d94b637cab0ac2e9eb59df8", txData.WitHash)
+		assert.Equal(t, uint32(512), txData.Size)
+		assert.Equal(t, uint32(512), txData.Vsize)
+		assert.Equal(t, uint32(2048), txData.Weight)
+		assert.Equal(t, uint32(2), txData.Version)
+		assert.Equal(t, uint32(0), txData.LockTime)
+	}
 
 	if err == nil {
 		txid, vout, sequence, scriptSig, err := CfdGoGetConfidentialTxIn(handle, txHex, uint32(1))
@@ -531,6 +577,19 @@ func TestCfdBlindTransaction(t *testing.T) {
 
 	err2 := CfdGoFreeBlindHandle(handle, blindHandle) // release
 	assert.NoError(t, err2)
+
+	if err == nil {
+		txData, err := CfdGoGetConfidentialTxData(handle, txHex)
+		assert.NoError(t, err)
+		assert.Equal(t, 64, len(txData.Txid))
+		assert.Equal(t, 64, len(txData.Wtxid))
+		assert.Equal(t, 64, len(txData.WitHash))
+		assert.Equal(t, uint32(12589), txData.Size)
+		assert.Equal(t, uint32(3604), txData.Vsize)
+		assert.Equal(t, uint32(14413), txData.Weight)
+		assert.Equal(t, uint32(2), txData.Version)
+		assert.Equal(t, uint32(0), txData.LockTime)
+	}
 
 	// unblind test
 	if err == nil {
@@ -990,6 +1049,96 @@ func TestCfdParseScript(t *testing.T) {
 	err = CfdGoFreeHandle(handle)
 	assert.NoError(t, err)
 	fmt.Print("TestCfdParseScript test done.\n")
+}
+
+func TestCfdEncodeSignatureToDer(t *testing.T) {
+	handle, err := CfdGoCreateHandle()
+	assert.NoError(t, err)
+
+	signature := "47ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb"
+
+	derSignature, err := CfdGoEncodeSignatureByDer(handle, signature, (int)(KCfdSigHashAll), false)
+	assert.NoError(t, err)
+	assert.Equal(t, derSignature, "3044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb01")
+
+	err = CfdGoFreeHandle(handle)
+	assert.NoError(t, err)
+	fmt.Print("TestCfdEncodeSignatureToDer test done.\n")
+}
+
+func TestCfdGoCreateScript(t *testing.T) {
+	handle, err := CfdGoCreateHandle()
+	assert.NoError(t, err)
+	defer CfdGoFreeHandle(handle)
+
+	t.Run("TestCfdGoCreateScript_UnlockingScript_pkh", func(t *testing.T) {
+		scriptItems := make([]string, 0, 2)
+		scriptItems = append(scriptItems, "304402204b922f2dafdd926b22b0e669fd774a2d5f10f969b8089a1c3a0384ba7ce95f6e02204e71c2a620cf430fa6d7ceaeb40d5298f20eebae3ecb783714a6adc03c66717d01")
+		scriptItems = append(scriptItems, "038f5d4ee5a661c04de7b715c6b9ac935456419fa9f484470275d1d489f2793301")
+		script, err := CfdGoCreateScript(handle, scriptItems)
+		assert.NoError(t, err)
+		assert.Equal(t, script, "47304402204b922f2dafdd926b22b0e669fd774a2d5f10f969b8089a1c3a0384ba7ce95f6e02204e71c2a620cf430fa6d7ceaeb40d5298f20eebae3ecb783714a6adc03c66717d0121038f5d4ee5a661c04de7b715c6b9ac935456419fa9f484470275d1d489f2793301")
+		scriptAsm := strings.Join(scriptItems, " ")
+		scriptHex, err := CfdGoConvertScriptAsmToHex(handle, scriptAsm)
+		assert.NoError(t, err)
+		assert.Equal(t, script, scriptHex)
+	})
+
+	t.Run("TestCfdGoCreateScript_SimpleScript", func(t *testing.T) {
+		scriptItems := make([]string, 0, 2)
+		scriptItems = append(scriptItems, "OP_9")
+		scriptItems = append(scriptItems, "OP_15")
+		scriptItems = append(scriptItems, "OP_ADD")
+		scriptItems = append(scriptItems, strconv.Itoa(24))
+		scriptItems = append(scriptItems, "OP_EQUAL")
+		script, err := CfdGoCreateScript(handle, scriptItems)
+		assert.NoError(t, err)
+		assert.Equal(t, script, "595f93011887")
+		scriptAsm := strings.Join(scriptItems, " ")
+		scriptHex, err := CfdGoConvertScriptAsmToHex(handle, scriptAsm)
+		assert.NoError(t, err)
+		assert.Equal(t, script, scriptHex)
+	})
+}
+
+func TestCfdCreateMultisigScriptSig(t *testing.T) {
+	handle, err := CfdGoCreateHandle()
+	assert.NoError(t, err)
+	defer CfdGoFreeHandle(handle)
+
+	redeemScript := "522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae"
+	signItems := []CfdMultisigSignData{
+		{
+			Signature:           "47ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb",
+			IsDerEncode:         true,
+			SighashType:         (int)(KCfdSigHashAll),
+			SighashAnyoneCanPay: false,
+			RelatedPubkey:       "02715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad",
+		},
+		{
+			Signature:           "3044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb01",
+			IsDerEncode:         false,
+			SighashType:         0,
+			SighashAnyoneCanPay: false,
+			RelatedPubkey:       "02bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d71",
+		},
+	}
+
+	scriptsig, err := CfdGoCreateMultisigScriptSig(handle, signItems, redeemScript)
+	assert.NoError(t, err)
+	assert.Equal(t, scriptsig, "00473044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb01473044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb0147522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae")
+
+	items, err := CfdGoParseScript(handle, scriptsig)
+	assert.NoError(t, err)
+	assert.Equal(t, int(4), len(items))
+	if len(items) == int(4) {
+		assert.Equal(t, "OP_0", items[0])
+		assert.Equal(t, "3044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb01", items[1])
+		assert.Equal(t, "3044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb01", items[2])
+		assert.Equal(t, "522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae", items[3])
+	}
+
+	fmt.Print("TestCfdCreateMultisigScriptSig test done.\n")
 }
 
 // last test
