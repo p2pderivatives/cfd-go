@@ -1069,6 +1069,7 @@ func TestCfdEncodeSignatureToDer(t *testing.T) {
 func TestCfdGoCreateScript(t *testing.T) {
 	handle, err := CfdGoCreateHandle()
 	assert.NoError(t, err)
+	defer CfdGoFreeHandle(handle)
 
 	t.Run("TestCfdGoCreateScript_UnlockingScript_pkh", func(t *testing.T) {
 		scriptItems := make([]string, 0, 2)
@@ -1098,6 +1099,46 @@ func TestCfdGoCreateScript(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, script, scriptHex)
 	})
+}
+
+func TestCfdCreateMultisigScriptSig(t *testing.T) {
+	handle, err := CfdGoCreateHandle()
+	assert.NoError(t, err)
+	defer CfdGoFreeHandle(handle)
+
+	redeemScript := "522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae"
+	signItems := []CfdMultisigSignData{
+		{
+			Signature:           "47ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb",
+			IsDerEncode:         true,
+			SighashType:         (int)(KCfdSigHashAll),
+			SighashAnyoneCanPay: false,
+			RelatedPubkey:       "02715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad",
+		},
+		{
+			Signature:           "3044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb01",
+			IsDerEncode:         false,
+			SighashType:         0,
+			SighashAnyoneCanPay: false,
+			RelatedPubkey:       "02bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d71",
+		},
+	}
+
+	scriptsig, err := CfdGoCreateMultisigScriptSig(handle, signItems, redeemScript)
+	assert.NoError(t, err)
+	assert.Equal(t, scriptsig, "00473044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb01473044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb0147522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae")
+
+	items, err := CfdGoParseScript(handle, scriptsig)
+	assert.NoError(t, err)
+	assert.Equal(t, int(4), len(items))
+	if len(items) == int(4) {
+		assert.Equal(t, "OP_0", items[0])
+		assert.Equal(t, "3044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb01", items[1])
+		assert.Equal(t, "3044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb01", items[2])
+		assert.Equal(t, "522102bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d712102715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad52ae", items[3])
+	}
+
+	fmt.Print("TestCfdCreateMultisigScriptSig test done.\n")
 }
 
 // last test

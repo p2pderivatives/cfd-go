@@ -75,13 +75,15 @@ go build
 # recommend out of source build
 mkdir build && cd $_
 # configure & build
-cmake .. (CMake options) -DENABLE_JS_WRAPPER=off
+cmake .. -DENABLE_SHARED=on -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DENABLE_CAPI=on -DTARGET_RPATH=/usr/local/lib/
 make
 cd ..
 go build
 ```
 
 **CMake options**
+
+`cmake .. (CMake options) -DENABLE_JS_WRAPPER=off`
 
 - `-DENABLE_ELEMENTS`: Enable functionalies for elements sidechain. [ON/OFF] (default:ON)
 - `-DENABLE_SHARED`: Enable building a shared library. [ON/OFF] (default:OFF)
