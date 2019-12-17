@@ -16,8 +16,8 @@
 }
 
 %insert(cgo_comment_typedefs) %{
-#cgo CFLAGS: -I./external/cfd/include -I../cfd/include
-#cgo LDFLAGS: -L/usr/local/lib -L${SRCDIR}/build/Release -L${SRCDIR}/build/Debug -lcfd
+#cgo CXXFLAGS: -I./external/cfd/include -I../cfd/include
+#cgo LDFLAGS: -L/usr/local/lib -L${SRCDIR}/build/Release -L${SRCDIR}/build/Debug -lcfd -lcfdcore -lunivalue -lwally
 %}
 
 %include "external/cfd/include/cfdc/cfdcapi_common.h"
