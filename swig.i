@@ -16,8 +16,8 @@
 }
 
 %insert(cgo_comment_typedefs) %{
-#cgo CXXFLAGS: -I./external/cfd/include -I../cfd/include
-#cgo LDFLAGS: -L/usr/local/lib -L${SRCDIR}/build/Release -L${SRCDIR}/build/Debug -lcfd -lcfdcore -lunivalue -lwally
+#cgo CXXFLAGS: -I./external/cfd/include -I../cfd/include -I/usr/local/include
+#cgo LDFLAGS: -L/usr/local/lib -L/usr/local/lib64 -L${SRCDIR}/build/Release -L${SRCDIR}/build/Debug -lcfd -lcfdcore -lunivalue -lwally
 %}
 
 %include "external/cfd/include/cfdc/cfdcapi_common.h"
@@ -195,16 +195,27 @@ func CfdGoCreateMultisigScript(handle uintptr, networkType int, hashType int, pu
  * Descriptor data struct.
  */
 type CfdDescriptorData struct {
+	// depth (0 - )
 	Depth uint32
+	// script type. (CfdDescriptorScriptType)
 	ScriptType int
+	// locking script.
 	LockingScript string
+	// address string. (for ScriptType not KCfdDescriptorScriptRaw)
 	Address string
+	// hash type. (CfdHashType)
 	HashType int
+	// redeem script. (for ScriptType KCfdDescriptorScriptSh or KCfdDescriptorScriptWsh)
 	RedeemScript string
+	// key type. (see CfdDescriptorKeyData.KeyType)
 	KeyType int
+	// pubkey
 	Pubkey string
+	// extend pubkey
 	ExtPubkey string
+	// extend privkey
 	ExtPrivkey string
+	// has multisig
 	IsMultisig bool
 }
 
@@ -212,9 +223,17 @@ type CfdDescriptorData struct {
  * Descriptor key data struct.
  */
 type CfdDescriptorKeyData struct {
+	// key type. (CfdDescriptorKeyType)
+	// - KCfdDescriptorKeyNull
+	// - KCfdDescriptorKeyPublic
+	// - KCfdDescriptorKeyBip32
+	// - KCfdDescriptorKeyBip32Priv
 	KeyType int
+	// pubkey
 	Pubkey string
+	// extend pubkey
 	ExtPubkey string
+	// extend privkey
 	ExtPrivkey string
 }
 
@@ -421,13 +440,21 @@ func CfdGoUpdateConfidentialTxOut(handle uintptr, txHex string, index uint32, as
  * TxData data struct.
  */
 type CfdTxData struct {
+	// txid
 	Txid string
+	// witness txid
 	Wtxid string
+	// witness hash
 	WitHash string
+	// size
 	Size uint32
+	// virtual size
 	Vsize uint32
+	// weight
 	Weight uint32
+	// version
 	Version uint32
+	// locktime
 	LockTime uint32
 }
 
@@ -1134,10 +1161,15 @@ func CfdGoCreateScript(handle uintptr, scriptItems []string) (script string, err
  * Multisig sign data struct.
  */
 type CfdMultisigSignData struct {
+	// signature
 	Signature string
+	// use der encode
 	IsDerEncode bool
+	// sighash type. (CfdSighashType)
 	SighashType int
+	// sighash anyone can pay.
 	SighashAnyoneCanPay bool
+	// related pubkey.
 	RelatedPubkey string
 }
 
