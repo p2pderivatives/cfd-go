@@ -232,6 +232,7 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
 		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
 		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
 	}
 	if err != nil {
 		errMsg, _ := CfdGoGetLastErrorMessage(handle)
@@ -259,6 +260,7 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
 		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
 		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
 		// 1
 		assert.Equal(t, uint32(1), descriptorDataList[1].Depth)
 		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[1].ScriptType)
@@ -271,6 +273,7 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 		assert.Equal(t, "", descriptorDataList[1].ExtPubkey)
 		assert.Equal(t, "", descriptorDataList[1].ExtPrivkey)
 		assert.Equal(t, false, descriptorDataList[1].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[1].ReqSigNum)
 		// 2
 		assert.Equal(t, uint32(2), descriptorDataList[2].Depth)
 		assert.Equal(t, (int)(KCfdDescriptorScriptPkh), descriptorDataList[2].ScriptType)
@@ -283,6 +286,7 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 		assert.Equal(t, "", descriptorDataList[2].ExtPubkey)
 		assert.Equal(t, "", descriptorDataList[2].ExtPrivkey)
 		assert.Equal(t, false, descriptorDataList[2].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[2].ReqSigNum)
 	}
 	if err != nil {
 		errMsg, _ := CfdGoGetLastErrorMessage(handle)
@@ -310,6 +314,7 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
 		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
 		assert.Equal(t, true, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(1), descriptorDataList[0].ReqSigNum)
 	}
 	if len(multisigList) == 2 {
 		assert.Equal(t, (int)(KCfdDescriptorKeyBip32), multisigList[0].KeyType)

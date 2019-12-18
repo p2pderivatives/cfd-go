@@ -217,6 +217,8 @@ type CfdDescriptorData struct {
 	ExtPrivkey string
 	// has multisig
 	IsMultisig bool
+	// number of multisig require signatures
+	ReqSigNum uint32
 }
 
 /**
@@ -262,11 +264,12 @@ func CfdGoParseDescriptor(handle uintptr, descriptor string, networkType int, bi
 			maxNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxNum)))
 			depthPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&(data.Depth))))
 			index := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
+			reqSigNumPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&(data.ReqSigNum))))
 			ret = CfdGetDescriptorData(handle, descriptorHandle, index, maxNumPtr,
 					depthPtr, &data.ScriptType, &data.LockingScript,
 					&data.Address, &data.HashType, &data.RedeemScript,
 					&data.KeyType, &data.Pubkey, &data.ExtPubkey, &data.ExtPrivkey,
-					&data.IsMultisig, keyNumPtr)
+					&data.IsMultisig, keyNumPtr, reqSigNumPtr)
 			if ret != (int)(KCfdSuccess) {
 				break
 			}
