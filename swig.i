@@ -217,6 +217,7 @@ type CfdDescriptorData struct {
 	ExtPrivkey string
 	// has multisig
 	IsMultisig bool
+	// number of multisig require signatures
 	ReqSigNum uint32
 }
 
