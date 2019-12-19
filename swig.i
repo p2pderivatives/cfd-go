@@ -762,6 +762,7 @@ func CfdGoAddConfidentialTxDerSign(handle uintptr, txHex string, txid string, vo
 
 /**
  * Add unlocking script to confidential transaction input by index.
+ *   (prototype interface)
  * param: handle               cfd handle
  * param: txHex                transaction hex
  * param: index                input index
@@ -781,8 +782,8 @@ func CfdGoAddConfidentialTxUnlockingScriptByIndex(handle uintptr, txHex string, 
 		return 
 	}
 
-	// outputTxHex = txHexWork
-	return txHexWork, err
+	outputTxHex = txHexWork
+	return
 }
 
 /**
