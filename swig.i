@@ -761,6 +761,67 @@ func CfdGoAddConfidentialTxDerSign(handle uintptr, txHex string, txid string, vo
 }
 
 /**
+ * Add unlocking script to confidential transaction input by index.
+ *   (prototype interface)
+ * param: handle               cfd handle
+ * param: txHex                transaction hex
+ * param: index                input index
+ * param: isWitness            insert sign data to witness stack
+ * param: unlockingScript      unlocking script hex
+ * param: clearStack           cleanup stack
+ * return: outputTxHex         output transaction hex
+ * return: err                 error
+ */
+func CfdGoAddConfidentialTxUnlockingScriptByIndex(handle uintptr, txHex string, index uint32, isWitness bool, unlockingScript string, clearStack bool) (outputTxHex string, err error) {
+	txid, vout, _, _, err := CfdGoGetConfidentialTxIn(handle, txHex, index)
+	if err != nil {
+		return
+	}
+	txHexWork, err := CfdGoAddConfidentialTxUnlockingScript(handle, txHex, txid, vout, isWitness, unlockingScript, clearStack)
+	if err != nil {
+		return 
+	}
+
+	outputTxHex = txHexWork
+	return
+}
+
+/**
+ * Add unlocking script to confidential transaction input.
+ * param: handle               cfd handle
+ * param: txHex                transaction hex
+ * param: txid                 txin txid
+ * param: vout                 txin vout
+ * param: isWitness            insert sign data to witness stack
+ * param: unlockingScript      unlocking script hex
+ * param: clearStack           cleanup stack
+ * return: outputTxHex         output transaction hex
+ * return: err                 error
+ */
+func CfdGoAddConfidentialTxUnlockingScript(handle uintptr, txHex, txid string, vout uint32, isWitness bool, unlockingScript string, clearStack bool) (outputTxHex string, err error) {
+	scriptItems, err := CfdGoParseScript(handle, unlockingScript)
+	if err != nil {
+		return
+	}
+
+	txHexWork := txHex
+	clearFlag := clearStack
+	for _, scriptItem := range scriptItems {
+		txHexWork, err = CfdGoAddConfidentialTxSign(handle, txHexWork, txid, vout, isWitness, scriptItem, clearFlag)
+		if err != nil {
+			return
+		}
+
+		if clearFlag {
+			clearFlag = false
+		}
+	}
+
+	outputTxHex = txHexWork
+	return
+}
+
+/**
  * Add multisig sign data to confidential transaction.
  * param: handle               cfd handle
  * param: multiSignHandle      multisig sign handle
