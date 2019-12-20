@@ -8,16 +8,21 @@ on:
     branches:
     - develop
 
+env:
+  CMAKE_VERSION: 3.15.5
+
 jobs:
   cmake-build:
     name: cmake build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-latest, windows-latest, ubuntu-latest]
         go-version: [1.11.x, 1.12.x, 1.13.x]
         exclude:
           - os: macos-latest
+            go-version: 1.11.x
+          - os: windows-latest
             go-version: 1.11.x
           - os: macos-latest
             go-version: 1.12.x
@@ -28,21 +33,50 @@ jobs:
       with:
         go-version: ${{ matrix.go-version }}
     - uses: actions/checkout@v1
-    - name: cmake_version
-      run: cmake --version
-    - name: cmake_generage-windows
+    - name: cmake-useCache-ubuntu
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/cache@v1
+      id: cache
+      with:
+        path: cache/cmake
+        key: ${{ runner.os }}-cmake-3.15.5-x64
+    - name: cmake-download-ubuntu
+      if: matrix.os == 'ubuntu-latest' && steps.cache.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p cache/cmake
+        cd cache/cmake
+        wget https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-Linux-x86_64.tar.gz
+        cd ../..
+    - name: cmake-setting-ubuntu
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        export cmake_file_name="cmake-$CMAKE_VERSION-Linux-x86_64"
+        cd cache/cmake
+        tar zxvf $cmake_file_name.tar.gz
+        chmod +x $cmake_file_name/bin/cmake $cmake_file_name/bin/ctest
+        export CURRENT_DIR=$(pwd)
+        echo ::add-path::$CURRENT_DIR/$cmake_file_name/bin
+        cd ../..
+    - name: cmake-generate
+      if: matrix.os != 'windows-latest'
+      run: |
+        cmake -S . -B build -G "Unix Makefiles"
+        cmake -DENABLE_SHARED=on -DENABLE_TESTS=off -DTARGET_RPATH="/usr/local/lib;/usr/local/lib64" --build build
+    - name: cmake-generate-windows
       if: matrix.os == 'windows-latest'
-      run: cmake -S . -B build -G "MSYS Makefiles"
-    - name: cmake_generage-macos
-      if: matrix.os == 'macos-latest'
-      run: cmake -S . -B build -G "Unix Makefiles"
-    - name: cmake_configure
-      run: cmake -DENABLE_SHARED=on -DENABLE_TESTS=off --build build
-    - name: cmake_build
-      run: cmake --build build --config Release
+      run: |
+        cmake -S . -B build -G "MSYS Makefiles"
+        cmake -DENABLE_SHARED=on -DENABLE_TESTS=off --build build
+    - name: cmake-build
+      run: |
+        cmake --version
+        cmake --build build --config Release
     - name: go_test-windows
       if: matrix.os == 'windows-latest'
       run: .\go_test.bat
-    - name: go_test-macos
-      if: matrix.os == 'macos-latest'
+    - name: go_test
+      if: matrix.os != 'windows-latest'
       run: ./go_test.sh
+    - name: ubuntu-after
+      if: matrix.os == 'ubuntu-latest'
+      run: rm -rf cache/cmake/cmake-$CMAKE_VERSION-Linux-x86_64
