@@ -107,13 +107,13 @@ install for `/usr/local/lib`.
 When using the cmake-js package and npm script, the options for compilation are already set.
 
 ```Shell
-npm cmake_make_install
+npm run cmake_make_install
 (Enter the password when prompted to use the sudo command.)
 ```
 
 cmake version is 3.15 or higher:
 ```Shell
-npm cmake_install
+npm run cmake_install
 (Enter the password when prompted to use the sudo command.)
 ```
 
