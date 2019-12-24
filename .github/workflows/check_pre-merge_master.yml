@@ -68,6 +68,12 @@ jobs:
         cmake -S . -B build -G "MSYS Makefiles"
         cmake -DENABLE_SHARED=on -DENABLE_TESTS=off -DCMAKE_BUILD_PARALLEL_LEVEL=2 --build build
     - name: cmake-build
+      if: matrix.os != 'macos-latest'
+      run: |
+        cmake --version
+        cmake --build build --config Release --parallel 2
+    - name: cmake-build-mac
+      if: matrix.os == 'macos-latest'
       run: |
         cmake --version
         cmake --build build --config Release
