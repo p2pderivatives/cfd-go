@@ -452,8 +452,6 @@ type CfdCoinSelectionOption struct {
 	FeeAsset string
 	// tx-fee amount
 	TxFeeAmount int64
-	// feerate
-	FeeRate float64
 	// effective feerate
 	EffectiveFeeRate float64
 	// longterm feerate
@@ -470,8 +468,7 @@ type CfdCoinSelectionOption struct {
  */
 func NewCfdCoinSelectionOption() CfdCoinSelectionOption {
 	option := CfdCoinSelectionOption{}
-	option.FeeRate = float64(20.0)
-	option.EffectiveFeeRate = float64(-1.0)
+	option.EffectiveFeeRate = float64(20.0)
 	option.LongTermFeeRate = float64(-1.0)
 	option.DustFeeRate = float64(-1.0)
 	option.KnapsackMinChange = int64(-1)
@@ -505,8 +502,8 @@ func CfdGoCoinSelection(handle uintptr, utxos []CfdUtxo, targetAmounts []CfdTarg
 	knapsackMinChangeBuf := SwigcptrInt64_t(uintptr(unsafe.Pointer(&option.KnapsackMinChange)))
 	ret := CfdInitializeCoinSelection(cfdErrHandle, utxoCountBuf,
 				amountCountBuf, option.FeeAsset, txFeeAmountBuf,
-				option.FeeRate, option.EffectiveFeeRate, option.LongTermFeeRate,
-				option.DustFeeRate, knapsackMinChangeBuf, &coinSlectHandle)
+				option.EffectiveFeeRate, option.LongTermFeeRate, option.DustFeeRate,
+				knapsackMinChangeBuf, &coinSlectHandle)
 	if ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, cfdErrHandle)
 		return

@@ -1454,7 +1454,6 @@ func TestCfdCoinSelectionUnuseFee(t *testing.T) {
 	}
 
 	option := NewCfdCoinSelectionOption()
-	option.FeeRate = 0
 	option.EffectiveFeeRate = 0
 	option.LongTermFeeRate = 0
 	option.DustFeeRate = 0
