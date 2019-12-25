@@ -103,7 +103,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DENABLE_SHARED=off -DCMAKE_BUILD_PARALLEL_LEVEL=2 -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib;/usr/local/lib64"
+        cmake .. -DENABLE_SHARED=off -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib;/usr/local/lib64"
         make
         sudo make install DESTDIR=/tmp/cfd
         cd ..
