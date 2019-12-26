@@ -1210,6 +1210,280 @@ func TestCfdCreateMultisigScriptSig(t *testing.T) {
 	fmt.Print("TestCfdCreateMultisigScriptSig test done.\n")
 }
 
+func TestCfdCoinSelection(t *testing.T) {
+	assets := []string{
+		"aa00000000000000000000000000000000000000000000000000000000000000",
+		"bb00000000000000000000000000000000000000000000000000000000000000",
+		"cc00000000000000000000000000000000000000000000000000000000000000",
+	}
+	utxos := []CfdUtxo{
+		{
+			Txid:       "7ca81dd22c934747f4f5ab7844178445fe931fb248e0704c062b8f4fbd3d500a",
+			Vout:       uint32(0),
+			Amount:     int64(312500000),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(037ca81dd22c934747f4f5ab7844178445fe931fb248e0704c062b8f4fbd3d500a))",
+		},
+		{
+			Txid:       "30f71f39d210f7ee291b0969c6935debf11395b0935dca84d30c810a75339a0a",
+			Vout:       uint32(0),
+			Amount:     int64(78125000),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(0330f71f39d210f7ee291b0969c6935debf11395b0935dca84d30c810a75339a0a))",
+		},
+		{
+			Txid:       "9e1ead91c432889cb478237da974dd1e9009c9e22694fd1e3999c40a1ef59b0a",
+			Vout:       uint32(0),
+			Amount:     int64(1250000000),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(039e1ead91c432889cb478237da974dd1e9009c9e22694fd1e3999c40a1ef59b0a))",
+		},
+		{
+			Txid:       "8f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a",
+			Vout:       uint32(0),
+			Amount:     int64(39062500),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(038f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a))",
+		},
+		{
+			Txid:       "4d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a",
+			Vout:       uint32(0),
+			Amount:     int64(156250000),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(034d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a))",
+		},
+		{
+			Txid:       "b9720ed2265a4ced42425bffdb4ef90a473b4106811a802fce53f7c57487fa0b",
+			Vout:       uint32(0),
+			Amount:     int64(2500000000),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(03b9720ed2265a4ced42425bffdb4ef90a473b4106811a802fce53f7c57487fa0b))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000b01",
+			Vout:       uint32(0),
+			Amount:     int64(26918400),
+			Asset:      assets[1],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b01))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000b02",
+			Vout:       uint32(0),
+			Amount:     int64(750000),
+			Asset:      assets[1],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b02))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000b03",
+			Vout:       uint32(0),
+			Amount:     int64(346430050),
+			Asset:      assets[1],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b03))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000b04",
+			Vout:       uint32(0),
+			Amount:     int64(18476350),
+			Asset:      assets[1],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b04))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000c01",
+			Vout:       uint32(0),
+			Amount:     int64(37654200),
+			Asset:      assets[2],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000c01))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000c02",
+			Vout:       uint32(0),
+			Amount:     int64(127030000),
+			Asset:      assets[2],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000c02))",
+		},
+	}
+	targets := []CfdTargetAmount{
+		{
+			Amount: int64(115800000),
+			Asset:  assets[0],
+		},
+		{
+			Amount: int64(347180040),
+			Asset:  assets[1],
+		},
+		{
+			Amount: int64(37654100),
+			Asset:  assets[2],
+		},
+	}
+
+	option := NewCfdCoinSelectionOption()
+	option.TxFeeAmount = int64(2000)
+	option.FeeAsset = assets[0]
+
+	selectUtxos, totalAmounts, utxoFee, err := CfdGoCoinSelection(uintptr(0), utxos, targets, option)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(9000), utxoFee)
+	assert.Equal(t, 5, len(selectUtxos))
+	assert.Equal(t, 3, len(totalAmounts))
+
+	if len(selectUtxos) == 5 {
+		assert.Equal(t, utxos[8].Amount, selectUtxos[0].Amount)
+		assert.Equal(t, utxos[7].Amount, selectUtxos[1].Amount)
+		assert.Equal(t, utxos[10].Amount, selectUtxos[2].Amount)
+		assert.Equal(t, utxos[1].Amount, selectUtxos[3].Amount)
+		assert.Equal(t, utxos[3].Amount, selectUtxos[4].Amount)
+	}
+	if len(totalAmounts) == 3 {
+		assert.Equal(t, int64(117187500), totalAmounts[0].Amount)
+		assert.Equal(t, targets[0].Asset, totalAmounts[0].Asset)
+		assert.Equal(t, int64(347180050), totalAmounts[1].Amount)
+		assert.Equal(t, targets[1].Asset, totalAmounts[1].Asset)
+		assert.Equal(t, int64(37654200), totalAmounts[2].Amount)
+		assert.Equal(t, targets[2].Asset, totalAmounts[2].Asset)
+	}
+
+	fmt.Print("TestCfdCoinSelection test done.\n")
+}
+
+func TestCfdCoinSelectionUnuseFee(t *testing.T) {
+	assets := []string{
+		"aa00000000000000000000000000000000000000000000000000000000000000",
+		"bb00000000000000000000000000000000000000000000000000000000000000",
+		"cc00000000000000000000000000000000000000000000000000000000000000",
+	}
+	utxos := []CfdUtxo{
+		{
+			Txid:       "7ca81dd22c934747f4f5ab7844178445fe931fb248e0704c062b8f4fbd3d500a",
+			Vout:       uint32(0),
+			Amount:     int64(312500000),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(037ca81dd22c934747f4f5ab7844178445fe931fb248e0704c062b8f4fbd3d500a))",
+		},
+		{
+			Txid:       "30f71f39d210f7ee291b0969c6935debf11395b0935dca84d30c810a75339a0a",
+			Vout:       uint32(0),
+			Amount:     int64(78125000),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(0330f71f39d210f7ee291b0969c6935debf11395b0935dca84d30c810a75339a0a))",
+		},
+		{
+			Txid:       "9e1ead91c432889cb478237da974dd1e9009c9e22694fd1e3999c40a1ef59b0a",
+			Vout:       uint32(0),
+			Amount:     int64(1250000000),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(039e1ead91c432889cb478237da974dd1e9009c9e22694fd1e3999c40a1ef59b0a))",
+		},
+		{
+			Txid:       "8f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a",
+			Vout:       uint32(0),
+			Amount:     int64(39062500),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(038f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a))",
+		},
+		{
+			Txid:       "4d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a",
+			Vout:       uint32(0),
+			Amount:     int64(156250000),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(034d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a))",
+		},
+		{
+			Txid:       "b9720ed2265a4ced42425bffdb4ef90a473b4106811a802fce53f7c57487fa0b",
+			Vout:       uint32(0),
+			Amount:     int64(2500000000),
+			Asset:      assets[0],
+			Descriptor: "sh(wpkh(03b9720ed2265a4ced42425bffdb4ef90a473b4106811a802fce53f7c57487fa0b))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000b01",
+			Vout:       uint32(0),
+			Amount:     int64(26918400),
+			Asset:      assets[1],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b01))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000b02",
+			Vout:       uint32(0),
+			Amount:     int64(750000),
+			Asset:      assets[1],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b02))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000b03",
+			Vout:       uint32(0),
+			Amount:     int64(346430050),
+			Asset:      assets[1],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b03))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000b04",
+			Vout:       uint32(0),
+			Amount:     int64(18476350),
+			Asset:      assets[1],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b04))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000c01",
+			Vout:       uint32(0),
+			Amount:     int64(37654200),
+			Asset:      assets[2],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000c01))",
+		},
+		{
+			Txid:       "0000000000000000000000000000000000000000000000000000000000000c02",
+			Vout:       uint32(0),
+			Amount:     int64(127030000),
+			Asset:      assets[2],
+			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000c02))",
+		},
+	}
+	targets := []CfdTargetAmount{
+		{
+			Amount: int64(115800000),
+			Asset:  assets[0],
+		},
+		{
+			Amount: int64(347180040),
+			Asset:  assets[1],
+		},
+		{
+			Amount: int64(37654100),
+			Asset:  assets[2],
+		},
+	}
+
+	option := NewCfdCoinSelectionOption()
+	option.EffectiveFeeRate = 0
+	option.LongTermFeeRate = 0
+	option.DustFeeRate = 0
+	option.KnapsackMinChange = 0
+
+	selectUtxos, totalAmounts, utxoFee, err := CfdGoCoinSelection(uintptr(0), utxos, targets, option)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), utxoFee)
+	assert.Equal(t, 5, len(selectUtxos))
+	assert.Equal(t, 3, len(totalAmounts))
+
+	if len(selectUtxos) == 5 {
+		assert.Equal(t, utxos[1].Amount, selectUtxos[0].Amount)
+		assert.Equal(t, utxos[3].Amount, selectUtxos[1].Amount)
+		assert.Equal(t, utxos[8].Amount, selectUtxos[2].Amount)
+		assert.Equal(t, utxos[7].Amount, selectUtxos[3].Amount)
+		assert.Equal(t, utxos[10].Amount, selectUtxos[4].Amount)
+	}
+	if len(totalAmounts) == 3 {
+		assert.Equal(t, int64(117187500), totalAmounts[0].Amount)
+		assert.Equal(t, targets[0].Asset, totalAmounts[0].Asset)
+		assert.Equal(t, int64(347180050), totalAmounts[1].Amount)
+		assert.Equal(t, targets[1].Asset, totalAmounts[1].Asset)
+		assert.Equal(t, int64(37654200), totalAmounts[2].Amount)
+		assert.Equal(t, targets[2].Asset, totalAmounts[2].Asset)
+	}
+
+	fmt.Print("TestCfdCoinSelectionUnuseFee test done.\n")
+}
+
 // last test
 /* comment out.
 func TestFinalize(t *testing.T) {
