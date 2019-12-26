@@ -432,6 +432,16 @@ type CfdUtxo struct {
 	Asset string
 	// output descriptor
 	Descriptor string
+	// is issuance output
+	IsIssuance bool
+	// is blind issuance output
+	IsBlindIssuance bool
+	// is peg-in output
+	IsPegin bool
+	// peg-in bitcoin tx size (require when IsPegin is true)
+	PeginBtcTxSize uint32
+	// fedpegscript hex (require when IsPegin is true)
+	FedpegScript string
 }
 
 /**
@@ -493,7 +503,7 @@ func CfdGoCoinSelection(handle uintptr, utxos []CfdUtxo, targetAmounts []CfdTarg
 	}
 	defer CfdGoCopyAndFreeHandle(handle, cfdErrHandle)
 
-	var coinSlectHandle uintptr
+	var coinSelectHandle uintptr
 	utxoCount := (uint32)(len(utxos))
 	amountCount := (uint32)(len(targetAmounts))
 	utxoCountBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&utxoCount)))
@@ -503,18 +513,18 @@ func CfdGoCoinSelection(handle uintptr, utxos []CfdUtxo, targetAmounts []CfdTarg
 	ret := CfdInitializeCoinSelection(cfdErrHandle, utxoCountBuf,
 				amountCountBuf, option.FeeAsset, txFeeAmountBuf,
 				option.EffectiveFeeRate, option.LongTermFeeRate, option.DustFeeRate,
-				knapsackMinChangeBuf, &coinSlectHandle)
+				knapsackMinChangeBuf, &coinSelectHandle)
 	if ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, cfdErrHandle)
 		return
 	}
-	defer CfdFreeCoinSelectionHandle(cfdErrHandle, coinSlectHandle)
+	defer CfdFreeCoinSelectionHandle(cfdErrHandle, coinSelectHandle)
 
 	for i := int32(0); i < (int32)(utxoCount); i++ {
 		indexBuf := SwigcptrInt32_t(uintptr(unsafe.Pointer(&i)))
 		voutBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&utxos[i].Vout)))
 		amoutBuf := SwigcptrInt64_t(uintptr(unsafe.Pointer(&utxos[i].Amount)))
-		ret = CfdAddCoinSelectionUtxo(cfdErrHandle, coinSlectHandle, indexBuf, utxos[i].Txid, voutBuf, amoutBuf, utxos[i].Asset, utxos[i].Descriptor)
+		ret = CfdAddCoinSelectionUtxo(cfdErrHandle, coinSelectHandle, indexBuf, utxos[i].Txid, voutBuf, amoutBuf, utxos[i].Asset, utxos[i].Descriptor)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, cfdErrHandle)
 			return
@@ -524,7 +534,7 @@ func CfdGoCoinSelection(handle uintptr, utxos []CfdUtxo, targetAmounts []CfdTarg
 	for i := uint32(0); i < amountCount; i++ {
 		indexBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
 		amoutBuf := SwigcptrInt64_t(uintptr(unsafe.Pointer(&targetAmounts[i].Amount)))
-		ret = CfdAddCoinSelectionAmount(cfdErrHandle, coinSlectHandle, indexBuf, amoutBuf, targetAmounts[i].Asset)
+		ret = CfdAddCoinSelectionAmount(cfdErrHandle, coinSelectHandle, indexBuf, amoutBuf, targetAmounts[i].Asset)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, cfdErrHandle)
 			return
@@ -532,7 +542,7 @@ func CfdGoCoinSelection(handle uintptr, utxos []CfdUtxo, targetAmounts []CfdTarg
 	}
 
 	utxoFeeBuf := SwigcptrInt64_t(uintptr(unsafe.Pointer(&utxoFee)))
-	ret = CfdFinalizeCoinSelection(cfdErrHandle, coinSlectHandle, utxoFeeBuf)
+	ret = CfdFinalizeCoinSelection(cfdErrHandle, coinSelectHandle, utxoFeeBuf)
 	if ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, cfdErrHandle)
 		return
@@ -542,7 +552,7 @@ func CfdGoCoinSelection(handle uintptr, utxos []CfdUtxo, targetAmounts []CfdTarg
 		utxoIndex := int32(0)
 		indexBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
 		utxoIndexBuf := SwigcptrInt32_t(uintptr(unsafe.Pointer(&utxoIndex)))
-		ret = CfdGetSelectedCoinIndex(cfdErrHandle, coinSlectHandle, indexBuf, utxoIndexBuf)
+		ret = CfdGetSelectedCoinIndex(cfdErrHandle, coinSelectHandle, indexBuf, utxoIndexBuf)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, cfdErrHandle)
 			return
@@ -557,7 +567,7 @@ func CfdGoCoinSelection(handle uintptr, utxos []CfdUtxo, targetAmounts []CfdTarg
 		amount := int64(0)
 		indexBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
 		amountBuf := SwigcptrInt64_t(uintptr(unsafe.Pointer(&amount)))
-		ret = CfdGetSelectedCoinAssetAmount(cfdErrHandle, coinSlectHandle, indexBuf, amountBuf)
+		ret = CfdGetSelectedCoinAssetAmount(cfdErrHandle, coinSelectHandle, indexBuf, amountBuf)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, cfdErrHandle)
 			return
@@ -565,6 +575,88 @@ func CfdGoCoinSelection(handle uintptr, utxos []CfdUtxo, targetAmounts []CfdTarg
 		totalAmounts = append(totalAmounts, targetAmounts[i])
 		totalAmounts[i].Amount = amount
 	}
+	return
+}
+
+/**
+ * EstimateFee option data struct.
+ */
+type CfdEstimateFeeOption struct {
+	// effective feerate
+	EffectiveFeeRate float64
+	// use elements chain
+	UseElements bool
+	// fee asset
+	FeeAsset string
+	// Require blinding or not
+	RequireBlind bool 
+}
+
+/**
+ * Create CfdEstimateFeeOption struct set default value.
+ * return: option        EstimateFeeOption
+ */
+func NewCfdEstimateFeeOption() CfdEstimateFeeOption {
+	option := CfdEstimateFeeOption{}
+	option.EffectiveFeeRate = float64(20.0)
+	option.UseElements = true
+	option.FeeAsset = ""
+	option.RequireBlind = true
+	return option
+}
+
+/**
+ * Estimate fee amount.
+ * param: handle       cfd handle
+ * param: txHex        transaction hex
+ * param: utxos        utxos to use as input
+ * param: useElements  flag to use elements transaction
+ */
+func CfdGoEstimateFee(handle uintptr, txHex string, utxos []CfdUtxo, option CfdEstimateFeeOption) (totalFee, txFee, utxoFee int64, err error) {
+	cfdErrHandle, err := CfdGoCloneHandle(handle)
+	if err != nil {
+		return
+	}
+	defer CfdGoCopyAndFreeHandle(handle, cfdErrHandle)
+
+	var estimateFeeHandle uintptr
+	if ret := CfdInitializeEstimateFee(handle, &estimateFeeHandle,
+			option.UseElements); ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, cfdErrHandle)
+		return
+	}
+
+	for utxo := range utxos {
+		vout := SwigcptrUint32_t(uintptr(unsafe.Pointer(&utxo.Vout)))
+		peginBtcTxSize := SwigcptrUint32_t(uintptr(unsafe.Pointer(&utxo.PeginBtcTxSize)))
+		if ret := CfdAddTxInForEstimateFee(
+				handle, estimateFeeHandle, utxo.Txid, vout, utxo.Descriptor, 
+				utxo.Asset, utxo.IsIssuance, utxo.IsBlindIssuance, utxo.IsPegin,
+				peginBtcTxSize, utxo.FedpegScript); ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, cfdErrHandle)
+			return
+		}
+	}
+
+	var txFeeWork, utxoFeeWork int64
+	txFeeWorkPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(txFeeWork)))
+	utxoFeeWorkPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(utxoFeeWork)))
+	if ret := CfdFinalizeEstimateFee(handle, estimateFeeHandle, txHex,
+			option.FeeAsset, txFeeWorkPtr, utxoFeeWorkPtr, option.RequireBlind,
+			option.EffectiveFeeRate); ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, cfdErrHandle)
+		return
+	}
+
+	if ret := CfdFreeEstimateFeeHandle(handle, estimateFeeHandle); 
+			ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, cfdErrHandle)
+		return
+	}
+
+	totalFee = txFeeWork + utxoFeeWork
+	txFee = txFeeWork
+	utxoFee = utxoFeeWork
 	return
 }
 
