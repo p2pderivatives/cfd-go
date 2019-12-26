@@ -1401,7 +1401,7 @@ func GetCoinSelectionTestData() (assets []string, utxos []CfdUtxo) {
 }
 
 func TestCfdGoEstimateFee(t *testing.T) {
-	asset, utxos := GetEstimateFeeTestData()
+	asset, inputs := GetEstimateFeeTestData()
 	t.Run("BitcoinTest", func(t *testing.T) {
 		handle, err := CfdGoCreateHandle()
 		assert.NoError(t, err)
@@ -1409,13 +1409,14 @@ func TestCfdGoEstimateFee(t *testing.T) {
 
 		txHex := "02000000014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff0101000000000000002200201863143c14c5166804bd19203356da136c985678cd4d27a1b8c632960490326200000000"
 		option := NewCfdEstimateFeeOption()
+		option.EffectiveFeeRate = float64(20.0)
 		option.UseElements = false
 		option.RequireBlind = false
-		totalFee, txFee, utxoFee, err := CfdGoEstimateFee(handle, txHex, utxos, option)
+		totalFee, txFee, inputFee, err := CfdGoEstimateFee(handle, txHex, inputs, option)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(12580), totalFee)
 		assert.Equal(t, int64(1060), txFee)
-		assert.Equal(t, int64(11520), utxoFee)
+		assert.Equal(t, int64(11520), inputFee)
 	})
 
 	t.Run("ElementsTest", func(t *testing.T) {
@@ -1425,48 +1426,77 @@ func TestCfdGoEstimateFee(t *testing.T) {
 
 		txHex := "020000000002d4b91f8ea0be3d89d33f9588884a843e78688152f4dff8aca5abc6f5973a83ae0000000000ffffffff140510708ffd1fc8bea09e204d36b0d5b9402a31767a4f6c36f23b40cd0cbaf70000000000ffffffff030100000000000000000000000000000000000000000000000000000000000000aa01000000003b9328e0001976a9146d715ab3da8090fd8f9e7aada1588e531b16b7da88ac0100000000000000000000000000000000000000000000000000000000000000bb010000000008f0d180001976a9147cafacbfc72f3682b1055b3a6b8711f3622eabfd88ac0100000000000000000000000000000000000000000000000000000000000000aa01000000000007a120000000000000"
 		option := NewCfdEstimateFeeOption()
+		option.EffectiveFeeRate = float64(20.0)
 		option.FeeAsset = asset[0]
-		totalFee, txFee, utxoFee, err := CfdGoEstimateFee(handle, txHex, utxos, option)
+		totalFee, txFee, inputFee, err := CfdGoEstimateFee(handle, txHex, inputs, option)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(47940), totalFee)
 		assert.Equal(t, int64(36400), txFee)
-		assert.Equal(t, int64(11540), utxoFee)
+		assert.Equal(t, int64(11540), inputFee)
 	})
 }
 
-func GetEstimateFeeTestData() (assets []string, utxos []CfdUtxo) {
+func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 	assets = []string{
 		"aa00000000000000000000000000000000000000000000000000000000000000",
 		"bb00000000000000000000000000000000000000000000000000000000000000",
 	}
-	utxos = []CfdUtxo{
+	inputs = []CfdEstimateFeeInput{
 		{
-			Txid:       "aa00000000000000000000000000000000000000000000000000000000000001",
-			Vout:       uint32(0),
-			Amount:     int64(100000000),
-			Asset:      assets[0],
-			Descriptor: "pkh(030000000000000000000000000000000000000000000000000000000000000a01)",
+			Utxo: CfdUtxo{
+				Txid:       "aa00000000000000000000000000000000000000000000000000000000000001",
+				Vout:       uint32(0),
+				Amount:     int64(100000000),
+				Asset:      assets[0],
+				Descriptor: "pkh(030000000000000000000000000000000000000000000000000000000000000a01)",
+			},
+			IsIssuance: false,
+			IsBlindIssuance: false,
+			IsPegin: false,
+			PeginBtcTxSize: uint32(0),
+			FedpegScript: "",
 		},
 		{
-			Txid:       "aa00000000000000000000000000000000000000000000000000000000000002",
-			Vout:       uint32(0),
-			Amount:     int64(200000000),
-			Asset:      assets[0],
-			Descriptor: "sh(multi(1,020000000000000000000000000000000000000000000000000000000000000a02,030000000000000000000000000000000000000000000000000000000000000a02))",
+			Utxo: CfdUtxo{
+				Txid:       "aa00000000000000000000000000000000000000000000000000000000000002",
+				Vout:       uint32(0),
+				Amount:     int64(200000000),
+				Asset:      assets[0],
+				Descriptor: "sh(multi(1,020000000000000000000000000000000000000000000000000000000000000a02,030000000000000000000000000000000000000000000000000000000000000a02))",
+			},
+			IsIssuance: false,
+			IsBlindIssuance: false,
+			IsPegin: false,
+			PeginBtcTxSize: uint32(0),
+			FedpegScript: "",
 		},
 		{
-			Txid:       "bb00000000000000000000000000000000000000000000000000000000000001",
-			Vout:       uint32(1),
-			Amount:     int64(30000000),
-			Asset:      assets[1],
-			Descriptor: "wpkh(030000000000000000000000000000000000000000000000000000000000000b01)",
+			Utxo: CfdUtxo{
+				Txid:       "bb00000000000000000000000000000000000000000000000000000000000001",
+				Vout:       uint32(1),
+				Amount:     int64(30000000),
+				Asset:      assets[1],
+				Descriptor: "wpkh(030000000000000000000000000000000000000000000000000000000000000b01)",
+			},
+			IsIssuance: false,
+			IsBlindIssuance: false,
+			IsPegin: false,
+			PeginBtcTxSize: uint32(0),
+			FedpegScript: "",
 		},
 		{
-			Txid:       "bb00000000000000000000000000000000000000000000000000000000000002",
-			Vout:       uint32(2),
-			Amount:     int64(40000000),
-			Asset:      assets[1],
-			Descriptor: "wsh(multi(1,020000000000000000000000000000000000000000000000000000000000000b02,030000000000000000000000000000000000000000000000000000000000000b02))",
+			Utxo: CfdUtxo{
+				Txid:       "bb00000000000000000000000000000000000000000000000000000000000002",
+				Vout:       uint32(2),
+				Amount:     int64(40000000),
+				Asset:      assets[1],
+				Descriptor: "wsh(multi(1,020000000000000000000000000000000000000000000000000000000000000b02,030000000000000000000000000000000000000000000000000000000000000b02))",
+			},
+			IsIssuance: false,
+			IsBlindIssuance: false,
+			IsPegin: false,
+			PeginBtcTxSize: uint32(0),
+			FedpegScript: "",
 		},
 	}
 
