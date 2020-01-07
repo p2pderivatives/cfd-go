@@ -1923,7 +1923,7 @@ func CfdGoVerifyConfidentialTxSignatureByIndex(
  *     (used only for witness input.)
  * param: witnessVersion        witness version.
  *     (used only for witness input. If not witness input used, set KCfdWitnessVersionNone or "-1".)
- * return: scriptsig            hex encoded script.
+ * return: result               result of verification signature
  * return: err                  error
  */
 func CfdGoVerifyConfidentialTxSignature(
