@@ -1877,7 +1877,7 @@ func CfdGoCreateMultisigScriptSig(handle uintptr, signItems []CfdMultisigSignDat
  * param: valueCommitment       input value commitment.
  *     (used only for witness input.)
  * param: witnessVersion        witness version.
- *     (used only for witness input.)
+ *     (used only for witness input. If not used, set KCfdWitnessVersionNone or "-1".)
  * return: result               result of verification signature
  * return: err                  error
  */
