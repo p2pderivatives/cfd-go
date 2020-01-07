@@ -11,9 +11,9 @@
 %}
 
 %typemap(argout) (char **) {
-    if ($1 && *$1) {
-        $input->n = strlen(*$1);
-    }
+  if ($1 && *$1) {
+    $input->n = strlen(*$1);
+  }
 }
 
 %insert(cgo_comment_typedefs) %{
@@ -1860,4 +1860,97 @@ func CfdGoCreateMultisigScriptSig(handle uintptr, signItems []CfdMultisigSignDat
 	}
 	return scriptsig, convertCfdError(ret, cfdErrHandle)
 }
+
+/**
+ * Verify signature in transaction input by index.
+ *   (prototype interface)
+ * param: handle                cfd handle.
+ * param: txHex                 transaction hex.
+ * param: signature             signature for input.
+ * param: pubkey                pubkey hex.
+ * param: script                script hex.
+ * param: index                 index of input for verification.
+ * param: sighashType           sighash type.
+ * param: sighashAnyoneCanPay   sighash anyone can pay flag.
+ * param: satoshiAmount         input satoshi amount.
+ *     (used only for witness input.)
+ * param: valueCommitment       input value commitment.
+ *     (used only for witness input.)
+ * param: witnessVersion        witness version.
+ *     (used only for witness input. If not used, set KCfdWitnessVersionNone or "-1".)
+ * return: result               result of verification signature
+ * return: err                  error
+ */
+func CfdGoVerifyConfidentialTxSignatureByIndex(
+		handle uintptr, txHex, signature, pubkey, script string, index uint32,
+		sighashType int, sighashAnyoneCanPay bool, satoshiAmount int64,
+		valueCommitment string, witnessVersion int) (result bool, err error) {
+	cfdErrHandle, err := CfdGoCloneHandle(handle)
+	if err != nil {
+		return
+	}
+	defer CfdGoCopyAndFreeHandle(handle, cfdErrHandle)
+
+	txid, vout, _, _, err := CfdGoGetConfidentialTxIn(cfdErrHandle, txHex, index)
+	if err != nil {
+		return
+	}
+	resultWork, err := CfdGoVerifyConfidentialTxSignature(cfdErrHandle, txHex, signature,
+			pubkey, script, txid, vout, sighashType, sighashAnyoneCanPay,
+			satoshiAmount, valueCommitment, witnessVersion)
+	if err != nil {
+		return 
+	}
+
+	result = resultWork
+	return
+}
+
+/**
+ * Verify signature in transaction input.
+ * param: handle                cfd handle.
+ * param: txHex                 transaction hex.
+ * param: signature             signature for input.
+ * param: pubkey                pubkey hex.
+ * param: script                script hex.
+ * param: txid                  input txid.
+ * param: vout                  input vout.
+ * param: sighashType           sighash type.
+ * param: sighashAnyoneCanPay   sighash anyone can pay flag.
+ * param: satoshiAmount         input satoshi amount.
+ *     (used only for witness input.)
+ * param: valueCommitment       input value commitment.
+ *     (used only for witness input.)
+ * param: witnessVersion        witness version.
+ *     (used only for witness input. If not witness input used, set KCfdWitnessVersionNone or "-1".)
+ * return: result               result of verification signature
+ * return: err                  error
+ */
+func CfdGoVerifyConfidentialTxSignature(
+		handle uintptr, txHex, signature, pubkey, script, txid string, vout uint32,
+		sighashType int, sighashAnyoneCanPay bool, satoshiAmount int64,
+		valueCommitment string, witnessVersion int) (result bool, err error) {
+	cfdErrHandle, err := CfdGoCloneHandle(handle)
+	if err != nil {
+		return
+	}
+	defer CfdGoCopyAndFreeHandle(handle, cfdErrHandle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdVerifyConfidentialTxSignature(cfdErrHandle, txHex, signature,
+			pubkey, script, txid, voutPtr, sighashType, sighashAnyoneCanPay,
+			satoshiAmountPtr, valueCommitment, witnessVersion)
+
+	if ret == (int)(KCfdSuccess) {
+		result = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		result = false
+	} else {
+		return false, convertCfdError(ret, cfdErrHandle)
+	}
+
+	return
+}
+
 %}
