@@ -1922,7 +1922,7 @@ func CfdGoVerifySignatureByIndex(
  * param: valueCommitment       input value commitment.
  *     (used only for witness input.)
  * param: witnessVersion        witness version.
- *     (used only for witness input.)
+ *     (used only for witness input. If not witness input used, set KCfdWitnessVersionNone or "-1".)
  * return: scriptsig            hex encoded script.
  * return: err                  error
  */
