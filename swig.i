@@ -1878,7 +1878,7 @@ func CfdGoCreateMultisigScriptSig(handle uintptr, signItems []CfdMultisigSignDat
  *     (used only for witness input.)
  * param: witnessVersion        witness version.
  *     (used only for witness input.)
- * return: scriptsig            hex encoded script.
+ * return: result               result of verification signature
  * return: err                  error
  */
 func CfdGoVerifySignatureByIndex(
