@@ -1503,7 +1503,7 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 	return
 }
 
-func TestCfdGoVerifySignature(t *testing.T) {
+func TestCfdGoVerifyConfidentialTxSignature(t *testing.T) {
 
 	t.Run("PKHSignature", func(t *testing.T) {
 		handle, err := CfdGoCreateHandle()
@@ -1526,13 +1526,44 @@ func TestCfdGoVerifySignature(t *testing.T) {
 		assert.NoError(t, err)
 
 		// check signature
-		result, err := CfdGoVerifySignature(handle, txHex, signature, pubkey, "", txid, vout, sighashType, false, satoshiValue, "", (int)(KCfdWitnessVersionNone))
+		result, err := CfdGoVerifyConfidentialTxSignature(handle, txHex, signature, pubkey, "", txid, vout, sighashType, false, satoshiValue, "", (int)(KCfdWitnessVersionNone))
 		assert.NoError(t, err)
 		assert.True(t, result)
 		// check signature
-		result, err = CfdGoVerifySignatureByIndex(handle, txHex, signature, pubkey, "", 0, sighashType, false, satoshiValue, "", (int)(KCfdWitnessVersionNone))
+		result, err = CfdGoVerifyConfidentialTxSignatureByIndex(handle, txHex, signature, pubkey, "", 0, sighashType, false, satoshiValue, "", (int)(KCfdWitnessVersionNone))
 		assert.NoError(t, err)
 		assert.True(t, result)
+	})
+
+	t.Run("PKHSignatureFail", func(t *testing.T) {
+		handle, err := CfdGoCreateHandle()
+		assert.NoError(t, err)
+		defer CfdGoFreeHandle(handle)
+
+		txHex := "02000000000117c10bbfcd4e89f6c33864ed627aa113f249343f4b2bbe6e86dcc725e0d06cfc010000006a473044022038527c96efaaa29b862c8fe8aa4e96602b03035505ebe1f166dd8b9f3731b7b502207e75d937ca1bb2e2f4208618051eb8aad02ad88a71477d7a6e7ec257f72cb6500121036b70f6598ee5c00ad068c9b86c7a1d5c433767a46db3bc3f9d53417171db1782fdffffff0301bdc7073c43d37ace6b66b02268ece4754fe6c39a985a16ccbe6cf05b89014d7201000000001dcd6500001976a91479975e7d3775b748cbcd5500804518280a2ebbae88ac01bdc7073c43d37ace6b66b02268ece4754fe6c39a985a16ccbe6cf05b89014d7201000000001dcccde80017a9141cd92b989652fbc4c2a92eb1d56456d0ef17d4158701bdc7073c43d37ace6b66b02268ece4754fe6c39a985a16ccbe6cf05b89014d7201000000000000971800000a000000"
+		txid := "fc6cd0e025c7dc866ebe2b4b3f3449f213a17a62ed6438c3f6894ecdbf0bc117"
+		vout := uint32(1)
+
+		// prepare pkh signature
+		pubkey, _, wif, err := CfdGoCreateKeyPair(handle, true, (int)(KCfdNetworkElementsRegtest))
+		assert.NoError(t, err)
+		sighashType := (int)(KCfdSigHashAll)
+		satoshiValue := int64(1000000000)
+		sighash, err := CfdGoCreateConfidentialSighash(handle, txHex, txid, vout,
+			(int)(KCfdP2pkh), pubkey, "", satoshiValue, "", sighashType, false)
+		assert.NoError(t, err)
+		signature, err := CfdGoCalculateEcSignature(handle, sighash, "", wif, (int)(KCfdNetworkElementsRegtest), true)
+		assert.NoError(t, err)
+
+		// check signature
+		invalidSighashType := (int)(KCfdSigHashSingle)
+		result, err := CfdGoVerifyConfidentialTxSignature(handle, txHex, signature, pubkey, "", txid, vout, invalidSighashType, false, satoshiValue, "", (int)(KCfdWitnessVersionNone))
+		assert.NoError(t, err)
+		assert.False(t, result)
+		// check signature
+		result, err = CfdGoVerifyConfidentialTxSignatureByIndex(handle, txHex, signature, pubkey, "", 0, invalidSighashType, false, satoshiValue, "", (int)(KCfdWitnessVersionNone))
+		assert.NoError(t, err)
+		assert.False(t, result)
 	})
 
 	t.Run("WSHSignature", func(t *testing.T) {
@@ -1561,11 +1592,11 @@ func TestCfdGoVerifySignature(t *testing.T) {
 		assert.NoError(t, err)
 
 		// check signature
-		result, err := CfdGoVerifySignature(handle, txHex, signature, pubkey, redeemScript, txid, vout, sighashType, false, int64(0), valueCommitment, (int)(KCfdWitnessVersion0))
+		result, err := CfdGoVerifyConfidentialTxSignature(handle, txHex, signature, pubkey, redeemScript, txid, vout, sighashType, false, int64(0), valueCommitment, (int)(KCfdWitnessVersion0))
 		assert.NoError(t, err)
 		assert.True(t, result)
 		// check signature
-		result, err = CfdGoVerifySignatureByIndex(handle, txHex, signature, pubkey, redeemScript, 0, sighashType, false, 0, valueCommitment, (int)(KCfdWitnessVersion0))
+		result, err = CfdGoVerifyConfidentialTxSignatureByIndex(handle, txHex, signature, pubkey, redeemScript, 0, sighashType, false, 0, valueCommitment, (int)(KCfdWitnessVersion0))
 		assert.NoError(t, err)
 		assert.True(t, result)
 	})

@@ -1881,7 +1881,7 @@ func CfdGoCreateMultisigScriptSig(handle uintptr, signItems []CfdMultisigSignDat
  * return: result               result of verification signature
  * return: err                  error
  */
-func CfdGoVerifySignatureByIndex(
+func CfdGoVerifyConfidentialTxSignatureByIndex(
 		handle uintptr, txHex, signature, pubkey, script string, index uint32,
 		sighashType int, sighashAnyoneCanPay bool, satoshiAmount int64,
 		valueCommitment string, witnessVersion int) (result bool, err error) {
@@ -1895,7 +1895,7 @@ func CfdGoVerifySignatureByIndex(
 	if err != nil {
 		return
 	}
-	resultWork, err := CfdGoVerifySignature(cfdErrHandle, txHex, signature,
+	resultWork, err := CfdGoVerifyConfidentialTxSignature(cfdErrHandle, txHex, signature,
 			pubkey, script, txid, vout, sighashType, sighashAnyoneCanPay,
 			satoshiAmount, valueCommitment, witnessVersion)
 	if err != nil {
@@ -1926,7 +1926,7 @@ func CfdGoVerifySignatureByIndex(
  * return: scriptsig            hex encoded script.
  * return: err                  error
  */
-func CfdGoVerifySignature(
+func CfdGoVerifyConfidentialTxSignature(
 		handle uintptr, txHex, signature, pubkey, script, txid string, vout uint32,
 		sighashType int, sighashAnyoneCanPay bool, satoshiAmount int64,
 		valueCommitment string, witnessVersion int) (result bool, err error) {
@@ -1936,15 +1936,16 @@ func CfdGoVerifySignature(
 	}
 	defer CfdGoCopyAndFreeHandle(handle, cfdErrHandle)
 
-	var resultWork bool
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
 	satoshiAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
-	ret := CfdConfidentialTxVerifySignature(cfdErrHandle, txHex, signature,
+	ret := CfdVerifyConfidentialTxSignature(cfdErrHandle, txHex, signature,
 			pubkey, script, txid, voutPtr, sighashType, sighashAnyoneCanPay,
-			satoshiAmountPtr, valueCommitment, witnessVersion, &resultWork)
+			satoshiAmountPtr, valueCommitment, witnessVersion)
 
 	if ret == (int)(KCfdSuccess) {
-		result = resultWork
+		result = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		result = false
 	} else {
 		return false, convertCfdError(ret, cfdErrHandle)
 	}
