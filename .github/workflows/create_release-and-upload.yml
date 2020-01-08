@@ -16,11 +16,6 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v1
-    - name: Get the version
-      id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-    - name: list
-      run: ls -a $GITHUB_WORKSPACE
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
