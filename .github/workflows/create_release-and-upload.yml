@@ -5,6 +5,9 @@ on:
     tags:
     - 'v*'
 
+env:
+  CMAKE_VERSION: 3.15.5
+
 jobs:
   upload-object-alpine:
     name: upload-object-alpine
@@ -79,10 +82,13 @@ jobs:
         name: artifact-upload_url
         path: /tmp/cfd/upload_url.txt
 
-  upload-object-macos-static:
-    name: upload-object-macos
+  upload-object-ubuntu:
+    name: upload-object-ubuntu
     needs: upload-object-alpine
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-16.04]
 
     steps:
     - name: checkout
@@ -90,39 +96,47 @@ jobs:
     - name: Get the version
       id: get_version
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-    - name: create folder
+    - name: cmake-useCache-ubuntu
+      uses: actions/cache@v1
+      id: cache
+      with:
+        path: cache/cmake
+        key: ${{ runner.os }}-cmake-3.15.5-x64
+    - name: cmake-download-ubuntu
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
-        echo "---- dump output data ----"
-        mkdir -p /tmp/cfd/usr/local/lib
-        sudo chmod 777 /tmp/cfd
-        sudo chown runner /tmp/cfd
-        sudo chmod 777 /tmp/cfd/usr
-        sudo chown runner /tmp/cfd/usr
+        mkdir -p cache/cmake
+        cd cache/cmake
+        wget https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-Linux-x86_64.tar.gz
+        cd ../..
+    - name: cmake-setting-ubuntu
+      run: |
+        export cmake_file_name="cmake-$CMAKE_VERSION-Linux-x86_64"
+        cd cache/cmake
+        tar zxvf $cmake_file_name.tar.gz
+        chmod +x $cmake_file_name/bin/cmake $cmake_file_name/bin/ctest
+        export CURRENT_DIR=$(pwd)
+        echo ::add-path::$CURRENT_DIR/$cmake_file_name/bin
+        cd ../..
     - name: cmake-build
       id: cmake_build
       run: |
+        mkdir dist
         mkdir build
         cd build
-        cmake .. -DENABLE_SHARED=off -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib;/usr/local/lib64"
+        cmake .. -DENABLE_SHARED=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib"
         make
-        sudo make install DESTDIR=/tmp/cfd
+        sudo make install DESTDIR=../dist
         cd ..
-        export CURRENT_DIR=$(pwd)
-        echo ::set-output name=CURRENT_DIR::$CURRENT_DIR
     - name: create archive file
       run: |
-        cd /tmp/cfd
-        sudo zip -r /tmp/cfd/cfd.zip usr
-        sudo chmod 777 /tmp/cfd/cfd.zip
-        sudo chown runner /tmp/cfd/cfd.zip
+        cd dist
+        zip -r cfd.zip usr
         echo "---- dump zip file ----"
-        sudo ls -l /tmp/cfd
+        ls -l
     - name: go test
-      env:
-        current_dir: ${{ steps.cmake_build.outputs.CURRENT_DIR }}
       run: |
-        sudo cp -rf /tmp/cfd/usr /
-        cd $current_dir
+        sudo unzip -q ./dist/cfd.zip -d /
         go test
     - name: download artifact
       uses: actions/download-artifact@v1
@@ -133,13 +147,25 @@ jobs:
       run: |
         url=$(cat artifact-upload_url/upload_url.txt)
         echo ::set-output name=upload_url::$url
-    - name: Upload Release Asset
-      id: upload-release-asset 
+    - name: Upload Release Asset Ubuntu-18.04
+      if: matrix.os == 'ubuntu-18.04'
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.get_url.outputs.upload_url }}
-        asset_path: /tmp/cfd/cfd.zip
-        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-darwin-static_x86_64.zip
+        asset_path: ./dist/cfd.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-ubuntu1804-gcc-x86_64.zip
         asset_content_type: application/zip
+    - name: Upload Release Asset Ubuntu-16.04
+      if: matrix.os == 'ubuntu-16.04'
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_url.outputs.upload_url }}
+        asset_path: ./dist/cfd.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-ubuntu1604-gcc-x86_64.zip
+        asset_content_type: application/zip
+    - name: ubuntu-after
+      run: rm -rf cache/cmake/cmake-$CMAKE_VERSION-Linux-x86_64
