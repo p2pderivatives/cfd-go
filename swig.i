@@ -783,12 +783,10 @@ func CfdGoUpdateConfidentialTxOut(handle uintptr, txHex string, index uint32, as
  * param: txHex               transaction hex
  * param: asset               asset
  * param: satoshiAmount       amount by satoshi
- * param: valueCommitment     amount by commitment bytes.
- * param: nonce               confidential nonce
  * return: outputTxHex        output transaction hex
  * return: err                error
  */
-func CfdGoAddDestoryConfidentialTxOut(handle uintptr, txHex string, asset string, satoshiAmount int64, valueCommitment string, nonce string) (outputTxHex string, err error) {
+func CfdGoAddDestoryConfidentialTxOut(handle uintptr, txHex string, asset string, satoshiAmount int64) (outputTxHex string, err error) {
 	cfdErrHandle, err := CfdGoCloneHandle(handle)
 	if err != nil {
 		return
@@ -797,7 +795,7 @@ func CfdGoAddDestoryConfidentialTxOut(handle uintptr, txHex string, asset string
 
 	burnScript, err := CfdGoConvertScriptAsmToHex(handle, "OP_RETURN")  // byte of OP_RETURN
 	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
-	ret := CfdAddConfidentialTxOut(cfdErrHandle, txHex, asset, satoshiPtr, valueCommitment, "", burnScript, nonce, &outputTxHex)
+	ret := CfdAddConfidentialTxOut(cfdErrHandle, txHex, asset, satoshiPtr, "", "", burnScript, "", &outputTxHex)
 	err = convertCfdError(ret, cfdErrHandle)
 	return outputTxHex, err
 }
