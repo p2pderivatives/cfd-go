@@ -9,8 +9,47 @@ env:
   CMAKE_VERSION: 3.15.5
 
 jobs:
+  create-releases:
+    name: upload-object-alpine
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v1
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    - name: list
+      run: ls -a $GITHUB_WORKSPACE
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          Changes in this Release
+          - First Change
+          - Second Change
+        draft: false
+        prerelease: false
+#      continue-on-error: true
+    - name: write upload url
+      env:
+        url: ${{ steps.create_release.outputs.upload_url }}
+      run: |
+        echo $url > upload_url.txt
+    - name: upload artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: artifact-upload_url
+        path: upload_url.txt
+
   upload-object-alpine:
     name: upload-object-alpine
+    needs: create-releases
     runs-on: ubuntu-latest
 
     steps:
@@ -44,21 +83,15 @@ jobs:
       uses: docker://golang:1.13-alpine
       with:
         entrypoint: /github/workspace/.github/workflows/docker/alpine_test_entrypoint.sh
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: download artifact
+      uses: actions/download-artifact@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          Changes in this Release
-          - First Change
-          - Second Change
-        draft: false
-        prerelease: false
-#      continue-on-error: true
+        name: artifact-upload_url
+    - name: dump upload url
+      id: get_url
+      run: |
+        url=$(cat artifact-upload_url/upload_url.txt)
+        echo ::set-output name=upload_url::$url
     - name: Upload Release Asset
       id: upload-release-asset 
 #      if: success()
@@ -66,25 +99,14 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ steps.get_url.outputs.upload_url }}
         asset_path: /tmp/cfd/cfd.zip
         asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-alpine_x86_64.zip
         asset_content_type: application/zip
-    - name: write upload url
-      env:
-        url: ${{ steps.create_release.outputs.upload_url }}
-      run: |
-        cd /tmp/cfd
-        sudo echo $url > upload_url.txt
-    - name: upload artifact
-      uses: actions/upload-artifact@v1
-      with:
-        name: artifact-upload_url
-        path: /tmp/cfd/upload_url.txt
 
   upload-object-ubuntu:
     name: upload-object-ubuntu
-    needs: upload-object-alpine
+    needs: create-releases
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -137,7 +159,7 @@ jobs:
     - name: go test
       run: |
         sudo unzip -q ./dist/cfd.zip -d /
-        go test
+        LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib" go test
     - name: download artifact
       uses: actions/download-artifact@v1
       with:
