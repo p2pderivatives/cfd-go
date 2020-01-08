@@ -778,6 +778,31 @@ func CfdGoUpdateConfidentialTxOut(handle uintptr, txHex string, index uint32, as
 }
 
 /**
+ * Add output for destroying the specified amount of the specified asset.
+ * param: handle              cfd handle
+ * param: txHex               transaction hex
+ * param: asset               asset
+ * param: satoshiAmount       amount by satoshi
+ * param: valueCommitment     amount by commitment bytes.
+ * param: nonce               confidential nonce
+ * return: outputTxHex        output transaction hex
+ * return: err                error
+ */
+func CfdGoAddDestoryConfidentialTxOut(handle uintptr, txHex string, asset string, satoshiAmount int64, valueCommitment string, nonce string) (outputTxHex string, err error) {
+	cfdErrHandle, err := CfdGoCloneHandle(handle)
+	if err != nil {
+		return
+	}
+	defer CfdGoCopyAndFreeHandle(handle, cfdErrHandle)
+
+	burnScript, err = CfdGoConvertScriptAsmToHex(handle, "OP_RETURN")  // byte of OP_RETURN
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdAddConfidentialTxOut(cfdErrHandle, txHex, asset, satoshiPtr, valueCommitment, "", RETURN_SCRIPT, nonce, &outputTxHex)
+	err = convertCfdError(ret, cfdErrHandle)
+	return outputTxHex, err
+}
+
+/**
  * TxData data struct.
  */
 type CfdTxData struct {
@@ -1948,6 +1973,29 @@ func CfdGoVerifyConfidentialTxSignature(
 		result = false
 	} else {
 		return false, convertCfdError(ret, cfdErrHandle)
+	}
+
+	return
+}
+
+/**
+ * Normalize ec signature to low-s form
+ * param: handle                 cfd handle
+ * param: signature              ec signature to nomalize
+ * return: normalizeSignature    normalized signature
+ * return: err                   error
+ */
+func CfdGoNormalizeSignature(handle uintptr, signature string) (normalizedSignature string, err error) {
+	cfdErrHandle, err := CfdGoCloneHandle(handle)
+	if err != nil {
+		return
+	}
+	defer CfdGoCopyAndFreeHandle(handle, cfdErrHandle)
+
+	ret := CfdNormalizeSignature(cfdErrHandle, signature, &normalizedSignature)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, cfdErrHandle)
+		normalizedSignature = ""
 	}
 
 	return
