@@ -10,7 +10,7 @@ env:
 
 jobs:
   create-releases:
-    name: upload-object-alpine
+    name: create-releases
     runs-on: ubuntu-latest
 
     steps:
