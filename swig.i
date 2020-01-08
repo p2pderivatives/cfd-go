@@ -795,9 +795,9 @@ func CfdGoAddDestoryConfidentialTxOut(handle uintptr, txHex string, asset string
 	}
 	defer CfdGoCopyAndFreeHandle(handle, cfdErrHandle)
 
-	burnScript, err = CfdGoConvertScriptAsmToHex(handle, "OP_RETURN")  // byte of OP_RETURN
+	burnScript, err := CfdGoConvertScriptAsmToHex(handle, "OP_RETURN")  // byte of OP_RETURN
 	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
-	ret := CfdAddConfidentialTxOut(cfdErrHandle, txHex, asset, satoshiPtr, valueCommitment, "", RETURN_SCRIPT, nonce, &outputTxHex)
+	ret := CfdAddConfidentialTxOut(cfdErrHandle, txHex, asset, satoshiPtr, valueCommitment, "", burnScript, nonce, &outputTxHex)
 	err = convertCfdError(ret, cfdErrHandle)
 	return outputTxHex, err
 }
