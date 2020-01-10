@@ -82,7 +82,9 @@ jobs:
       run: .\go_test.bat
     - name: go_test
       if: matrix.os != 'windows-latest'
-      run: ./go_test.sh
+      run: |
+        go build
+        LD_LIBRARY_PATH=./build/Release go test
     - name: ubuntu-after
       if: matrix.os == 'ubuntu-latest'
       run: rm -rf cache/cmake/cmake-$CMAKE_VERSION-Linux-x86_64
