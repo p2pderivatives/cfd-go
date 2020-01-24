@@ -1,5 +1,16 @@
 project(external_download NONE)
 
+# env check
+if($ENV{CFD_CMAKE_GIT_SSH})
+if($ENV{CFD_CMAKE_GIT_SSH} STREQUAL "1")
+set(USE_GIT_SSH   ON)
+else()
+set(USE_GIT_SSH   OFF)
+endif()
+else()
+set(USE_GIT_SSH   OFF)
+endif()
+
 # load file
 set(EXTERNAL_LOCAL_FILENAME  local_resource/external_project_local_setting.config)
 set(LOCAL_VERSION_FILE  ${CMAKE_SOURCE_DIR}/${EXTERNAL_LOCAL_FILENAME})
@@ -28,11 +39,17 @@ if(CFD_TARGET_URL)
 set(CFD_TARGET_REP  ${CFD_TARGET_URL})
 message(STATUS "[external project local] cfd url=${CFD_TARGET_URL}")
 else()
-set(CFD_TARGET_REP  https://github.com/p2pderivatives/cfd.git)
+set(CFD_TARGET_REP  p2pderivatives/cfd.git)
+endif()
+
+if(${USE_GIT_SSH})
+set(CFD_URL  git@github.com:${CFD_TARGET_REP})
+else()
+set(CFD_URL  https://github.com/${CFD_TARGET_REP})
 endif()
 
 set(TEMPLATE_PROJECT_NAME           cfd)
-set(TEMPLATE_PROJECT_GIT_REPOSITORY ${CFD_TARGET_REP})
+set(TEMPLATE_PROJECT_GIT_REPOSITORY ${CFD_URL})
 set(TEMPLATE_PROJECT_GIT_TAG        ${CFD_TARGET_TAG})
 set(PROJECT_EXTERNAL  "${CMAKE_SOURCE_DIR}/external/${TEMPLATE_PROJECT_NAME}/external")
 set(DIR_PATH "${CFD_ROOT_BINARY_DIR}/${TEMPLATE_PROJECT_NAME}")
