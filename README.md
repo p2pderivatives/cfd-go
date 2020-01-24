@@ -111,7 +111,7 @@ Attention: Currently, there is a problem with ExternalProject, so a problem occu
 ```Shell
 (cleanup)
 ./tools/cleanup.sh
-./tools/cleanup_install_files.sh
+sudo ./tools/cleanup_install_files.sh
 
 (build and install by using makefile)
 npm run cmake_make_install
@@ -122,7 +122,7 @@ cmake version is 3.15 or higher:
 ```Shell
 (cleanup)
 ./tools/cleanup.sh
-./tools/cleanup_install_files.sh
+sudo ./tools/cleanup_install_files.sh
 
 (build and install by using ninja or makefile)
 npm run cmake_install
@@ -136,7 +136,7 @@ Attention: Currently, there is a problem with ExternalProject, so a problem occu
 ```Shell
 (cleanup)
 ./tools/cleanup.sh
-./tools/cleanup_install_files.sh
+sudo ./tools/cleanup_install_files.sh
 
 (build)
 mkdir build && cd build && cmake .. -DENABLE_SHARED=on -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DENABLE_CAPI=on -DTARGET_RPATH=/usr/local/lib && make
@@ -159,7 +159,7 @@ cd build && sudo make uninstall
 cd build && sudo ninja uninstall
 
 (uninstall by using script)
-./tools/cleanup_install_files.sh
+sudo ./tools/cleanup_install_files.sh
 ```
 
 ---
