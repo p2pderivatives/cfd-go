@@ -110,7 +110,7 @@ Attention: Currently, there is a problem with ExternalProject, so a problem occu
 
 ```Shell
 (cleanup)
-./tools/cleanup.sh
+./tools/cmake_cleanup.sh
 sudo ./tools/cleanup_install_files.sh
 
 (build and install by using makefile)
@@ -121,7 +121,7 @@ npm run cmake_make_install
 cmake version is 3.15 or higher:
 ```Shell
 (cleanup)
-./tools/cleanup.sh
+./tools/cmake_cleanup.sh
 sudo ./tools/cleanup_install_files.sh
 
 (build and install by using ninja or makefile)
@@ -135,7 +135,7 @@ Attention: Currently, there is a problem with ExternalProject, so a problem occu
 
 ```Shell
 (cleanup)
-./tools/cleanup.sh
+./tools/cmake_cleanup.sh
 sudo ./tools/cleanup_install_files.sh
 
 (build)
