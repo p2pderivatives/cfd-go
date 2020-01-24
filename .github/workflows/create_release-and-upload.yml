@@ -5,9 +5,46 @@ on:
     tags:
     - 'v*'
 
+env:
+  CMAKE_VERSION: 3.15.5
+
 jobs:
-  docker-build:
-    name: docker-build
+  create-releases:
+    name: create-releases
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v1
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          Changes in this Release
+          - First Change
+          - Second Change
+        draft: false
+        prerelease: false
+#      continue-on-error: true
+    - name: write upload url
+      env:
+        url: ${{ steps.create_release.outputs.upload_url }}
+      run: |
+        echo $url > upload_url.txt
+    - name: upload artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: artifact-upload_url
+        path: upload_url.txt
+
+  upload-object-alpine:
+    name: upload-object-alpine
+    needs: create-releases
     runs-on: ubuntu-latest
 
     steps:
@@ -41,29 +78,111 @@ jobs:
       uses: docker://golang:1.13-alpine
       with:
         entrypoint: /github/workspace/.github/workflows/docker/alpine_test_entrypoint.sh
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: download artifact
+      uses: actions/download-artifact@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          Changes in this Release
-          - First Change
-          - Second Change
-        draft: false
-        prerelease: false
-      continue-on-error: true
+        name: artifact-upload_url
+    - name: dump upload url
+      id: get_url
+      run: |
+        url=$(cat artifact-upload_url/upload_url.txt)
+        echo ::set-output name=upload_url::$url
     - name: Upload Release Asset
       id: upload-release-asset 
-      if: success()
+#      if: success()
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ steps.get_url.outputs.upload_url }}
         asset_path: /tmp/cfd/cfd.zip
         asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-alpine_x86_64.zip
         asset_content_type: application/zip
+
+  upload-object-ubuntu:
+    name: upload-object-ubuntu
+    needs: create-releases
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-16.04]
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v1
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    - name: cmake-useCache-ubuntu
+      uses: actions/cache@v1
+      id: cache
+      with:
+        path: cache/cmake
+        key: ${{ runner.os }}-cmake-3.15.5-x64
+    - name: cmake-download-ubuntu
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p cache/cmake
+        cd cache/cmake
+        wget https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-Linux-x86_64.tar.gz
+        cd ../..
+    - name: cmake-setting-ubuntu
+      run: |
+        export cmake_file_name="cmake-$CMAKE_VERSION-Linux-x86_64"
+        cd cache/cmake
+        tar zxvf $cmake_file_name.tar.gz
+        chmod +x $cmake_file_name/bin/cmake $cmake_file_name/bin/ctest
+        export CURRENT_DIR=$(pwd)
+        echo ::add-path::$CURRENT_DIR/$cmake_file_name/bin
+        cd ../..
+    - name: cmake-build
+      id: cmake_build
+      run: |
+        mkdir dist
+        mkdir build
+        cd build
+        cmake .. -DENABLE_SHARED=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib"
+        make
+        sudo make install DESTDIR=../dist
+        cd ..
+    - name: create archive file
+      run: |
+        cd dist
+        zip -r cfd.zip usr
+        echo "---- dump zip file ----"
+        ls -l
+    - name: go test
+      run: |
+        sudo unzip -q ./dist/cfd.zip -d /
+        LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib" go test
+    - name: download artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: artifact-upload_url
+    - name: dump upload url
+      id: get_url
+      run: |
+        url=$(cat artifact-upload_url/upload_url.txt)
+        echo ::set-output name=upload_url::$url
+    - name: Upload Release Asset Ubuntu-18.04
+      if: matrix.os == 'ubuntu-18.04'
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_url.outputs.upload_url }}
+        asset_path: ./dist/cfd.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-ubuntu1804-gcc-x86_64.zip
+        asset_content_type: application/zip
+    - name: Upload Release Asset Ubuntu-16.04
+      if: matrix.os == 'ubuntu-16.04'
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_url.outputs.upload_url }}
+        asset_path: ./dist/cfd.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-ubuntu1604-gcc-x86_64.zip
+        asset_content_type: application/zip
+    - name: ubuntu-after
+      run: rm -rf cache/cmake/cmake-$CMAKE_VERSION-Linux-x86_64

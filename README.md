@@ -106,23 +106,45 @@ install for `/usr/local/lib`.
 
 When using the cmake-js package and npm script, the options for compilation are already set.
 
+Attention: Currently, there is a problem with ExternalProject, so a problem occurs when performing update processing. Please perform cleanup when building before installation.
+
 ```Shell
-npm cmake_make_install
+(cleanup)
+./tools/cmake_cleanup.sh
+sudo ./tools/cleanup_install_files.sh
+
+(build and install by using makefile)
+npm run cmake_make_install
 (Enter the password when prompted to use the sudo command.)
 ```
 
 cmake version is 3.15 or higher:
 ```Shell
-npm cmake_install
+(cleanup)
+./tools/cmake_cleanup.sh
+sudo ./tools/cleanup_install_files.sh
+
+(build and install by using ninja or makefile)
+npm run cmake_install
 (Enter the password when prompted to use the sudo command.)
 ```
 
 #### Using CMake install
 
+Attention: Currently, there is a problem with ExternalProject, so a problem occurs when performing update processing. Please perform cleanup when building before installation.
+
 ```Shell
+(cleanup)
+./tools/cmake_cleanup.sh
+sudo ./tools/cleanup_install_files.sh
+
+(build)
+mkdir build && cd build && cmake .. -DENABLE_SHARED=on -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DENABLE_CAPI=on -DTARGET_RPATH=/usr/local/lib && make
+
+(install by using makefile)
 cd build && sudo make install
 
-(Using ninja:)
+(install by using ninja)
 cd build && sudo ninja install
 ```
 
@@ -130,10 +152,14 @@ cmake version is 3.15 or higher: `cmake --install build`
 
 ### uninstall
 ```Shell
+(uninstall by using makefile)
 cd build && sudo make uninstall
 
-(Using ninja:)
+(uninstall by using ninja)
 cd build && sudo ninja uninstall
+
+(uninstall by using script)
+sudo ./tools/cleanup_install_files.sh
 ```
 
 ---
@@ -181,3 +207,21 @@ LD_LIBRARY_PATH=./build/Release go test
 ### Example
 
 - cfdgo_test.go
+
+## Note
+
+### Git connection:
+
+Git repository connections default to HTTPS.
+However, depending on the connection settings of GitHub, you may only be able to connect via SSH.
+As a countermeasure, forcibly establish SSH connection by setting `CFD_CMAKE_GIT_SSH=1` in the environment variable.
+
+- Windows: (On the command line. Or set from the system setting screen.)
+```
+set CFD_CMAKE_GIT_SSH=1
+```
+
+- MacOS & Linux(Ubuntu):
+```
+export CFD_CMAKE_GIT_SSH=1
+```
