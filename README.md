@@ -207,3 +207,21 @@ LD_LIBRARY_PATH=./build/Release go test
 ### Example
 
 - cfdgo_test.go
+
+## Note
+
+### Git connection:
+
+Git repository connections default to HTTPS.
+However, depending on the connection settings of GitHub, you may only be able to connect via SSH.
+As a countermeasure, forcibly establish SSH connection by setting `CFD_CMAKE_GIT_SSH=1` in the environment variable.
+
+- Windows: (On the command line. Or set from the system setting screen.)
+```
+set CFD_CMAKE_GIT_SSH=1
+```
+
+- MacOS & Linux(Ubuntu):
+```
+export CFD_CMAKE_GIT_SSH=1
+```
