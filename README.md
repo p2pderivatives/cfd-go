@@ -106,23 +106,45 @@ install for `/usr/local/lib`.
 
 When using the cmake-js package and npm script, the options for compilation are already set.
 
+Attention: Currently, there is a problem with ExternalProject, so a problem occurs when performing update processing. Please perform cleanup when building before installation.
+
 ```Shell
+(cleanup)
+./tools/cleanup.sh
+./tools/cleanup_install_files.sh
+
+(build and install by using makefile)
 npm run cmake_make_install
 (Enter the password when prompted to use the sudo command.)
 ```
 
 cmake version is 3.15 or higher:
 ```Shell
+(cleanup)
+./tools/cleanup.sh
+./tools/cleanup_install_files.sh
+
+(build and install by using ninja or makefile)
 npm run cmake_install
 (Enter the password when prompted to use the sudo command.)
 ```
 
 #### Using CMake install
 
+Attention: Currently, there is a problem with ExternalProject, so a problem occurs when performing update processing. Please perform cleanup when building before installation.
+
 ```Shell
+(cleanup)
+./tools/cleanup.sh
+./tools/cleanup_install_files.sh
+
+(build)
+mkdir build && cd build && cmake .. -DENABLE_SHARED=on -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DENABLE_CAPI=on -DTARGET_RPATH=/usr/local/lib && make
+
+(install by using makefile)
 cd build && sudo make install
 
-(Using ninja:)
+(install by using ninja)
 cd build && sudo ninja install
 ```
 
@@ -130,10 +152,14 @@ cmake version is 3.15 or higher: `cmake --install build`
 
 ### uninstall
 ```Shell
+(uninstall by using makefile)
 cd build && sudo make uninstall
 
-(Using ninja:)
+(uninstall by using ninja)
 cd build && sudo ninja uninstall
+
+(uninstall by using script)
+./tools/cleanup_install_files.sh
 ```
 
 ---
