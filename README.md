@@ -150,6 +150,20 @@ cd build && sudo ninja install
 
 cmake version is 3.15 or higher: `cmake --install build`
 
+#### Using releases asset (ubuntu / macos)
+
+```Shell
+(cleanup)
+./tools/cmake_cleanup.sh
+sudo ./tools/cleanup_install_files.sh
+
+(download)
+wget https://github.com/cryptogarageinc/cfd-go/releases/download/v0.0.17/cfdgo-v0.0.17-ubuntu1804-gcc-x86_64.zip
+
+(unzip)
+sudo unzip -q cfdgo-v0.0.17-ubuntu1804-gcc-x86_64.zip -d /
+```
+
 ### uninstall
 ```Shell
 (uninstall by using makefile)
@@ -196,10 +210,39 @@ go mod download
 
 ---
 
-## Example
+## Development information
+
+### managed files
+
+- cfdgo.go, cfdgo.cxx: generated from swig.
+- swig.i: swig file.
+
+#### generate from swig.i
+
+attention: At first, install swig and set PATH.
+
+```
+(linux/macos)
+./tools/gen_swig.sh
+
+(Windows)
+.\tools\gen_swig.bat
+```
 
 ### Test
 
+test file is `cfdgo_test.go` . Execute by the following method.
+
+- shell script or bat file
+```
+(linux/macos)
+./go_test.sh
+
+(Windows)
+.\go_test.bat
+```
+
+- go command
 ```Shell
 LD_LIBRARY_PATH=./build/Release go test
 ```
@@ -207,6 +250,8 @@ LD_LIBRARY_PATH=./build/Release go test
 ### Example
 
 - cfdgo_test.go
+
+---
 
 ## Note
 
