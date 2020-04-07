@@ -158,10 +158,10 @@ cmake version is 3.15 or higher: `cmake --install build`
 sudo ./tools/cleanup_install_files.sh
 
 (download)
-wget https://github.com/cryptogarageinc/cfd-go/releases/download/v0.0.17/cfdgo-v0.0.17-ubuntu1804-gcc-x86_64.zip
+wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.0.5/cfdgo-v0.0.5-ubuntu1804-gcc-x86_64.zip
 
 (unzip)
-sudo unzip -q cfdgo-v0.0.17-ubuntu1804-gcc-x86_64.zip -d /
+sudo unzip -q cfdgo-v0.0.5-ubuntu1804-gcc-x86_64.zip -d /
 ```
 
 ### uninstall
@@ -188,7 +188,7 @@ go.mod
 
 ```
 require (
-  github.com/cryptogarageinc/cfd-go v0.0.2
+  github.com/p2pderivatives/cfd-go v0.0.5
   ...
 )
 ```
@@ -196,7 +196,7 @@ require (
 Reference github commit:
 ```
 require (
-  github.com/cryptogarageinc/cfd-go v1.0.0-0.20191205091101-a48a6a8b1a24
+  github.com/p2pderivatives/cfd-go v1.0.0-0.20191205091101-a48a6a8b1a24
   ...
 )
 ```
