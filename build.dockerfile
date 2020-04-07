@@ -2,11 +2,11 @@ FROM alpine:3.10
 
 WORKDIR /workspace
 
-ARG CFDGO_VER=v0.0.4
+ARG CFDGO_VER=v0.0.5
 
 RUN apk add --update --no-cache musl gcc g++ make git cmake
 
-RUN git clone https://github.com/cryptogarageinc/cfd-go.git \
+RUN git clone https://github.com/p2pderivatives/cfd-go.git \
   && cd cfd-go \
   && git checkout refs/tags/$CFDGO_VER \
   && mkdir build \

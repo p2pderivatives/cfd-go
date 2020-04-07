@@ -4,9 +4,17 @@ on:
   push:
     branches:
     - develop
+    - dev_v[0-9]+
+    paths-ignore:
+    - 'README.md'
+    - '*.dockerfile'
+    - '*.json'
+    - 'LICENSE'
+    - 'pc/**'
   pull_request:
     branches:
     - develop
+    - dev_v[0-9]+
 
 env:
   CMAKE_VERSION: 3.15.5
@@ -18,12 +26,12 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
-        go-version: [1.11.x, 1.12.x, 1.13.x]
+        go-version: [1.12.x, 1.13.x, 1.14.x]
         exclude:
           - os: macos-latest
-            go-version: 1.11.x
+            go-version: 1.14.x
           - os: windows-latest
-            go-version: 1.11.x
+            go-version: 1.14.x
           - os: macos-latest
             go-version: 1.12.x
 
