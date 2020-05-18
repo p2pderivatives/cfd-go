@@ -18,8 +18,8 @@
 }
 
 %insert(cgo_comment_typedefs) %{
-#cgo CXXFLAGS: -I./external/cfd/include -I../cfd/include -I/usr/local/include
-#cgo LDFLAGS: -L/usr/local/lib -L/usr/local/lib64 -L${SRCDIR}/build/Release -L${SRCDIR}/build/Debug -lcfd -lcfdcore -lunivalue -lwally
+#cgo CXXFLAGS: -I./external/cfd/include -I../cfd/include -I/usr/local/include -I/c/usr/local/include -IC:/usr/local/include
+#cgo LDFLAGS: -L/usr/local/lib -L/usr/local/lib64 -L/c/usr/local/lib -LC:/usr/local/lib -L${SRCDIR}/build/Release -L${SRCDIR}/build/Debug -lcfd -lcfdcore -lunivalue -lwally
 %}
 
 %include "external/cfd/include/cfdc/cfdcapi_common.h"
@@ -465,6 +465,8 @@ type CfdUtxo struct {
 	PeginBtcTxSize uint32
 	// fedpegscript hex (require when IsPegin is true)
 	FedpegScript string
+	// scriptsig template hex (require script hash estimate fee)
+	ScriptSigTemplate string
 }
 
 /**
@@ -480,7 +482,7 @@ type CfdTargetAmount struct {
 /**
  * CoinSelection option data struct.
  */
-type CfdCoinSelectionOption struct {
+type CfdCoinSelectOption struct {
 	// fee asset
 	FeeAsset string
 	// tx-fee amount
@@ -493,18 +495,24 @@ type CfdCoinSelectionOption struct {
 	DustFeeRate float64
 	// knapsack min change value
 	KnapsackMinChange int64
+	// blind exponent
+	Exponent int64
+	// blind minimum bits
+	MinimumBits int64
 }
 
 /**
- * Create CfdCoinSelectionOption struct set default value.
+ * Create CfdCoinSelectOption struct set default value.
  * return: option        CoinSelection option
  */
-func NewCfdCoinSelectionOption() CfdCoinSelectionOption {
-	option := CfdCoinSelectionOption{}
+func NewCfdCoinSelectionOption() CfdCoinSelectOption {
+	option := CfdCoinSelectOption{}
 	option.EffectiveFeeRate = float64(20.0)
 	option.LongTermFeeRate = float64(-1.0)
 	option.DustFeeRate = float64(-1.0)
 	option.KnapsackMinChange = int64(-1)
+	option.Exponent = int64(0)
+	option.MinimumBits = int64(-1)
 	return option
 }
 
@@ -518,7 +526,7 @@ func NewCfdCoinSelectionOption() CfdCoinSelectionOption {
  * return: utxoFee       fee by utxo
  * return: err           error
  */
-func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option CfdCoinSelectionOption) (selectUtxos []CfdUtxo, totalAmounts []CfdTargetAmount, utxoFee int64, err error) {
+func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option CfdCoinSelectOption) (selectUtxos []CfdUtxo, totalAmounts []CfdTargetAmount, utxoFee int64, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -546,7 +554,7 @@ func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option
 		indexBuf := SwigcptrInt32_t(uintptr(unsafe.Pointer(&i)))
 		voutBuf := SwigcptrUint32_t(uintptr(unsafe.Pointer(&utxos[i].Vout)))
 		amoutBuf := SwigcptrInt64_t(uintptr(unsafe.Pointer(&utxos[i].Amount)))
-		ret = CfdAddCoinSelectionUtxo(handle, coinSelectHandle, indexBuf, utxos[i].Txid, voutBuf, amoutBuf, utxos[i].Asset, utxos[i].Descriptor)
+		ret = CfdAddCoinSelectionUtxoTemplate(handle, coinSelectHandle, indexBuf, utxos[i].Txid, voutBuf, amoutBuf, utxos[i].Asset, utxos[i].Descriptor, utxos[i].ScriptSigTemplate)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
 			return
@@ -561,6 +569,19 @@ func CfdGoCoinSelection(utxos []CfdUtxo, targetAmounts []CfdTargetAmount, option
 			err = convertCfdError(ret, handle)
 			return
 		}
+	}
+
+	exponentPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&option.Exponent)))
+	ret = CfdSetOptionCoinSelection(handle, coinSelectHandle, int(KCfdCoinSelectionExponent), exponentPtr, float64(0), false)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	minimumBitsPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&option.MinimumBits)))
+	ret = CfdSetOptionCoinSelection(handle, coinSelectHandle, int(KCfdCoinSelectionMinimumBits), minimumBitsPtr, float64(0), false)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
 	}
 
 	utxoFeeBuf := SwigcptrInt64_t(uintptr(unsafe.Pointer(&utxoFee)))
@@ -621,7 +642,7 @@ type CfdEstimateFeeInput struct {
 /**
  * EstimateFee option data struct.
  */
-type CfdEstimateFeeOption struct {
+type CfdFeeEstimateOption struct {
 	// effective feerate
 	EffectiveFeeRate float64
 	// use elements chain
@@ -630,18 +651,24 @@ type CfdEstimateFeeOption struct {
 	FeeAsset string
 	// Require blinding or not
 	RequireBlind bool
+	// blinding exponent value
+	Exponent int64
+	// blinding minimum bits value
+	MinimumBits int64
 }
 
 /**
- * Create CfdEstimateFeeOption struct set default value.
+ * Create CfdFeeEstimateOption struct set default value.
  * return: option        EstimateFeeOption
  */
-func NewCfdEstimateFeeOption() CfdEstimateFeeOption {
-	option := CfdEstimateFeeOption{}
+func NewCfdEstimateFeeOption() CfdFeeEstimateOption {
+	option := CfdFeeEstimateOption{}
 	option.EffectiveFeeRate = float64(20.0)
 	option.UseElements = true
 	option.FeeAsset = ""
 	option.RequireBlind = true
+	option.Exponent = int64(0)
+	option.MinimumBits = int64(-1)
 	return option
 }
 
@@ -651,11 +678,11 @@ func NewCfdEstimateFeeOption() CfdEstimateFeeOption {
  * param: inputs        inputs to set in the transaction
  * param: option        options for fee estimation
  * return: totalFee     total fee value when all utxos set to input.
- *     (totalFee = txFee + utxoFee)
+ *     (totalFee = txFee + inputFee)
  * return: txFee        base transaction fee value.
  * return: inputFee     fee value all of input set.
  */
-func CfdGoEstimateFee(txHex string, inputs []CfdEstimateFeeInput, option CfdEstimateFeeOption) (totalFee, txFee, inputFee int64, err error) {
+func CfdGoEstimateFee(txHex string, inputs []CfdEstimateFeeInput, option CfdFeeEstimateOption) (totalFee, txFee, inputFee int64, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -663,8 +690,11 @@ func CfdGoEstimateFee(txHex string, inputs []CfdEstimateFeeInput, option CfdEsti
 	defer CfdGoFreeHandle(handle)
 
 	var estimateFeeHandle uintptr
-	if ret := CfdInitializeEstimateFee(handle, &estimateFeeHandle,
-		option.UseElements); ret != (int)(KCfdSuccess) {
+	if ret := CfdInitializeEstimateFee(
+		handle,
+		&estimateFeeHandle,
+		option.UseElements,
+	); ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, handle)
 		return
 	}
@@ -673,21 +703,51 @@ func CfdGoEstimateFee(txHex string, inputs []CfdEstimateFeeInput, option CfdEsti
 	for _, input := range inputs {
 		vout := SwigcptrUint32_t(uintptr(unsafe.Pointer(&input.Utxo.Vout)))
 		peginBtcTxSize := SwigcptrUint32_t(uintptr(unsafe.Pointer(&input.PeginBtcTxSize)))
-		if ret := CfdAddTxInForEstimateFee(
-			handle, estimateFeeHandle, input.Utxo.Txid, vout, input.Utxo.Descriptor,
-			input.Utxo.Asset, input.IsIssuance, input.IsBlindIssuance, input.IsPegin,
-			peginBtcTxSize, input.FedpegScript); ret != (int)(KCfdSuccess) {
+		if ret := CfdAddTxInTemplateForEstimateFee(
+			handle,
+			estimateFeeHandle,
+			input.Utxo.Txid,
+			vout,
+			input.Utxo.Descriptor,
+			input.Utxo.Asset,
+			input.IsIssuance,
+			input.IsBlindIssuance,
+			input.IsPegin,
+			peginBtcTxSize,
+			input.FedpegScript,
+			input.Utxo.ScriptSigTemplate,
+		); ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
 			return
 		}
 	}
 
+	exponentPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&option.Exponent)))
+	ret := CfdSetOptionEstimateFee(handle, estimateFeeHandle, int(KCfdEstimateFeeExponent), exponentPtr, float64(0), false)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	minimumBitsPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&option.MinimumBits)))
+	ret = CfdSetOptionEstimateFee(handle, estimateFeeHandle, int(KCfdEstimateFeeMinimumBits), minimumBitsPtr, float64(0), false)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+
 	var txFeeWork, inputFeeWork int64
 	txFeeWorkPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txFeeWork)))
 	inputFeeWorkPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&inputFeeWork)))
-	if ret := CfdFinalizeEstimateFee(handle, estimateFeeHandle, txHex,
-		option.FeeAsset, txFeeWorkPtr, inputFeeWorkPtr, option.RequireBlind,
-		option.EffectiveFeeRate); ret != (int)(KCfdSuccess) {
+	if ret := CfdFinalizeEstimateFee(
+		handle,
+		estimateFeeHandle,
+		txHex,
+		option.FeeAsset,
+		txFeeWorkPtr,
+		inputFeeWorkPtr,
+		option.RequireBlind,
+		option.EffectiveFeeRate,
+	); ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, handle)
 		return
 	}
@@ -804,16 +864,7 @@ func CfdGoUpdateConfidentialTxOut(txHex string, index uint32, asset string, sato
  * return: err                error
  */
 func CfdGoAddDestoryConfidentialTxOut(txHex string, asset string, satoshiAmount int64) (outputTxHex string, err error) {
-	handle, err := CfdGoCreateHandle()
-	if err != nil {
-		return
-	}
-	defer CfdGoFreeHandle(handle)
-
-	burnScript, err := CfdGoConvertScriptAsmToHex("OP_RETURN") // byte of OP_RETURN
-	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
-	ret := CfdAddConfidentialTxOut(handle, txHex, asset, satoshiPtr, "", "", burnScript, "", &outputTxHex)
-	err = convertCfdError(ret, handle)
+	outputTxHex, err = CfdGoAddDestroyConfidentialTxOut(txHex, asset, satoshiAmount)
 	return outputTxHex, err
 }
 
@@ -1182,6 +1233,45 @@ func CfdGoGetIssuanceBlindingKey(masterBlindingKey string, txid string, vout uin
 }
 
 /**
+ * Get default blinding key by locking script.
+ * param: masterBlindingKey    master blinding key
+ * param: lockingScript        locking script
+ * return: blindingKey         blinding key
+ * return: err                 error
+ */
+func CfdGoGetDefaultBlindingKey(masterBlindingKey string, lockingScript string) (blindingKey string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdGetDefaultBlindingKey(handle, masterBlindingKey, lockingScript, &blindingKey)
+	err = convertCfdError(ret, handle)
+	return blindingKey, err
+}
+
+/**
+ * Get default blinding key by address.
+ * param: masterBlindingKey    master blinding key
+ * param: address              address
+ * return: blindingKey         blinding key
+ * return: err                 error
+ */
+func CfdGoGetDefaultBlindingKeyByAddress(masterBlindingKey string, address string) (blindingKey string, err error) {
+	info, err := CfdGoGetAddressInfo(address)
+	if err != nil {
+		return "", err
+	}
+
+	blindingKey, err = CfdGoGetDefaultBlindingKey(masterBlindingKey, info.LockingScript)
+	if err != nil {
+		return "", err
+	}
+	return blindingKey, nil
+}
+
+/**
  * Get blind transaction handle.
  * return: blindHandle         blindTx handle. release: CfdGoFreeBlindHandle
  * return: err                 error
@@ -1246,6 +1336,61 @@ func CfdGoAddBlindTxOutData(blindHandle uintptr, index uint32, confidentialKey s
 }
 
 /**
+ * BlindRawTransaction option data struct.
+ */
+type CfdBlindTxOption struct {
+	// blind minimum range value
+	MinimumRangeValue int64
+	// blind exponent
+	Exponent int64
+	// blind minimum bits
+	MinimumBits int64
+}
+
+/** NewCfdBlindTxOption
+ * Create CfdBlindTxOption struct set default value.
+ * return: option       FundRawTx option
+ */
+func NewCfdBlindTxOption() CfdBlindTxOption {
+	option := CfdBlindTxOption{}
+	option.MinimumRangeValue = int64(1)
+	option.Exponent = int64(0)
+	option.MinimumBits = int64(-1)
+	return option
+}
+
+// CfdGoSetBlindTxOption is set blinding optional data.
+func CfdGoSetBlindTxOption(blindHandle uintptr, option CfdBlindTxOption) (err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	minRangeValPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&option.MinimumRangeValue)))
+	ret := CfdSetBlindTxOption(handle, blindHandle, int(KCfdBlindOptionMinimumRangeValue), minRangeValPtr)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return err
+	}
+
+	exponentPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&option.Exponent)))
+	ret = CfdSetBlindTxOption(handle, blindHandle, int(KCfdBlindOptionExponent), exponentPtr)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return err
+	}
+
+	minBitsPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&option.MinimumBits)))
+	ret = CfdSetBlindTxOption(handle, blindHandle, int(KCfdBlindOptionMinimumBits), minBitsPtr)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return err
+	}
+	return nil
+}
+
+/**
  * Generate blind transaction.
  * param: blindHandle          blindTx handle
  * param: txHex                transaction hex
@@ -1279,6 +1424,131 @@ func CfdGoFreeBlindHandle(blindHandle uintptr) (err error) {
 	ret := CfdFreeBlindHandle(handle, blindHandle)
 	err = convertCfdError(ret, handle)
 	return
+}
+
+/**
+ * BlindRawTransaction option data struct.
+ */
+type CfdBlindInputData struct {
+	// Txid
+	Txid string
+	// Vout
+	Vout uint32
+	// Asset
+	Asset string
+	// Asset BlindFactor
+	AssetBlindFactor string
+	// satoshi value
+	Amount int64
+	// Value BlindFactor
+	ValueBlindFactor string
+	// (option) Asset blinding key
+	AssetBlindingKey string
+	// (option) Token blinding key
+	TokenBlindingKey string
+}
+
+/**
+ * BlindRawTransaction option data struct.
+ */
+type CfdBlindOutputData struct {
+	// txout index (-1: auto)
+	Index int
+	// confidential or not address
+	ConfidentialAddress string
+	// (optional) confidential key
+	ConfidentialKey string
+}
+
+/** CfdGoBlindRawTransaction
+ * Execute blindrawtransaction.
+ * param: txHex              transaction hex.
+ * param: txinList           txin utxo list.
+ * param: txoutList          txout target list. (need nonce empty txout)
+ * param: option             blindrawtransaction option.
+ * return: outputTx          blindrawtransaction tx.
+ * return: err               error
+ */
+func CfdGoBlindRawTransaction(txHex string, txinList []CfdBlindInputData, txoutList []CfdBlindOutputData, option *CfdBlindTxOption) (outputTx string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return "", err
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var blindHandle uintptr
+	ret := CfdInitializeBlindTx(handle, &blindHandle)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return "", err
+	}
+	defer CfdFreeBlindHandle(handle, blindHandle)
+
+	if option != nil {
+		minRangeValPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&(*option).MinimumRangeValue)))
+		ret := CfdSetBlindTxOption(handle, blindHandle, int(KCfdBlindOptionMinimumRangeValue), minRangeValPtr)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return "", err
+		}
+
+		exponentPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&(*option).Exponent)))
+		ret = CfdSetBlindTxOption(handle, blindHandle, int(KCfdBlindOptionExponent), exponentPtr)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return "", err
+		}
+
+		minBitsPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&(*option).MinimumBits)))
+		ret = CfdSetBlindTxOption(handle, blindHandle, int(KCfdBlindOptionMinimumBits), minBitsPtr)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return "", err
+		}
+	}
+
+	for i := 0; i < len(txinList); i++ {
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinList[i].Vout)))
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txinList[i].Amount)))
+		ret = CfdAddBlindTxInData(handle, blindHandle, txinList[i].Txid, voutPtr, txinList[i].Asset, txinList[i].AssetBlindFactor, txinList[i].ValueBlindFactor, amountPtr, txinList[i].AssetBlindingKey, txinList[i].TokenBlindingKey)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return "", err
+		}
+	}
+
+	for i := 0; i < len(txoutList); i++ {
+		if txoutList[i].Index < 0 {
+			ret = CfdAddBlindTxOutByAddress(handle, blindHandle, txoutList[i].ConfidentialAddress)
+		} else if len(txoutList[i].ConfidentialKey) > 0 {
+			index := uint32(txoutList[i].Index)
+			indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+			ret = CfdAddBlindTxOutData(handle, blindHandle, indexPtr, txoutList[i].ConfidentialKey)
+		} else {
+			var address string
+			var confidentialKey string
+			var networkType int
+			ret = CfdParseConfidentialAddress(handle, txoutList[i].ConfidentialAddress, &address, &confidentialKey, &networkType)
+			if ret != (int)(KCfdSuccess) {
+				err = convertCfdError(ret, handle)
+				return "", err
+			}
+			index := uint32(txoutList[i].Index)
+			indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+			ret = CfdAddBlindTxOutData(handle, blindHandle, indexPtr, confidentialKey)
+		}
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return "", err
+		}
+	}
+
+	ret = CfdFinalizeBlindTx(handle, blindHandle, txHex, &outputTx)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	return outputTx, nil
 }
 
 /**
@@ -1763,6 +2033,56 @@ func CfdGoGetPubkeyFromPrivkey(privkeyHex string, privkeyWif string, isCompress 
 	return pubkey, err
 }
 
+/** CfdGoCreateExtkey
+ * Create extkey.
+ * param: networkType     network type.
+ * param: extkeyType      extkey type. (0: privkey, 1: pubkey)
+ * param: fingerprint     fingerprint.
+ * param: key             key.
+ * param: chainCode       chain code.
+ * param: depth           depth.
+ * param: childNumber     child number. (0x80000000 over is hardened.)
+ * return: extkey         extkey.
+ * return: err            error
+ */
+func CfdGoCreateExtkey(networkType int, extkeyType int, fingerprint string, key string, chainCode string, depth byte, childNumber uint32) (extkey string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	childNumberPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&childNumber)))
+	ret := CfdCreateExtkey(handle, networkType, extkeyType, "", fingerprint, key, chainCode, depth, childNumberPtr, &extkey)
+	err = convertCfdError(ret, handle)
+	return extkey, err
+}
+
+/** CfdGoCreateExtkeyFromParent
+ * Create extkey from parent key.
+ * param: networkType     network type.
+ * param: extkeyType      extkey type. (0: privkey, 1: pubkey)
+ * param: parentKey       parent key. (pubkey or privkey)
+ * param: key             key. (pubkey or privkey)
+ * param: chainCode       chain code.
+ * param: depth           depth.
+ * param: childNumber     child number. (0x80000000 over is hardened.)
+ * return: extkey         extkey.
+ * return: err            error
+ */
+func CfdGoCreateExtkeyFromParent(networkType int, extkeyType int, parentKey string, key string, chainCode string, depth byte, childNumber uint32) (extkey string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	childNumberPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&childNumber)))
+	ret := CfdCreateExtkey(handle, networkType, extkeyType, parentKey, "", key, chainCode, depth, childNumberPtr, &extkey)
+	err = convertCfdError(ret, handle)
+	return extkey, err
+}
+
 /**
  * Create extkey from seed.
  * param: seed            seed data(hex).
@@ -2198,9 +2518,22 @@ func CfdGoVerifyConfidentialTxSignature(
 	}
 	defer CfdGoFreeHandle(handle)
 
+	sig := signature
+	if len(signature) > (65 * 2) {
+		var decodedSig string
+		var decSighashType int
+		var decSighashAnyoneCanPay bool
+		ret := CfdDecodeSignatureFromDer(handle, signature, &decodedSig, &decSighashType, &decSighashAnyoneCanPay)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return false, err
+		}
+		sig = decodedSig
+	}
+
 	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
 	satoshiAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
-	ret := CfdVerifyConfidentialTxSignature(handle, txHex, signature,
+	ret := CfdVerifyConfidentialTxSignature(handle, txHex, sig,
 		pubkey, script, txid, voutPtr, sighashType, sighashAnyoneCanPay,
 		satoshiAmountPtr, valueCommitment, witnessVersion)
 
@@ -2242,17 +2575,17 @@ func CfdGoNormalizeSignature(signature string) (normalizedSignature string, err 
  * param: derEncodedSignature      signature encoded by der encodeing.
  * return: signature               compact format signature.
  * return: sighashType             sighash type.
- * return: sighash_anyone_can_pay  flag of signing only the current input.
+ * return: sighashAnyoneCanPay     flag of signing only the current input.
  * return: err                     error
  */
-func CfdGoDecodeSignatureFromDer(derEncodedSignature string) (signature string, sighashType int, sighash_anyone_can_pay bool, err error) {
+func CfdGoDecodeSignatureFromDer(derEncodedSignature string) (signature string, sighashType int, sighashAnyoneCanPay bool, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
 	}
 	defer CfdGoFreeHandle(handle)
 
-	ret := CfdDecodeSignatureFromDer(handle, derEncodedSignature, &signature, &sighashType, &sighash_anyone_can_pay)
+	ret := CfdDecodeSignatureFromDer(handle, derEncodedSignature, &signature, &sighashType, &sighashAnyoneCanPay)
 	err = convertCfdError(ret, handle)
 	return
 }
@@ -2673,45 +3006,1047 @@ func CfdGoFreeTransactionHandle(createTxHandle uintptr) {
 	FreeTransactionHandle(createTxHandle)
 }
 
-/*
-func GetTxInfo(networkType int, txHex string) (txid string, wtxid string, size uint32, vsize uint32, weight uint32, version uint32, locktime uint32) {
-	// FIXME
-	ret := CfdGetTxInfo(arg1 uintptr, arg2 int, arg3 string, arg4 *string, arg5 *string, arg6 Uint32_t, arg7 Uint32_t, arg8 Uint32_t, arg9 Uint32_t, arg10 Uint32_t)
+/** CfdGoSerializeByteData
+ * Serialize byte data.
+ * param: buffer        buffer
+ * return: output       serialized buffer.
+ * return: err          error
+ */
+func CfdGoSerializeByteData(buffer string) (output string, err error) {
+	output = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdSerializeByteData(handle, buffer, &output)
+	err = convertCfdError(ret, handle)
+	return output, err
 }
 
-func GetTxIn(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, arg5 *string, arg6 Uint32_t, arg7 Uint32_t, arg8 *string) (_swig_ret int) {
-	func CfdGetTxIn(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, arg5 *string, arg6 Uint32_t, arg7 Uint32_t, arg8 *string) (_swig_ret int) {
+/** CfdGoVerifyEcSignature
+ * Verify ec signature.
+ * param: sighash       signature hash.
+ * param: pubkey        pubkey.
+ * param: signature     signature.
+ * return: isVerify     verify check.
+ * return: err          error
+ */
+func CfdGoVerifyEcSignature(sighash string, pubkey string, signature string) (isVerify bool, err error) {
+	isVerify = false
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdVerifyEcSignature(handle, sighash, pubkey, signature)
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isVerify = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isVerify, err
 }
 
-func CfdGetTxInWitness(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, arg5 Uint32_t, arg6 *string) (_swig_ret int) {
-	func CfdGetTxInWitness(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, arg5 Uint32_t, arg6 *string) (_swig_ret int) {
+/** CfdGoCalculateSchnorrSignatureWithNonce
+ * Calculate schnorr signature. (with nonce)
+ * param: oraclePrivkey   oracle privkey.
+ * param: kValue          k-value.
+ * param: message         message hash(32byte).
+ * return: signature      32byte signature.
+ * return: err            error
+ */
+func CfdGoCalculateSchnorrSignatureWithNonce(oraclePrivkey string, kValue string, message string) (signature string, err error) {
+	signature = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdCalculateSchnorrSignatureWithNonce(handle, oraclePrivkey, kValue, message, &signature)
+	err = convertCfdError(ret, handle)
+	return signature, err
 }
 
-func CfdGetTxOut(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, arg5 Int64_t, arg6 *string) (_swig_ret int) {
-	func CfdGetTxOut(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, arg5 Int64_t, arg6 *string) (_swig_ret int) {
+/** CfdGoVerifySchnorrSignatureWithNonce
+ * Verify schnorr signature with nonce.
+ * param: pubkey        oracle pubkey.
+ * param: nonce         pubkey nonce.
+ * param: signature     signature(32byte).
+ * param: message       message hash(32byte).
+ * return: isVerify     verify check.
+ * return: err          error
+ */
+func CfdGoVerifySchnorrSignatureWithNonce(pubkey string, nonce string, signature string, message string) (isVerify bool, err error) {
+	isVerify = false
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
 
+	ret := CfdVerifySchnorrSignatureWithNonce(handle, pubkey, nonce, signature, message)
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isVerify = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isVerify, err
+}
 
-func CfdGetTxInCount(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t) (_swig_ret int) {
-	func CfdGetTxInCount(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t) (_swig_ret int) {
+/** CfdGoCalculateSchnorrSignature
+ * Calculate schnorr signature. (with nonce)
+ * param: oraclePrivkey   oracle privkey.
+ * param: kValue          k-value.
+ * param: message         message hash(32byte).
+ * return: signature      64byte signature.
+ * return: err            error
+ */
+func CfdGoCalculateSchnorrSignature(oraclePrivkey string, kValue string, message string) (signature string, err error) {
+	signature = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
 
-func CfdGetTxInWitnessCount(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, arg5 Uint32_t) (_swig_ret int) {
-	func CfdGetTxInWitnessCount(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t, arg5 Uint32_t) (_swig_ret int) {
+	ret := CfdCalculateSchnorrSignature(handle, oraclePrivkey, kValue, message, &signature)
+	err = convertCfdError(ret, handle)
+	return signature, err
+}
 
-func CfdGetTxOutCount(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t) (_swig_ret int) {
-	func CfdGetTxOutCount(arg1 uintptr, arg2 int, arg3 string, arg4 Uint32_t) (_swig_ret int) {
+/** CfdGoVerifySchnorrSignature
+ * Verify schnorr signature with nonce.
+ * param: pubkey        oracle pubkey.
+ * param: signature     signature(64byte).
+ * param: message       message hash(32byte).
+ * return: isVerify     verify check.
+ * return: err          error
+ */
+func CfdGoVerifySchnorrSignature(pubkey string, signature string, message string) (isVerify bool, err error) {
+	isVerify = false
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
 
-func CfdGetTxInIndex(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 Uint32_t, arg6 Uint32_t) (_swig_ret int) {
-	func CfdGetTxInIndex(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 Uint32_t, arg6 Uint32_t) (_swig_ret int) {
+	ret := CfdVerifySchnorrSignature(handle, pubkey, signature, message)
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isVerify = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isVerify, err
+}
 
-func CfdGetTxOutIndex(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 string, arg6 Uint32_t) (_swig_ret int) {
-	func CfdGetTxOutIndex(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 string, arg6 Uint32_t) (_swig_ret int) {
+/** CfdGoCompressPubkey
+ * Compress pubkey.
+ * param: pubkey              pubkey.
+ * return: compressedPubkey   compressed pubkey.
+ * return: err                error
+ */
+func CfdGoCompressPubkey(pubkey string) (compressedPubkey string, err error) {
+	compressedPubkey = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
 
-func CfdCreateSighash(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 Uint32_t, arg6 int, arg7 string, arg8 string, arg9 Int64_t, arg10 int, arg11 bool, arg12 *string) (_swig_ret int) {
-	func CfdCreateSighash(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 Uint32_t, arg6 int, arg7 string, arg8 string, arg9 Int64_t, arg10 int, arg11 bool, arg12 *string) (_swig_ret int) {
+	ret := CfdCompressPubkey(handle, pubkey, &compressedPubkey)
+	err = convertCfdError(ret, handle)
+	return compressedPubkey, err
+}
 
-func CfdAddSignWithPrivkeySimple(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 Uint32_t, arg6 int, arg7 string, arg8 string, arg9 Int64_t, arg10 int, arg11 bool, arg12 bool, arg13 *string) (_swig_ret int) {
-	func CfdAddSignWithPrivkeySimple(arg1 uintptr, arg2 int, arg3 string, arg4 string, arg5 Uint32_t, arg6 int, arg7 string, arg8 string, arg9 Int64_t, arg10 int, arg11 bool, arg12 bool, arg13 *string) (_swig_ret int) {
-*/
+/** CfdGoUncompressPubkey
+ * Compress pubkey.
+ * param: pubkey                pubkey.
+ * return: uncompressedPubkey   uncompressed pubkey.
+ * return: err                  error
+ */
+func CfdGoUncompressPubkey(pubkey string) (uncompressedPubkey string, err error) {
+	uncompressedPubkey = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdUncompressPubkey(handle, pubkey, &uncompressedPubkey)
+	err = convertCfdError(ret, handle)
+	return uncompressedPubkey, err
+}
+
+/** CfdGoCombinePubkey
+ * Combine pubkey.
+ * param: pubkeyList          pubkey list.
+ * return: combinedPubkey     combined pubkey.
+ * return: err                error
+ */
+func CfdGoCombinePubkey(pubkeyList []string) (combinedPubkey string, err error) {
+	combinedPubkey = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var combineHandle uintptr
+	ret := CfdInitializeCombinePubkey(handle, &combineHandle)
+	if ret != (int)(KCfdSuccess) {
+		return "", convertCfdError(ret, handle)
+	}
+	defer CfdFreeCombinePubkeyHandle(handle, combineHandle)
+
+	for i := 0; i < len(pubkeyList); i++ {
+		ret = CfdAddCombinePubkey(handle, combineHandle, pubkeyList[i])
+		if ret != (int)(KCfdSuccess) {
+			break
+		}
+	}
+
+	if ret == (int)(KCfdSuccess) {
+		ret = CfdFinalizeCombinePubkey(handle, combineHandle, &combinedPubkey)
+	}
+	return combinedPubkey, convertCfdError(ret, handle)
+}
+
+/** CfdGoCombinePubkeyPair
+ * Compress pubkey.
+ * param: sourcePubkey        source pubkey.
+ * param: destPubkey          destination pubkey.
+ * return: combinedPubkey     combined pubkey.
+ * return: err                error
+ */
+func CfdGoCombinePubkeyPair(sourcePubkey string, destPubkey string) (combinedPubkey string, err error) {
+	pubkeys := []string{sourcePubkey, destPubkey}
+	combinedPubkey, err = CfdGoCombinePubkey(pubkeys)
+	return combinedPubkey, err
+}
+
+/** CfdGoPubkeyTweakAdd
+ * TweakAdd pubkey.
+ * param: pubkey              pubkey.
+ * param: tweak               tweak data.
+ * return: tweakedPubkey      tweaked pubkey.
+ * return: err                error
+ */
+func CfdGoPubkeyTweakAdd(pubkey string, tweak string) (tweakedPubkey string, err error) {
+	tweakedPubkey = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdPubkeyTweakAdd(handle, pubkey, tweak, &tweakedPubkey)
+	err = convertCfdError(ret, handle)
+	return tweakedPubkey, err
+}
+
+/** CfdGoPubkeyTweakMul
+ * TweakMul pubkey.
+ * param: pubkey              pubkey.
+ * param: tweak               tweak data.
+ * return: tweakedPubkey      tweaked pubkey.
+ * return: err                error
+ */
+func CfdGoPubkeyTweakMul(pubkey string, tweak string) (tweakedPubkey string, err error) {
+	tweakedPubkey = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdPubkeyTweakMul(handle, pubkey, tweak, &tweakedPubkey)
+	err = convertCfdError(ret, handle)
+	return tweakedPubkey, err
+}
+
+/** CfdGoNegatePubkey
+ * Negate pubkey.
+ * param: pubkey              pubkey.
+ * return: negatePubkey       negate pubkey.
+ * return: err                error
+ */
+func CfdGoNegatePubkey(pubkey string) (negatePubkey string, err error) {
+	negatePubkey = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdNegatePubkey(handle, pubkey, &negatePubkey)
+	err = convertCfdError(ret, handle)
+	return negatePubkey, err
+}
+
+/** CfdGoPrivkeyTweakAdd
+ * TweakAdd privkey.
+ * param: privkey             privkey.
+ * param: tweak               tweak data.
+ * return: tweakedPrivkey     tweaked privkey.
+ * return: err                error
+ */
+func CfdGoPrivkeyTweakAdd(privkey string, tweak string) (tweakedPrivkey string, err error) {
+	tweakedPrivkey = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdPrivkeyTweakAdd(handle, privkey, tweak, &tweakedPrivkey)
+	err = convertCfdError(ret, handle)
+	return tweakedPrivkey, err
+}
+
+/** CfdGoPrivkeyTweakMul
+ * TweakMul privkey.
+ * param: privkey             privkey.
+ * param: tweak               tweak data.
+ * return: tweakedPrivkey     tweaked privkey.
+ * return: err                error
+ */
+func CfdGoPrivkeyTweakMul(privkey string, tweak string) (tweakedPrivkey string, err error) {
+	tweakedPrivkey = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdPrivkeyTweakMul(handle, privkey, tweak, &tweakedPrivkey)
+	err = convertCfdError(ret, handle)
+	return tweakedPrivkey, err
+}
+
+/** CfdGoNegatePrivkey
+ * Negate privkey.
+ * param: privkey             privkey.
+ * return: negatePrivkey      negate privkey.
+ * return: err                error
+ */
+func CfdGoNegatePrivkey(privkey string) (negatePrivkey string, err error) {
+	negatePrivkey = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdNegatePrivkey(handle, privkey, &negatePrivkey)
+	err = convertCfdError(ret, handle)
+	return negatePrivkey, err
+}
+
+/** CfdGoGetSchnorrPubkey
+ * Get schnorr pubkey.
+ * param: oraclePubkey        oracle pubkey.
+ * param: rPoint              r-point data.
+ * param: message             message hash.
+ * return: pubkey             schnorr pubkey.
+ * return: err                error
+ */
+func CfdGoGetSchnorrPubkey(oraclePubkey string, rPoint string, message string) (pubkey string, err error) {
+	pubkey = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdGetSchnorrPubkey(handle, oraclePubkey, rPoint, message, &pubkey)
+	err = convertCfdError(ret, handle)
+	return pubkey, err
+}
+
+/** CfdGoGetSchnorrPublicNonce
+ * Get schnorr public nonce.
+ * param: privkey             privkey.
+ * return: nonce              public nonce.
+ * return: err                error
+ */
+func CfdGoGetSchnorrPublicNonce(privkey string) (nonce string, err error) {
+	nonce = ""
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdGetSchnorrPublicNonce(handle, privkey, &nonce)
+	err = convertCfdError(ret, handle)
+	return nonce, err
+}
+
+/** CfdGoVerifySignature
+ * Verify signature.
+ * param: networkType           network type.
+ * param: txHex                 transaction hex.
+ * param: signature             signature.
+ * param: hashType              hash type.
+ * param: pubkey                public key.
+ * param: redeemScript          redeem script(using script hash).
+ * param: txid                  utxo txid.
+ * param: vout                  utxo vout.
+ * param: sighashType           signature hash type.
+ * param: sighashAnyoneCanPay   sighash anyone can pay flag.
+ * param: satoshiValue          satoshi value.
+ * param: valueByteData         value bytedata(commitment value).
+ * return: isVerify             verify check.
+ * return: err                  error
+ */
+func CfdGoVerifySignature(networkType int, txHex string, signature string, hashType int, pubkey string, redeemScript string, txid string, vout uint32, sighashType int, sighashAnyoneCanPay bool, satoshiValue int64, valueByteData string) (isVerify bool, err error) {
+	isVerify = false
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	sig := signature
+	if len(signature) > (65 * 2) {
+		var decodedSig string
+		var decSighashType int
+		var decSighashAnyoneCanPay bool
+		ret := CfdDecodeSignatureFromDer(handle, signature, &decodedSig, &decSighashType, &decSighashAnyoneCanPay)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return false, err
+		}
+		sig = decodedSig
+	}
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiValue)))
+	ret := CfdVerifySignature(handle, networkType, txHex, sig, hashType, pubkey, redeemScript, txid, voutPtr, sighashType, sighashAnyoneCanPay, satoshiPtr, valueByteData)
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isVerify = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isVerify, err
+}
+
+/** CfdGoVerifyTxSign
+ * Verify transaction sign.
+ * param: networkType           network type.
+ * param: txHex                 transaction hex.
+ * param: txid                  utxo txid.
+ * param: vout                  utxo vout.
+ * param: address               address string.
+ * param: addressType           address type.
+ * param: directLockingScript   locking script on direct.
+ * param: satoshiValue          satoshi value.
+ * param: valueByteData         value bytedata(commitment value).
+ * return: isVerify             verify check.
+ * return: err                  error
+ */
+func CfdGoVerifyTxSign(networkType int, txHex string, txid string, vout uint32, address string, addressType int, directLockingScript string, satoshiValue int64, valueByteData string) (isVerify bool, err error) {
+	isVerify = false
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiValue)))
+	ret := CfdVerifyTxSign(handle, networkType, txHex, txid, voutPtr, address, addressType, directLockingScript, satoshiPtr, valueByteData)
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isVerify = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isVerify, err
+}
+
+/**
+ * Get transaction data.
+ * param: networkType   network type.
+ * param: txHex         transaction hex
+ * return: data         transaction data
+ * return: err          error
+ */
+func CfdGoGetTxInfo(networkType int, txHex string) (data CfdTxData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	sizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Size)))
+	vsizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Vsize)))
+	weightPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Weight)))
+	versionPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.Version)))
+	locktimePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&data.LockTime)))
+	ret := CfdGetTxInfo(handle, networkType, txHex, &data.Txid, &data.Wtxid, sizePtr, vsizePtr, weightPtr, versionPtr, locktimePtr)
+	err = convertCfdError(ret, handle)
+	return data, err
+}
+
+/**
+ * Get txin on transaction.
+ * param: networkType   network type.
+ * param: txHex         transaction hex
+ * param: index         txin index
+ * return: txid         txid
+ * return: vout         vout
+ * return: sequence     sequence
+ * return: scriptSig    unlockingScript
+ * return: err          error
+ */
+func CfdGoGetTxIn(networkType int, txHex string, index uint32) (txid string, vout uint32, sequence uint32, scriptSig string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	sequencePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&sequence)))
+	ret := CfdGetTxIn(handle, networkType, txHex, indexPtr, &txid, voutPtr, sequencePtr, &scriptSig)
+	err = convertCfdError(ret, handle)
+	return txid, vout, sequence, scriptSig, err
+}
+
+/**
+ * Get witness stack on transaction input.
+ * param: networkType   network type.
+ * param: txHex         transaction hex
+ * param: txinIndex     txin index
+ * param: stackIndex    witness stack index
+ * return: stackData    witness stack data
+ * return: err          error
+ */
+func CfdGoGetTxInWitness(networkType int, txHex string, txinIndex uint32, stackIndex uint32) (stackData string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	txinIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinIndex)))
+	stackIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&stackIndex)))
+	ret := CfdGetTxInWitness(handle, networkType, txHex, txinIndexPtr, stackIndexPtr, &stackData)
+	err = convertCfdError(ret, handle)
+	return stackData, err
+}
+
+/**
+ * Get txout on transaction.
+ * param: networkType   network type.
+ * param: txHex         transaction hex
+ * param: index         txin index
+ * return: asset            asset
+ * return: satoshiAmount    amount by satoshi
+ * return: valueCommitment  amount by commitment bytes.
+ * return: nonce            confidential nonce
+ * return: lockingScript    locking script
+ * return: err              error
+ */
+func CfdGoGetTxOut(networkType int, txHex string, index uint32) (satoshiAmount int64, lockingScript string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdGetTxOut(handle, networkType, txHex, indexPtr, satoshiPtr, &lockingScript)
+	err = convertCfdError(ret, handle)
+	return satoshiAmount, lockingScript, err
+}
+
+/**
+ * Get txin count on transaction.
+ * param: networkType   network type.
+ * param: txHex         transaction hex
+ * return: count        txin count
+ * return: err          error
+ */
+func CfdGoGetTxInCount(networkType int, txHex string) (count uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetTxInCount(handle, networkType, txHex, countPtr)
+	err = convertCfdError(ret, handle)
+	return count, err
+}
+
+/**
+ * Get witness stack count on transaction input.
+ * param: networkType   network type.
+ * param: txHex         transaction hex
+ * param: txinIndex     txin index
+ * return: count        witness stack count
+ * return: err          error
+ */
+func CfdGoGetTxInWitnessCount(networkType int, txHex string, txinIndex uint32) (count uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	txinIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinIndex)))
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetTxInWitnessCount(handle, networkType, txHex, txinIndexPtr, countPtr)
+	err = convertCfdError(ret, handle)
+	return count, err
+}
+
+/**
+ * Get txout count on transaction.
+ * param: networkType   network type.
+ * param: txHex         transaction hex
+ * return: count        txout count
+ * return: err          error
+ */
+func CfdGoGetTxOutCount(networkType int, txHex string) (count uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	countPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&count)))
+	ret := CfdGetTxOutCount(handle, networkType, txHex, countPtr)
+	err = convertCfdError(ret, handle)
+	return count, err
+}
+
+/**
+ * Get txin index on transaction.
+ * param: networkType   network type.
+ * param: txHex         transaction hex
+ * param: txid          transaction id
+ * param: vout          transaction vout
+ * return: index        txin index
+ * return: err          error
+ */
+func CfdGoGetTxInIndex(networkType int, txHex string, txid string, vout uint32) (index uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdGetTxInIndex(handle, networkType, txHex, txid, voutPtr, indexPtr)
+	err = convertCfdError(ret, handle)
+	return index, err
+}
+
+/**
+ * Get txout index on transaction.
+ * param: networkType          network type.
+ * param: txHex                transaction hex
+ * param: address              address string
+ * param: directLockingScript  lockingScript (if address is empty)
+ * return: index               txout index
+ * return: err                 error
+ */
+func CfdGoGetTxOutIndex(networkType int, txHex string, address string, directLockingScript string) (index uint32, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+	ret := CfdGetTxOutIndex(handle, networkType, txHex, address, directLockingScript, indexPtr)
+	err = convertCfdError(ret, handle)
+	return index, err
+}
+
+/**
+ * Create sighash from transaction.
+ * param: networkType          network type.
+ * param: txHex                transaction hex
+ * param: txid                 txin txid
+ * param: vout                 txin vout
+ * param: hashType             hash type
+ * param: pubkey               pubkey (p2pkh, p2wpkh, p2sh-p2wpkh)
+ * param: redeemScript         redeem script (p2Sh, p2wsh, p2sh-p2wsh)
+ * param: satoshiAmount        amount by satoshi
+ * param: sighashType          sighash type
+ * param: sighashAnyoneCanPay  sighash anyone can pay flag
+ * return: sighash             signature hash
+ * return: err                 error
+ */
+func CfdGoCreateSighash(networkType int, txHex string, txid string, vout uint32, hashType int, pubkey string, redeemScript string, satoshiAmount int64, sighashType int, sighashAnyoneCanPay bool) (sighash string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdCreateSighash(handle, networkType, txHex, txid, voutPtr, hashType, pubkey, redeemScript, satoshiPtr, sighashType, sighashAnyoneCanPay, &sighash)
+	err = convertCfdError(ret, handle)
+	return sighash, err
+}
+
+/**
+ * Generate sign with privkey, and add sign data to confidential transaction.
+ * param: networkType          network type.
+ * param: txHex                transaction hex
+ * param: txid                 txin txid
+ * param: vout                 txin vout
+ * param: hashType             hash type (p2pkh, p2sh, etc...)
+ * param: pubkey               public key.
+ * param: privkey              private key.
+ * param: satoshiAmount        input satoshi amount.
+ *     (used only for exist valueCommitment.)
+ * param: sighashType          sighash type
+ * param: sighashAnyoneCanPay  sighash anyone can pay flag
+ * param: hasGrindR            grind-r option for ec-signature.
+ * return: outputTxHex         output transaction hex
+ * return: err                 error
+ */
+func CfdGoAddTxSignWithPrivkey(networkType int, txHex string, txid string, vout uint32, hashType int, pubkey string, privkey string, satoshiAmount int64, sighashType int, sighashAnyoneCanPay bool, hasGrindR bool) (outputTxHex string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdAddSignWithPrivkeySimple(handle, networkType, txHex, txid, voutPtr, hashType, pubkey, privkey, satoshiAmountPtr, sighashType, sighashAnyoneCanPay, hasGrindR, &outputTxHex)
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
+}
+
+/** CfdGoGetMnemonicWordList
+ * Get mnemonic word list.
+ * param: language        language. (default: en)
+ * return: mnemonicList   mnemonic word list.
+ * return: err            error
+ */
+func CfdGoGetMnemonicWordList(language string) (mnemonicList []string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var maxIndex uint32
+	var mnemonicHandle uintptr
+	maxIndexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&maxIndex)))
+	ret := CfdInitializeMnemonicWordList(handle, language, &mnemonicHandle, maxIndexPtr)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	defer CfdFreeMnemonicWordList(handle, mnemonicHandle)
+
+	mnemonicList = make([]string, 0, maxIndex)
+	for i := uint32(0); i < maxIndex; i++ {
+		var word string
+		indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
+		ret := CfdGetMnemonicWord(handle, mnemonicHandle, indexPtr, &word)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return
+		}
+		mnemonicList = append(mnemonicList, word)
+	}
+	return mnemonicList, err
+}
+
+/** CfdGoConvertMnemonicWordsToSeed
+ * Convert mnemonic to seed.
+ * param: mnemonicWords   mnemonic word array.
+ * param: passphrase      passphrase
+ * param: language        language. (default: en)
+ * return: seed           seed hex.
+ * return: entropy        entropy hex.
+ * return: err            error
+ */
+func CfdGoConvertMnemonicWordsToSeed(mnemonicWords []string, passphrase string, language string) (seed string, entropy string, err error) {
+	mnemonic := strings.Join(mnemonicWords, " ")
+	seed, entropy, err = CfdGoConvertMnemonicToSeed(mnemonic, passphrase, language)
+	return seed, entropy, err
+}
+
+/** CfdGoConvertMnemonicToSeed
+ * Convert mnemonic to seed.
+ * param: mnemonic        mnemonic string. (split space)
+ * param: passphrase      passphrase
+ * param: language        language. (default: en)
+ * return: seed           seed hex.
+ * return: entropy        mnemonic's entropy hex.
+ * return: err            error
+ */
+func CfdGoConvertMnemonicToSeed(mnemonic string, passphrase string, language string) (seed string, entropy string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdConvertMnemonicToSeed(handle, mnemonic, passphrase, true, language, false, &seed, &entropy)
+	err = convertCfdError(ret, handle)
+	return seed, entropy, err
+}
+
+/** CfdGoConvertEntropyToMnemonic
+ * Convert entropy to mnemonic.
+ * param: entropy         entropy hex.
+ * param: language        language. (default: en)
+ * return: mnemonic       mnemonic string. (split space)
+ * return: err            error
+ */
+func CfdGoConvertEntropyToMnemonic(entropy string, language string) (mnemonic string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdConvertEntropyToMnemonic(handle, entropy, language, &mnemonic)
+	err = convertCfdError(ret, handle)
+	return mnemonic, err
+}
+
+/**
+ * FundRawTransaction option data struct.
+ */
+type CfdFundRawTxOption struct {
+	// fee asset
+	FeeAsset string
+	// use blind tx
+	IsBlindTx bool
+	// effective feerate
+	EffectiveFeeRate float64
+	// longterm feerate
+	LongTermFeeRate float64
+	// dust feerate
+	DustFeeRate float64
+	// knapsack min change value
+	KnapsackMinChange int64
+	// blind exponent
+	Exponent int64
+	// blind minimum bits
+	MinimumBits int64
+}
+
+/**
+ * Selection target amount struct.
+ */
+type CfdFundRawTxTargetAmount struct {
+	// amount
+	Amount int64
+	// asset
+	Asset string
+	// reserved address
+	ReservedAddress string
+}
+
+/** NewCfdFundRawTxOption
+ * Create CfdFundRawTxOption struct set default value.
+ * param: networkType   network type.
+ * return: option       FundRawTx option
+ */
+func NewCfdFundRawTxOption(networkType int) CfdFundRawTxOption {
+	option := CfdFundRawTxOption{}
+	if networkType == int(KCfdNetworkLiquidv1) || networkType == int(KCfdNetworkElementsRegtest) {
+		option.FeeAsset = "0000000000000000000000000000000000000000000000000000000000000000"
+		option.IsBlindTx = true
+		option.EffectiveFeeRate = float64(0.15)
+		option.LongTermFeeRate = float64(-1.0)
+		option.DustFeeRate = float64(-1.0)
+		option.KnapsackMinChange = int64(-1)
+		option.Exponent = int64(0)
+		option.MinimumBits = int64(-1)
+	} else {
+		option.EffectiveFeeRate = float64(20.0)
+		option.LongTermFeeRate = float64(-1.0)
+		option.DustFeeRate = float64(-1.0)
+		option.KnapsackMinChange = int64(-1)
+	}
+	return option
+}
+
+/** CfdGoFundRawTransactionBtc
+ * Execute fundrawtransacdtion on bitcoin.
+ * param: networkType        network type.
+ * param: txHex              transaction hex.
+ * param: txinList           txin utxo list.
+ * param: utxoList           utxo list.
+ * param: targetAmount       target amount.
+ * param: reservedAddress    reserved append address.
+ * param: option             fundrawtransaction option.
+ * return: outputTx          fundrawtransaction tx.
+ * return: fee               fee amount.
+ * return: usedAddressList   used address list.
+ * return: err               error
+ */
+func CfdGoFundRawTransactionBtc(txHex string, txinList []CfdUtxo, utxoList []CfdUtxo, targetAmount int64, reservedAddress string, option *CfdFundRawTxOption) (outputTx string, fee int64, usedAddressList []string, err error) {
+	targetAmountList := []CfdFundRawTxTargetAmount{
+		{
+			Amount:          targetAmount,
+			Asset:           "",
+			ReservedAddress: reservedAddress,
+		},
+	}
+	outputTx, fee, usedAddressList, err = CfdGoFundRawTransaction(int(KCfdNetworkMainnet), txHex, txinList, utxoList, targetAmountList, option)
+	return outputTx, fee, usedAddressList, err
+}
+
+/** CfdGoFundRawTransaction
+ * Execute fundrawtransacdtion.
+ * param: networkType        network type.
+ * param: txHex              transaction hex.
+ * param: txinList           txin utxo list.
+ * param: utxoList           utxo list.
+ * param: targetAmountList   selection target amount list.
+ * param: option             fundrawtransaction option.
+ * return: outputTx          fundrawtransaction tx.
+ * return: fee               fee amount.
+ * return: usedAddressList   used address list.
+ * return: err               error
+ */
+func CfdGoFundRawTransaction(networkType int, txHex string, txinList []CfdUtxo, utxoList []CfdUtxo, targetAmountList []CfdFundRawTxTargetAmount, option *CfdFundRawTxOption) (outputTx string, fee int64, usedAddressList []string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var fundOpt CfdFundRawTxOption
+	if option != nil {
+		fundOpt = *option
+	} else {
+		fundOpt = NewCfdFundRawTxOption(networkType)
+	}
+
+	var fundHandle uintptr
+	assetCount := uint32(len(targetAmountList))
+	assetCountPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&assetCount)))
+	ret := CfdInitializeFundRawTx(handle, networkType, assetCountPtr, fundOpt.FeeAsset, &fundHandle)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	defer CfdFreeFundRawTxHandle(handle, fundHandle)
+
+	for i := 0; i < len(txinList); i++ {
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinList[i].Vout)))
+		peginBtcTxSizePtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&txinList[i].PeginBtcTxSize)))
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&txinList[i].Amount)))
+		ret = CfdAddTxInTemplateForFundRawTx(handle, fundHandle, txinList[i].Txid, voutPtr, amountPtr, txinList[i].Descriptor, txinList[i].Asset, txinList[i].IsIssuance, txinList[i].IsBlindIssuance, txinList[i].IsPegin, peginBtcTxSizePtr, txinList[i].FedpegScript, txinList[i].ScriptSigTemplate)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return
+		}
+	}
+
+	for i := 0; i < len(utxoList); i++ {
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&utxoList[i].Vout)))
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&utxoList[i].Amount)))
+		ret = CfdAddUtxoTemplateForFundRawTx(handle, fundHandle, utxoList[i].Txid, voutPtr, amountPtr, utxoList[i].Descriptor, utxoList[i].Asset, utxoList[i].ScriptSigTemplate)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return
+		}
+	}
+
+	for idx := uint32(0); idx < uint32(len(targetAmountList)); idx++ {
+		idxPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&idx)))
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&targetAmountList[idx].Amount)))
+		ret = CfdAddTargetAmountForFundRawTx(handle, fundHandle, idxPtr, amountPtr, targetAmountList[idx].Asset, targetAmountList[idx].ReservedAddress)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return
+		}
+	}
+
+	var emptyInt64 int64
+	emptyInt64Ptr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&emptyInt64)))
+	ret = CfdSetOptionFundRawTx(handle, fundHandle, int(KCfdFundTxIsBlind), emptyInt64Ptr, float64(0), fundOpt.IsBlindTx)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	ret = CfdSetOptionFundRawTx(handle, fundHandle, int(KCfdFundTxDustFeeRate), emptyInt64Ptr, fundOpt.DustFeeRate, false)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	ret = CfdSetOptionFundRawTx(handle, fundHandle, int(KCfdFundTxLongTermFeeRate), emptyInt64Ptr, fundOpt.LongTermFeeRate, false)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	knapsackPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&fundOpt.KnapsackMinChange)))
+	ret = CfdSetOptionFundRawTx(handle, fundHandle, int(KCfdFundTxKnapsackMinChange), knapsackPtr, float64(0), false)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	exponentPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&fundOpt.Exponent)))
+	ret = CfdSetOptionFundRawTx(handle, fundHandle, int(KCfdFundTxBlindExponent), exponentPtr, float64(0), false)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+	minimumBitsPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&fundOpt.MinimumBits)))
+	ret = CfdSetOptionFundRawTx(handle, fundHandle, int(KCfdFundTxBlindMinimumBits), minimumBitsPtr, float64(0), false)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+
+	var appendTxoutCount uint32
+	feePtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&fee)))
+	appendTxoutCountPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&appendTxoutCount)))
+	ret = CfdFinalizeFundRawTx(handle, fundHandle, txHex, fundOpt.EffectiveFeeRate, feePtr, appendTxoutCountPtr, &outputTx)
+	if ret != (int)(KCfdSuccess) {
+		err = convertCfdError(ret, handle)
+		return
+	}
+
+	usedAddressList = make([]string, 0, appendTxoutCount)
+	for i := uint32(0); i < appendTxoutCount; i++ {
+		var addr string
+		indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&i)))
+		ret := CfdGetAppendTxOutFundRawTx(handle, fundHandle, indexPtr, &addr)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return
+		}
+		usedAddressList = append(usedAddressList, addr)
+	}
+	return outputTx, fee, usedAddressList, nil
+}
 
 // refine API ------------------------------------------------------------------
 
@@ -2838,9 +4173,9 @@ type ScriptWitness struct {
 // TxIn : transaction input.
 type TxIn struct {
 	// utxo outpoint.
-	OutPoint     OutPoint
+	OutPoint OutPoint
 	// sequence number.
-	Sequence     uint32
+	Sequence uint32
 	// witness stack.
 	WitnessStack ScriptWitness
 }
@@ -2848,11 +4183,11 @@ type TxIn struct {
 // TxOut : transaction output.
 type TxOut struct {
 	// satoshi amount.
-	Amount        int64
+	Amount int64
 	// locking script.
 	LockingScript string
 	// address (if locking script is usual hashtype.)
-	Address       string
+	Address string
 }
 
 // ConfidentialTxIn : confidential transaction input.
@@ -2868,13 +4203,13 @@ type ConfidentialTxIn struct {
 // ConfidentialTxOut : confidential transaction output.
 type ConfidentialTxOut struct {
 	// satoshi amount (unblind value)
-	Amount          int64
+	Amount int64
 	// asset (or commitment asset)
-	Asset           string
+	Asset string
 	// locking script
-	LockingScript   string
+	LockingScript string
 	// address or confidential address. (if locking script is usual hashtype.)
-	Address         string
+	Address string
 	// commitment value
 	CommitmentValue string
 	// commitment nonce
@@ -2882,7 +4217,7 @@ type ConfidentialTxOut struct {
 	// surjectionprooof of asset
 	Surjectionproof string
 	// rangeproof of value
-	Rangeproof      string
+	Rangeproof string
 }
 
 // CreateConfidentialTx : create confidential transaction.
