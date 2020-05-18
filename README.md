@@ -10,7 +10,7 @@
 
 - Go (1.12 or higher)
 - C/C++ Compiler
-  - can compilefe c++11
+  - can compile c++11
   - make support compiler
 - CMake (3.14.3 or higher)
 - Python 3.x
@@ -50,7 +50,7 @@ apt-get install -y build-essential golang cmake nodejs
 cmake version 3.14.2 or lower, download from website and install cmake.
 (https://cmake.org/download/)
 
-go version 1.11 or lower, get `golang.org/dl/go1.13` or higher.
+go version 1.11 or lower, get `golang.org/dl/go1.12` or higher.
 (https://www.mazn.net/blog/2019/02/03/1704.html)
 
 ---
@@ -158,10 +158,10 @@ cmake version is 3.15 or higher: `cmake --install build`
 sudo ./tools/cleanup_install_files.sh
 
 (download)
-wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.0.5/cfdgo-v0.0.5-ubuntu1804-gcc-x86_64.zip
+wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.0/cfdgo-v0.1.0-ubuntu1804-gcc-x86_64.zip
 
 (unzip)
-sudo unzip -q cfdgo-v0.0.5-ubuntu1804-gcc-x86_64.zip -d /
+sudo unzip -q cfdgo-v0.1.0-ubuntu1804-gcc-x86_64.zip -d /
 ```
 
 ### uninstall
@@ -188,7 +188,7 @@ go.mod
 
 ```
 require (
-  github.com/p2pderivatives/cfd-go v0.0.5
+  github.com/p2pderivatives/cfd-go v0.1.0
   ...
 )
 ```

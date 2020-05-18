@@ -177,3 +177,4 @@ external/*
 /go.sum
 /cover.html
 *.log
+/cover.txt
