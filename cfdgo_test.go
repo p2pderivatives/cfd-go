@@ -2496,13 +2496,32 @@ func TestSignTransactionBitcoin(t *testing.T) {
 	// privkey: 'cUCCL2wBhCHVwiRpfUVd1rjWUSB4QCnGBczhCW5neLFTQkxZimeG'
 	pubkey := "03d34d21d3017acdfb033e010574fb73dc83639f97145d83965fe1b19a4c8e2b6b"
 	privkey := "cUCCL2wBhCHVwiRpfUVd1rjWUSB4QCnGBczhCW5neLFTQkxZimeG"
-	sighash, err := CfdGoCreateSighash(int(KCfdNetworkMainnet), tx, "7461b02405414d79e79a5050684a333c922c1136f4bdff5fb94b551394edebbd", uint32(0), int(KCfdP2wpkh), pubkey, "", int64(10000000), int(KCfdSigHashAll), false)
+	nettype := int(KCfdNetworkTestnet)
+	script := "512103d34d21d3017acdfb033e010574fb73dc83639f97145d83965fe1b19a4c8e2b6b51ae"
+	sighash, err := CfdGoCreateSighash(nettype, tx, "1497e1f146bc5fe00b6268ea16a7069ecb90a2a41a183446d5df8965d2356dc1", uint32(1), int(KCfdP2wsh), "", script, int64(10000000), int(KCfdSigHashAll), false)
 	assert.NoError(t, err)
-	assert.Equal(t, "bd5860257b18c95444cc64c36efcfe665c998659eced56280550bd5b063ab8a5", sighash)
+	assert.Equal(t, "565a63b7a106969255da55c47b39bd47e7e19b366a00f5270bcc13283c472e08", sighash)
 
-	txHex, err := CfdGoAddTxSignWithPrivkey(int(KCfdNetworkMainnet), tx, "7461b02405414d79e79a5050684a333c922c1136f4bdff5fb94b551394edebbd", uint32(0), int(KCfdP2wpkh), pubkey, privkey, int64(10000000), int(KCfdSigHashAll), false, true)
+	sig, err := CfdGoCalculateEcSignature(sighash, "", privkey, nettype, true)
 	assert.NoError(t, err)
-	assert.Equal(t, "02000000000102bdebed9413554bb95fffbdf436112c923c334a6850509ae7794d410524b061740000000000ffffffffc16d35d26589dfd54634181aa4a290cb9e06a716ea68620be05fbc46f1e197140100000000ffffffff0200e1f50500000000160014751e76e8199196d454941c45d1b3a323f1433bd620544771000000001600144dc2412fe3dc759e3830b6fb360264c8ce0abe3802473044022047df4e3d86faa587bdeecb15e9d140956dd6e5c58917cd158d08cf62c1b495ad022010b828d155010188ecaaa8110a48c2dd13d69d7ae620d3926632a004a82483d6012103d34d21d3017acdfb033e010574fb73dc83639f97145d83965fe1b19a4c8e2b6b0000000000", txHex)
+	assert.Equal(t, "7a6eca34eefe7efff7069a01af778d29b9c0311e90878a7245699af394f2b26216f9d4a9a884ab1686140ab10e37b1a8a579fbacd50392dd90a72da22a339867", sig)
+
+	signDataList := []CfdMultisigSignData{
+		{
+			Signature:           sig,
+			IsDerEncode:         true,
+			SighashType:         int(KCfdSigHashAll),
+			SighashAnyoneCanPay: false,
+			RelatedPubkey:       pubkey,
+		},
+	}
+	txHex, err := CfdGoAddTxMultisigSign(nettype, tx, "1497e1f146bc5fe00b6268ea16a7069ecb90a2a41a183446d5df8965d2356dc1", uint32(1), int(KCfdP2wsh), signDataList, script)
+	assert.NoError(t, err)
+	assert.Equal(t, "02000000000102bdebed9413554bb95fffbdf436112c923c334a6850509ae7794d410524b061740000000000ffffffffc16d35d26589dfd54634181aa4a290cb9e06a716ea68620be05fbc46f1e197140100000000ffffffff0200e1f50500000000160014751e76e8199196d454941c45d1b3a323f1433bd620544771000000001600144dc2412fe3dc759e3830b6fb360264c8ce0abe3800030047304402207a6eca34eefe7efff7069a01af778d29b9c0311e90878a7245699af394f2b262022016f9d4a9a884ab1686140ab10e37b1a8a579fbacd50392dd90a72da22a3398670125512103d34d21d3017acdfb033e010574fb73dc83639f97145d83965fe1b19a4c8e2b6b51ae00000000", txHex)
+
+	txHex, err = CfdGoAddTxSignWithPrivkey(nettype, txHex, "7461b02405414d79e79a5050684a333c922c1136f4bdff5fb94b551394edebbd", uint32(0), int(KCfdP2wpkh), pubkey, privkey, int64(10000000), int(KCfdSigHashAll), false, true)
+	assert.NoError(t, err)
+	assert.Equal(t, "02000000000102bdebed9413554bb95fffbdf436112c923c334a6850509ae7794d410524b061740000000000ffffffffc16d35d26589dfd54634181aa4a290cb9e06a716ea68620be05fbc46f1e197140100000000ffffffff0200e1f50500000000160014751e76e8199196d454941c45d1b3a323f1433bd620544771000000001600144dc2412fe3dc759e3830b6fb360264c8ce0abe3802473044022047df4e3d86faa587bdeecb15e9d140956dd6e5c58917cd158d08cf62c1b495ad022010b828d155010188ecaaa8110a48c2dd13d69d7ae620d3926632a004a82483d6012103d34d21d3017acdfb033e010574fb73dc83639f97145d83965fe1b19a4c8e2b6b030047304402207a6eca34eefe7efff7069a01af778d29b9c0311e90878a7245699af394f2b262022016f9d4a9a884ab1686140ab10e37b1a8a579fbacd50392dd90a72da22a3398670125512103d34d21d3017acdfb033e010574fb73dc83639f97145d83965fe1b19a4c8e2b6b51ae00000000", txHex)
 
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
