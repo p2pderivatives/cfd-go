@@ -3744,6 +3744,120 @@ func CfdGoAddTxSignWithPrivkey(networkType int, txHex string, txid string, vout 
 	return outputTxHex, err
 }
 
+/**
+ * Add pubkey hash sign data to transaction.
+ * param: networkType    network type.
+ * param: txHex          transaction hex
+ * param: txid           txin txid
+ * param: vout           txin vout
+ * param: hashType       hash type (p2pkh, p2sh, etc...)
+ * param: pubkey         public key.
+ * param: signatureData  signature data.
+ * return: outputTxHex   output transaction hex
+ * return: err           error
+ */
+func CfdGoAddTxPubkeyHashSign(networkType int, txHex string, txid string, vout uint32, hashType int, pubkey string, signatureData CfdSignParameter) (outputTxHex string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	ret := CfdAddPubkeyHashSign(handle, networkType, txHex, txid, voutPtr, hashType, pubkey, signatureData.Data, signatureData.IsDerEncode, signatureData.SighashType, signatureData.SighashAnyoneCanPay, &outputTxHex)
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
+}
+
+/**
+ * Add script hash sign data to transaction.
+ * param: networkType   network type.
+ * param: txHex         transaction hex
+ * param: txid          txin txid
+ * param: vout          txin vout
+ * param: hashType      hash type (p2pkh, p2sh, etc...)
+ * param: signDataList  sign data list.
+ * param: redeemScript  redeem script.
+ * return: outputTxHex  output transaction hex
+ * return: err          error
+ */
+func CfdGoAddTxScriptHashSign(networkType int, txHex string, txid string, vout uint32, hashType int, signDataList []CfdSignParameter, redeemScript string) (outputTxHex string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := (int)(KCfdSuccess)
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	workTxHex := txHex
+	workOutputTxHex := ""
+	clearFlag := true
+	for i := 0; i < len(signDataList); i++ {
+		ret = CfdAddTxSign(handle, networkType, workTxHex, txid, voutPtr, hashType, signDataList[i].Data, signDataList[i].IsDerEncode, signDataList[i].SighashType, signDataList[i].SighashAnyoneCanPay, clearFlag, &workOutputTxHex)
+		if ret != (int)(KCfdSuccess) {
+			break
+		}
+		workTxHex = workOutputTxHex
+		workOutputTxHex = ""
+		clearFlag = false
+	}
+
+	if ret == (int)(KCfdSuccess) {
+		ret = CfdAddScriptHashSign(handle, networkType, workTxHex, txid, voutPtr, hashType, redeemScript, clearFlag, &outputTxHex)
+	}
+
+	err = convertCfdError(ret, handle)
+	return outputTxHex, err
+}
+
+/**
+ * Add multisig sign to transaction.
+ * param: networkType   network type.
+ * param: txHex         transaction hex
+ * param: txid          txin txid
+ * param: vout          txin vout
+ * param: hashType      hash type (p2pkh, p2sh, etc...)
+ * param: signDataList  multisig sign data list.
+ * param: redeemScript  multisig redeem script.
+ * return: outputTxHex  output transaction hex
+ * return: err          error
+ */
+func CfdGoAddTxMultisigSign(networkType int, txHex string, txid string, vout uint32, hashType int, signDataList []CfdMultisigSignData, redeemScript string) (outputTxHex string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var multisigHandle uintptr
+	ret := CfdInitializeMultisigSign(handle, &multisigHandle)
+	if ret != (int)(KCfdSuccess) {
+		return "", convertCfdError(ret, handle)
+	}
+	defer CfdFreeMultisigSignHandle(handle, multisigHandle)
+
+	for i := 0; i < len(signDataList); i++ {
+		if signDataList[i].IsDerEncode {
+			ret = CfdAddMultisigSignDataToDer(handle, multisigHandle,
+				signDataList[i].Signature, signDataList[i].SighashType,
+				signDataList[i].SighashAnyoneCanPay, signDataList[i].RelatedPubkey)
+		} else {
+			ret = CfdAddMultisigSignData(handle, multisigHandle,
+				signDataList[i].Signature, signDataList[i].RelatedPubkey)
+		}
+		if ret != (int)(KCfdSuccess) {
+			break
+		}
+	}
+
+	if ret == (int)(KCfdSuccess) {
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+		ret = CfdFinalizeMultisigSign(handle, multisigHandle, networkType, txHex, txid, voutPtr, hashType, redeemScript, &outputTxHex)
+	}
+	return outputTxHex, convertCfdError(ret, handle)
+}
+
 /** CfdGoGetMnemonicWordList
  * Get mnemonic word list.
  * param: language        language. (default: en)
