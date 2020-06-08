@@ -42,6 +42,81 @@ jobs:
         name: artifact-upload_url
         path: upload_url.txt
 
+  upload-object-windows-mingw:
+    name: upload-object-win-mingw
+    needs: create-releases
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        bin: [gcc, gcc-static]
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: download artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: artifact-upload_url
+    - name: dump upload url
+      id: get_url
+      run: |
+        export up_url="$(cat artifact-upload_url/upload_url.txt)"
+        echo "::set-output name=upload_url::$up_url"
+        echo "url=$up_url"
+      shell: bash
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      shell: bash
+    - name: dump version
+      env:
+        version: ${{ steps.get_version.outputs.VERSION }}
+      run: echo "version=${version}"
+      shell: bash
+    - name: create folder
+      run: mkdir dist
+    - name: cmake-configure
+      if: matrix.bin != 'gcc-static'
+      run: |
+        cmake -S . -B build -G "MSYS Makefiles"
+        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=on -DENABLE_CAPI=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off --build build
+    - name: cmake-configure static
+      if: matrix.bin == 'gcc-static'
+      run: |
+        cmake -S . -B build -G "MSYS Makefiles"
+        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=off -DENABLE_CAPI=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off --build build
+    - name: cmake-build
+      run: |
+        cmake --build build --parallel 2 --config Release
+      timeout-minutes: 20
+    - name: cmake-install
+      shell: cmd
+      run: |
+        cmake -DCMAKE_INSTALL_PREFIX="./dist" --install build
+        cmake --install build
+        cd dist
+        del /F /Q cmake\wallycore-*
+        del /F /Q lib\wallycore.*
+        del /F /Q lib\libwallycore.*
+        del /F /Q lib\pkgconfig\wallycore.pc
+    - name: create archive file
+      run: |
+        cd dist
+        Compress-Archive -Path ./* -DestinationPath ../cfd.zip
+        cd ..
+        echo "---- dump zip file ----"
+        dir .
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_url.outputs.upload_url }}
+        asset_path: ./cfd.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-win-${{ matrix.bin }}-x86_64.zip
+        asset_content_type: application/zip
+
   upload-object-alpine:
     name: upload-object-alpine
     needs: create-releases
@@ -106,6 +181,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-18.04, ubuntu-16.04]
+        bin: [gcc, gcc-static]
 
     steps:
     - name: checkout
@@ -138,12 +214,22 @@ jobs:
         echo ::add-path::$CURRENT_DIR/$cmake_file_name/bin
         cd ../..
     - name: cmake-build
-      id: cmake_build
+      if: matrix.bin != 'gcc-static'
       run: |
         mkdir dist
         mkdir build
         cd build
         cmake .. -DENABLE_SHARED=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib"
+        make
+        sudo make install DESTDIR=../dist
+        cd ..
+    - name: cmake-build static
+      if: matrix.bin == 'gcc-static'
+      run: |
+        mkdir dist
+        mkdir build
+        cd build
+        cmake .. -DENABLE_SHARED=off -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib"
         make
         sudo make install DESTDIR=../dist
         cd ..
@@ -174,7 +260,7 @@ jobs:
       with:
         upload_url: ${{ steps.get_url.outputs.upload_url }}
         asset_path: ./dist/cfd.zip
-        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-ubuntu1804-gcc-x86_64.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-ubuntu1804-${{ matrix.bin }}-x86_64.zip
         asset_content_type: application/zip
     - name: Upload Release Asset Ubuntu-16.04
       if: matrix.os == 'ubuntu-16.04'
@@ -184,7 +270,7 @@ jobs:
       with:
         upload_url: ${{ steps.get_url.outputs.upload_url }}
         asset_path: ./dist/cfd.zip
-        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-ubuntu1604-gcc-x86_64.zip
+        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-ubuntu1604-${{ matrix.bin }}-x86_64.zip
         asset_content_type: application/zip
     - name: ubuntu-after
       run: rm -rf cache/cmake/cmake-$CMAKE_VERSION-Linux-x86_64

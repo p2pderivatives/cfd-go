@@ -158,10 +158,10 @@ cmake version is 3.15 or higher: `cmake --install build`
 sudo ./tools/cleanup_install_files.sh
 
 (download)
-wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.0/cfdgo-v0.1.0-ubuntu1804-gcc-x86_64.zip
+wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.2/cfdgo-v0.1.2-ubuntu1804-gcc-x86_64.zip
 
 (unzip)
-sudo unzip -q cfdgo-v0.1.0-ubuntu1804-gcc-x86_64.zip -d /
+sudo unzip -q cfdgo-v0.1.2-ubuntu1804-gcc-x86_64.zip -d /
 ```
 
 ### uninstall
@@ -188,7 +188,7 @@ go.mod
 
 ```
 require (
-  github.com/p2pderivatives/cfd-go v0.1.0
+  github.com/p2pderivatives/cfd-go v0.1.2
   ...
 )
 ```
@@ -269,4 +269,35 @@ set CFD_CMAKE_GIT_SSH=1
 - MacOS & Linux(Ubuntu):
 ```
 export CFD_CMAKE_GIT_SSH=1
+```
+
+### Ignore git update for CMake External Project:
+
+Depending on your git environment, you may get the following error when checking out external:
+```
+  Performing update step for 'libwally-core-download'
+  Current branch cmake_build is up to date.
+  No stash entries found.
+  No stash entries found.
+  No stash entries found.
+  CMake Error at /workspace/cfd-core/build/external/libwally-core/download/libwally-core-download-prefix/tmp/libwally-core-download-gitupdate.cmake:133 (message):
+
+
+    Failed to unstash changes in:
+    '/workspace/cfd-core/external/libwally-core/'.
+
+    You will have to resolve the conflicts manually
+```
+
+This phenomenon is due to the `git update` related command.
+Please set an environment variable that skips update processing.
+
+- Windows: (On the command line. Or set from the system setting screen.)
+```
+set CFD_CMAKE_GIT_SKIP_UPDATE=1
+```
+
+- MacOS & Linux(Ubuntu):
+```
+export CFD_CMAKE_GIT_SKIP_UPDATE=1
 ```
