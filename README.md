@@ -98,6 +98,30 @@ go build
 
 On Linux or MacOS, can use install / uninstall.
 
+On Windows, can use `releases asset`.
+
+### Using releases asset
+
+The fastest and easiest way.
+
+- macos / linux(ubuntu)
+```Shell
+(cleanup)
+./tools/cmake_cleanup.sh
+sudo ./tools/cleanup_install_files.sh
+
+(download)
+wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.3/cfdgo-v0.1.3-ubuntu1804-gcc-x86_64.zip
+
+(unzip)
+sudo unzip -q cfdgo-v0.1.24-ubuntu1804-gcc-x86_64.zip -d /
+```
+
+- windows
+  1. cleanup: `c:/usr/local` directory.
+  2. download: https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.3/cfdgo-v0.1.3-win-gcc-static-x86_64.zip
+  3. Unzip and extract to `c:/usr/local` directory.
+
 ### install (after build)
 
 install for `/usr/local/lib`.
@@ -158,10 +182,10 @@ cmake version is 3.15 or higher: `cmake --install build`
 sudo ./tools/cleanup_install_files.sh
 
 (download)
-wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.2/cfdgo-v0.1.2-ubuntu1804-gcc-x86_64.zip
+wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.3/cfdgo-v0.1.3-ubuntu1804-gcc-x86_64.zip
 
 (unzip)
-sudo unzip -q cfdgo-v0.1.2-ubuntu1804-gcc-x86_64.zip -d /
+sudo unzip -q cfdgo-v0.1.3-ubuntu1804-gcc-x86_64.zip -d /
 ```
 
 ### uninstall
@@ -188,7 +212,7 @@ go.mod
 
 ```
 require (
-  github.com/p2pderivatives/cfd-go v0.1.2
+  github.com/p2pderivatives/cfd-go v0.1.3
   ...
 )
 ```

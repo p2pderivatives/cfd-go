@@ -364,6 +364,67 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 		fmt.Print("[error message] " + err.Error() + "\n")
 	}
 
+	// miniscript wsh
+	networkType = (int)(KCfdNetworkMainnet)
+	descriptorDataList, multisigList, err = CfdGoParseDescriptor(
+		"wsh(thresh(2,multi(2,03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7,036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00),a:multi(1,036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00),ac:pk_k(022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01)))",
+		networkType,
+		"0")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 1 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "00206a6c42f62db9fab091ffaf930e0a847646898d225e1ad94ff43226e20180b9d1", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bc1qdfky9a3dh8atpy0l47fsuz5ywergnrfztcddjnl5xgnwyqvqh8gschn2ch", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[0].HashType)
+		assert.Equal(t, "522103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c721036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a0052ae6b5121036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a0051ae6c936b21022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01ac6c935287", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[0].KeyType)
+		assert.Equal(t, "", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	// miniscript wsh derive
+	networkType = (int)(KCfdNetworkMainnet)
+	descriptorDataList, multisigList, err = CfdGoParseDescriptor(
+		"sh(wsh(c:or_i(andor(c:pk_h(xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*),pk_h(xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*),pk_h(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)),pk_k(02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e))))",
+		networkType,
+		"44")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 2 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptSh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "a914a7a9f411001e3e3db96d7f02fc9ab1d0dc6aa69187", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "3GyYN9WnJBoMn8M5tuqVcFJq1BvbAcdPAt", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2shP2wsh), descriptorDataList[0].HashType)
+		assert.Equal(t, "0020e29b7f3e543d581c99c92b59d45218b008b82c2d406bba3c7384d52e568124aa", descriptorDataList[0].RedeemScript)
+
+		assert.Equal(t, uint32(1), descriptorDataList[1].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[1].ScriptType)
+		assert.Equal(t, "0020e29b7f3e543d581c99c92b59d45218b008b82c2d406bba3c7384d52e568124aa", descriptorDataList[1].LockingScript)
+		assert.Equal(t, "bc1qu2dh70j584vpexwf9dvag5sckqytstpdgp4m50rnsn2ju45pyj4qudazmh", descriptorDataList[1].Address)
+		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[1].HashType)
+		assert.Equal(t, "6376a914520e6e72bcd5b616bc744092139bd759c31d6bbe88ac6476a91406afd46bcdfd22ef94ac122aa11f241244a37ecc886776a9145ab62f0be26fe9d6205a155403f33e2ad2d31efe8868672102d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e68ac", descriptorDataList[1].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[1].KeyType)
+		assert.Equal(t, "", descriptorDataList[1].Pubkey)
+		assert.Equal(t, "", descriptorDataList[1].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[1].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[1].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[1].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
 
@@ -992,6 +1053,11 @@ func TestCfdAddSignConfidentialTx(t *testing.T) {
 	isVerify, err = CfdGoVerifyTxSign(int(KCfdNetworkLiquidv1), txHex, txid, vout, "ert1qav7q64dhpx9y4m62rrhpa67trmvjf2ptxfddld", int(KCfdP2wpkhAddress), "", int64(13000000000000), "")
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
+
+	isVerify, reason, err := CfdGoVerifyTxSignReason(int(KCfdNetworkLiquidv1), txHex, txid, vout, "ert1qs58jzsgjsteydejyhy32p2v2vm8llh9uns6d93", int(KCfdP2wpkhAddress), "", int64(13000000000000), "")
+	assert.NoError(t, err)
+	assert.False(t, isVerify)
+	assert.Equal(t, "Unmatch locking script.", reason)
 
 	if err != nil {
 		fmt.Print("[error message] " + err.Error() + "\n")
@@ -1879,9 +1945,9 @@ func TestCfdGoEstimateFee(t *testing.T) {
 		option.RequireBlind = false
 		totalFee, txFee, inputFee, err := CfdGoEstimateFee(txHex, inputs, option)
 		assert.NoError(t, err)
-		assert.Equal(t, int64(10740), totalFee)
+		assert.Equal(t, int64(10760), totalFee)
 		assert.Equal(t, int64(1060), txFee)
-		assert.Equal(t, int64(9680), inputFee)
+		assert.Equal(t, int64(9700), inputFee)
 	})
 
 	t.Run("ElementsTest", func(t *testing.T) {
@@ -1891,9 +1957,9 @@ func TestCfdGoEstimateFee(t *testing.T) {
 		option.FeeAsset = asset[0]
 		totalFee, txFee, inputFee, err := CfdGoEstimateFee(txHex, inputs, option)
 		assert.NoError(t, err)
-		assert.Equal(t, int64(46380), totalFee)
-		assert.Equal(t, int64(36660), txFee)
-		assert.Equal(t, int64(9720), inputFee)
+		assert.Equal(t, int64(46120), totalFee)
+		assert.Equal(t, int64(36360), txFee)
+		assert.Equal(t, int64(9760), inputFee)
 	})
 
 	fmt.Printf("%s test done.\n", GetFuncName())
@@ -2206,6 +2272,13 @@ func TestCfdGoAddConfidentialTxMultisigSign(t *testing.T) {
 		isVerify, err := CfdGoVerifyConfidentialTxSign(kTxData, txid, vout, addr, addressType, "", satoshi, "")
 		assert.NoError(t, err)
 		assert.Equal(t, false, isVerify)
+	}
+
+	if err == nil {
+		isVerify, reason, err := CfdGoVerifyConfidentialTxSignReason(kTxData, txid, vout, addr, addressType, "", satoshi, "")
+		assert.NoError(t, err)
+		assert.Equal(t, false, isVerify)
+		assert.Equal(t, "NotFound witness stack. segwit need scriptsig.", reason)
 	}
 
 	if err == nil {
@@ -2738,8 +2811,8 @@ func TestFundRawTransaction(t *testing.T) {
 
 	outputTx, fee, usedAddressList, err := CfdGoFundRawTransaction(netType, txHex, txinList, utxos, targets, &option)
 	assert.NoError(t, err)
-	assert.Equal(t, "010000000006fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f0000000000feffffff0a9a33750a810cd384ca5d93b09513f1eb5d93c669091b29eef710d2391ff7300000000000feffffff0ad4a335556c64c3e2599c3a4c3ddff5b28f616fa55cf2323d2ae642eef74a8f0000000000feffffff030b0000000000000000000000000000000000000000000000000000000000000000000000feffffff020b0000000000000000000000000000000000000000000000000000000000000000000000feffffff010c0000000000000000000000000000000000000000000000000000000000000000000000feffffff050100000000000000000000000000000000000000000000000000000000000000aa010000000006b22c2000160014c6598809d09edaacb8f4f4d5b9b81e4413a572430100000000000000000000000000000000000000000000000000000000000000aa01000000000000027900000100000000000000000000000000000000000000000000000000000000000000bb010000000014b18c12001600148aff8eea7bef9ec60d35d7034b2e48e180e93c5d0100000000000000000000000000000000000000000000000000000000000000cc0100000000023e8eb800160014799a8d3f11251b6a6df4ba156a28dd64ad969a910100000000000000000000000000000000000000000000000000000000000000aa010000000006fc2133001600146cd31ad8b8552934f4bd9c8cf84a93cbd7a49de111000000", outputTx)
-	assert.Equal(t, int64(633), fee)
+	assert.Equal(t, "010000000006fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f0000000000feffffff0a9a33750a810cd384ca5d93b09513f1eb5d93c669091b29eef710d2391ff7300000000000feffffff0ad4a335556c64c3e2599c3a4c3ddff5b28f616fa55cf2323d2ae642eef74a8f0000000000feffffff030b0000000000000000000000000000000000000000000000000000000000000000000000feffffff020b0000000000000000000000000000000000000000000000000000000000000000000000feffffff010c0000000000000000000000000000000000000000000000000000000000000000000000feffffff050100000000000000000000000000000000000000000000000000000000000000aa010000000006b22c2000160014c6598809d09edaacb8f4f4d5b9b81e4413a572430100000000000000000000000000000000000000000000000000000000000000aa01000000000000027500000100000000000000000000000000000000000000000000000000000000000000bb010000000014b18c12001600148aff8eea7bef9ec60d35d7034b2e48e180e93c5d0100000000000000000000000000000000000000000000000000000000000000cc0100000000023e8eb800160014799a8d3f11251b6a6df4ba156a28dd64ad969a910100000000000000000000000000000000000000000000000000000000000000aa010000000006fc2137001600146cd31ad8b8552934f4bd9c8cf84a93cbd7a49de111000000", outputTx)
+	assert.Equal(t, int64(629), fee)
 	assert.Equal(t, 3, len(usedAddressList))
 	if len(usedAddressList) == 3 {
 		assert.Equal(t, "ex1q3tlca6nma70vvrf46up5ktjguxqwj0zamt7ktn", usedAddressList[0])
