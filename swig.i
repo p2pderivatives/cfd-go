@@ -2781,6 +2781,43 @@ func CfdGoVerifyConfidentialTxSign(txHex string, txid string, vout uint32, addre
 	return isSuccess, err
 }
 
+/**
+ * Verify sign in transaction input with error message.
+ * param: txHex                transaction hex.
+ * param: txid                 txin txid
+ * param: vout                 txin vout
+ * param: address              address string.
+ * param: addressType          address type.
+ * param: directLockingScript  locking script direct input.
+ * param: satoshiAmount        input satoshi amount.
+ *     (used only for exist valueCommitment.)
+ * param: valueCommitment      input value commitment.
+ * return: isSuccess           result of verification signature
+ * return: reason              output error message.
+ * return: err                 error
+ */
+func CfdGoVerifyConfidentialTxSignReason(txHex string, txid string, vout uint32, address string, addressType int, directLockingScript string, satoshiAmount int64, valueCommitment string) (isSuccess bool, reason string, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiAmountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiAmount)))
+	ret := CfdVerifyConfidentialTxSign(handle, txHex, txid, voutPtr, address, addressType, directLockingScript, satoshiAmountPtr, valueCommitment)
+	if ret == (int)(KCfdSuccess) {
+		isSuccess = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isSuccess = false
+		CfdGetLastErrorMessage(handle, &reason)
+	} else {
+		err = convertCfdError(ret, handle)
+		CfdGetLastErrorMessage(handle, &reason)
+	}
+	return isSuccess, reason, err
+}
+
 /*
  * Output data struct.
  */
@@ -3476,6 +3513,44 @@ func CfdGoVerifyTxSign(networkType int, txHex string, txid string, vout uint32, 
 		err = convertCfdError(ret, handle)
 	}
 	return isVerify, err
+}
+
+/** CfdGoVerifyTxSignReason
+ * Verify transaction sign.
+ * param: networkType           network type.
+ * param: txHex                 transaction hex.
+ * param: txid                  utxo txid.
+ * param: vout                  utxo vout.
+ * param: address               address string.
+ * param: addressType           address type.
+ * param: directLockingScript   locking script on direct.
+ * param: satoshiValue          satoshi value.
+ * param: valueByteData         value bytedata(commitment value).
+ * return: isVerify             verify check.
+ * return: reason               output error message.
+ * return: err                  error
+ */
+func CfdGoVerifyTxSignReason(networkType int, txHex string, txid string, vout uint32, address string, addressType int, directLockingScript string, satoshiValue int64, valueByteData string) (isVerify bool, reason string, err error) {
+	isVerify = false
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&vout)))
+	satoshiPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&satoshiValue)))
+	ret := CfdVerifyTxSign(handle, networkType, txHex, txid, voutPtr, address, addressType, directLockingScript, satoshiPtr, valueByteData)
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isVerify = false
+		CfdGetLastErrorMessage(handle, &reason)
+	} else {
+		err = convertCfdError(ret, handle)
+		CfdGetLastErrorMessage(handle, &reason)
+	}
+	return isVerify, reason, err
 }
 
 /**
