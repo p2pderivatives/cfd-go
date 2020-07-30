@@ -111,7 +111,7 @@ The fastest and easiest way.
 sudo ./tools/cleanup_install_files.sh
 
 (download)
-wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.3/cfdgo-v0.1.3-ubuntu1804-gcc-x86_64.zip
+wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.4/cfdgo-v0.1.3-ubuntu1804-gcc-x86_64.zip
 
 (unzip)
 sudo unzip -q cfdgo-v0.1.24-ubuntu1804-gcc-x86_64.zip -d /
@@ -119,7 +119,7 @@ sudo unzip -q cfdgo-v0.1.24-ubuntu1804-gcc-x86_64.zip -d /
 
 - windows
   1. cleanup: `c:/usr/local` directory.
-  2. download: https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.3/cfdgo-v0.1.3-win-gcc-static-x86_64.zip
+  2. download: https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.4/cfdgo-v0.1.3-win-gcc-static-x86_64.zip
   3. Unzip and extract to `c:/usr/local` directory.
 
 ### install (after build)
@@ -182,10 +182,10 @@ cmake version is 3.15 or higher: `cmake --install build`
 sudo ./tools/cleanup_install_files.sh
 
 (download)
-wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.3/cfdgo-v0.1.3-ubuntu1804-gcc-x86_64.zip
+wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.4/cfdgo-v0.1.4-ubuntu1804-gcc-x86_64.zip
 
 (unzip)
-sudo unzip -q cfdgo-v0.1.3-ubuntu1804-gcc-x86_64.zip -d /
+sudo unzip -q cfdgo-v0.1.4-ubuntu1804-gcc-x86_64.zip -d /
 ```
 
 ### uninstall
@@ -212,7 +212,7 @@ go.mod
 
 ```
 require (
-  github.com/p2pderivatives/cfd-go v0.1.3
+  github.com/p2pderivatives/cfd-go v0.1.4
   ...
 )
 ```

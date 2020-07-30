@@ -473,7 +473,7 @@ type CfdUtxo struct {
  * Selection target amount struct.
  */
 type CfdTargetAmount struct {
-	// amount
+	// Amount more than the specified amount is set in txout. default is 0 (disable).
 	Amount int64
 	// asset
 	Asset string
@@ -493,11 +493,11 @@ type CfdCoinSelectOption struct {
 	LongTermFeeRate float64
 	// dust feerate
 	DustFeeRate float64
-	// knapsack min change value
+	// knapsack min change value. knapsack logic's threshold. Recommended value is 1.
 	KnapsackMinChange int64
-	// blind exponent
+	// blind exponent. default is 0.
 	Exponent int64
-	// blind minimum bits
+	// blind minimum bits. default is -1 (cfd-go auto).
 	MinimumBits int64
 }
 
@@ -4062,11 +4062,11 @@ type CfdFundRawTxOption struct {
 	LongTermFeeRate float64
 	// dust feerate
 	DustFeeRate float64
-	// knapsack min change value
+	// knapsack min change value. knapsack logic's threshold. Recommended value is 1.
 	KnapsackMinChange int64
-	// blind exponent
+	// blind exponent. default is 0.
 	Exponent int64
-	// blind minimum bits
+	// blind minimum bits. default is -1 (cfd-go auto).
 	MinimumBits int64
 }
 
@@ -4074,11 +4074,11 @@ type CfdFundRawTxOption struct {
  * Selection target amount struct.
  */
 type CfdFundRawTxTargetAmount struct {
-	// amount
+	// Amount more than the specified amount is set in txout. default is 0 (disable).
 	Amount int64
 	// asset
 	Asset string
-	// reserved address
+	// address for adding txout. Also serves as a change address.
 	ReservedAddress string
 }
 
@@ -4113,8 +4113,8 @@ func NewCfdFundRawTxOption(networkType int) CfdFundRawTxOption {
  * param: txHex              transaction hex.
  * param: txinList           txin utxo list.
  * param: utxoList           utxo list.
- * param: targetAmount       target amount.
- * param: reservedAddress    reserved append address.
+ * param: targetAmount       target amount. see: CfdFundRawTxTargetAmount.Amount
+ * param: reservedAddress    address for adding txout. Also serves as a change address.
  * param: option             fundrawtransaction option.
  * return: outputTx          fundrawtransaction tx.
  * return: fee               fee amount.

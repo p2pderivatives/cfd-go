@@ -3,7 +3,7 @@ FROM golang:1.13-alpine
 WORKDIR /workspace
 
 ARG CFDGO_DOMAIN=p2pderivatives
-ARG CFDGO_VER=v0.1.3
+ARG CFDGO_VER=v0.1.4
 
 RUN apk add --update --no-cache musl gcc g++ make unzip wget \
   && echo "---- download cfd binary ----" \
