@@ -11,11 +11,11 @@
 - Go (1.12 or higher)
 - C/C++ Compiler
   - can compile c++11
-  - make support compiler
 - CMake (3.14.3 or higher)
-- Python 3.x
-- node.js (stable version)
-  - for cmake-js
+- When using npm scripts and cmake-js
+  - node.js (stable version)
+  - Python 3.x
+    - for building libwally-core js wrapper
 
 ### Windows (MinGW)
 
@@ -23,10 +23,10 @@ attention: Cgo can only be used on the `make` platform.
 
 (Recommended to use wsl(Windows Subsystem for Linux), because it can be cumbersome.)
 
-- MinGW (http://mingw-w64.org/doku.php)
-  - download and install files.
-    - go (1.12 or higher)
-    - MinGW (Add to PATH after install)
+download and install files.
+- go (1.12 or higher)
+- [CMake](https://cmake.org/) (3.14.3 or higher)
+- [MinGW](http://mingw-w64.org/) (Add to PATH after install)
 
 ### MacOS
 
@@ -111,15 +111,15 @@ The fastest and easiest way.
 sudo ./tools/cleanup_install_files.sh
 
 (download)
-wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.4/cfdgo-v0.1.3-ubuntu1804-gcc-x86_64.zip
+wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.5/cfdgo-v0.1.5-ubuntu1804-gcc-x86_64.zip
 
 (unzip)
-sudo unzip -q cfdgo-v0.1.24-ubuntu1804-gcc-x86_64.zip -d /
+sudo unzip -q cfdgo-v0.1.5-ubuntu1804-gcc-x86_64.zip -d /
 ```
 
 - windows
   1. cleanup: `c:/usr/local` directory.
-  2. download: https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.4/cfdgo-v0.1.3-win-gcc-static-x86_64.zip
+  2. download: https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.5/cfdgo-v0.1.5-win-gcc-static-x86_64.zip
   3. Unzip and extract to `c:/usr/local` directory.
 
 ### install (after build)
@@ -174,20 +174,6 @@ cd build && sudo ninja install
 
 cmake version is 3.15 or higher: `cmake --install build`
 
-#### Using releases asset (ubuntu / macos)
-
-```Shell
-(cleanup)
-./tools/cmake_cleanup.sh
-sudo ./tools/cleanup_install_files.sh
-
-(download)
-wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.4/cfdgo-v0.1.4-ubuntu1804-gcc-x86_64.zip
-
-(unzip)
-sudo unzip -q cfdgo-v0.1.4-ubuntu1804-gcc-x86_64.zip -d /
-```
-
 ### uninstall
 ```Shell
 (uninstall by using makefile)
@@ -212,7 +198,7 @@ go.mod
 
 ```
 require (
-  github.com/p2pderivatives/cfd-go v0.1.4
+  github.com/p2pderivatives/cfd-go v0.1.5
   ...
 )
 ```
@@ -234,7 +220,33 @@ go mod download
 
 ---
 
-## Development information
+## Test and Example
+
+### Test
+
+test file is `cfdgo_test.go` . Execute by the following method.
+
+- shell script or bat file
+```
+(linux/macos)
+./go_test.sh
+
+(Windows)
+.\go_test.bat
+```
+
+- go command (linux/macos)
+```Shell
+LD_LIBRARY_PATH=./build/Release go test
+```
+
+### Example
+
+- cfdgo_test.go
+
+---
+
+## Information for developers
 
 ### managed files
 
@@ -253,27 +265,31 @@ attention: At first, install swig and set PATH.
 .\tools\gen_swig.bat
 ```
 
-### Test
+### using library
 
-test file is `cfdgo_test.go` . Execute by the following method.
+- cfd
+  - cfd-core
+    - [libwally-core](https://github.com/cryptogarageinc/libwally-core/tree/cfd-develop) (forked from [ElementsProject/libwally-core](https://github.com/ElementsProject/libwally-core))
+    - [univalue](https://github.com/jgarzik/univalue) (for JSON encoding and decoding)
 
-- shell script or bat file
+### formatter
+
+- go fmt (ignore cfdgo.go)
+
+### support compilers
+
+- GCC (contains MinGW) (5.x or higher)
+- Clang (7.x or higher)
+
+### code coverage
+
 ```
-(linux/macos)
-./go_test.sh
-
 (Windows)
-.\go_test.bat
+.\go_coverage.bat
+
+(Ubuntu / MacOS)
+./go_coverage.sh
 ```
-
-- go command
-```Shell
-LD_LIBRARY_PATH=./build/Release go test
-```
-
-### Example
-
-- cfdgo_test.go
 
 ---
 

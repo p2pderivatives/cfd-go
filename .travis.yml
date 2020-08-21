@@ -73,6 +73,7 @@ deploy:
     - "${STATIC_ASSET_FILE_NAME}.zip"
     - "${DYNAMIC_ASSET_FILE_NAME}.zip"
   draft: false
+  prerelease: true
   on:
     tags: true
   skip_cleanup: true
