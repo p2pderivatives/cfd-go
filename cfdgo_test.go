@@ -705,6 +705,90 @@ func TestCfdGetTransaction(t *testing.T) {
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
 
+func TestCfdGetTransactionByHandle(t *testing.T) {
+	txHex := "0200000000020f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570000000000ffffffff0f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570100008000ffffffffd8bbe31bc590cbb6a47d2e53a956ec25d8890aefd60dcfc93efd34727554890b0683fe0819a4f9770c8a7cd5824e82975c825e017aff8ba0d6a5eb4959cf9c6f010000000023c346000004017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000003b947f6002200d8510dfcf8e2330c0795c771d1e6064daab2f274ac32a6e2708df9bfa893d17a914ef3e40882e17d6e477082fcafeb0f09dc32d377b87010bad521bafdac767421d45b71b29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b9270002cc645552109331726c0ffadccab21620dd7a5a33260c6ac7bd1c78b98cb1e35a1976a9146c22e209d36612e0d9d2a20b814d7d8648cc7a7788ac017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000000000c350000001cdb0ed311810e61036ac9255674101497850f5eee5e4320be07479c05473cbac010000000023c3460003ce4c4eac09fe317f365e45c00ffcf2e9639bc0fd792c10f72cdc173c4e5ed8791976a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac00000000"
+
+	txData, txinList, txoutList, err := GetConfidentialTxData(txHex, true)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(txinList))
+	assert.Equal(t, 4, len(txoutList))
+
+	if err == nil {
+		assert.Equal(t, "cf7783b2b1de646e35186df988a219a17f0317b5c3f3c47fa4ab2d7463ea3992", txData.Txid)
+		assert.Equal(t, "cf7783b2b1de646e35186df988a219a17f0317b5c3f3c47fa4ab2d7463ea3992", txData.Wtxid)
+		assert.Equal(t, "938e3a9b5bac410e812d08db74c4ef2bc58d1ed99d94b637cab0ac2e9eb59df8", txData.WitHash)
+		assert.Equal(t, uint32(512), txData.Size)
+		assert.Equal(t, uint32(512), txData.Vsize)
+		assert.Equal(t, uint32(2048), txData.Weight)
+		assert.Equal(t, uint32(2), txData.Version)
+		assert.Equal(t, uint32(0), txData.LockTime)
+
+		// txid, vout, sequence, scriptSig, err := CfdGoGetConfidentialTxIn(txHex, uint32(1))
+		assert.NoError(t, err)
+		assert.Equal(t, "57a15002d066ce52573d674df925c9bc0f1164849420705f2cfad8a68111230f", txinList[1].OutPoint.Txid)
+		assert.Equal(t, uint32(1), txinList[1].OutPoint.Vout)
+		assert.Equal(t, uint32(4294967295), txinList[1].Sequence)
+		assert.Equal(t, "", txinList[1].ScriptSig)
+
+		// entropy, nonce, assetAmount, assetValue, tokenAmount, tokenValue, assetRangeproof, tokenRangeproof, err := CfdGoGetTxInIssuanceInfo(txHex, uint32(1))
+		assert.Equal(t, "6f9ccf5949eba5d6a08bff7a015e825c97824e82d57c8a0c77f9a41908fe8306", txinList[1].Issuance.Entropy)
+		assert.Equal(t, "0b8954757234fd3ec9cf0dd6ef0a89d825ec56a9532e7da4b6cb90c51be3bbd8", txinList[1].Issuance.Nonce)
+		assert.Equal(t, "010000000023c34600", txinList[1].Issuance.AssetValue)
+		assert.Equal(t, "", txinList[1].Issuance.TokenValue)
+		assert.Equal(t, int64(600000000), txinList[1].Issuance.AssetAmount)
+		assert.Equal(t, int64(0), txinList[1].Issuance.TokenAmount)
+		assert.Equal(t, "", txinList[1].IssuanceAmountRangeproof)
+		assert.Equal(t, "", txinList[1].InflationKeysRangeproof)
+
+		// asset, satoshiValue, valueCommitment, nonce, lockingScript, surjectionProof, rangeproof, err := CfdGoGetConfidentialTxOut(txHex, uint32(3))
+		assert.Equal(t, "accb7354c07974e00b32e4e5eef55078490141675592ac3610e6101831edb0cd", txoutList[3].Asset)
+		assert.Equal(t, int64(600000000), txoutList[3].Amount)
+		assert.Equal(t, "010000000023c34600", txoutList[3].CommitmentValue)
+		assert.Equal(t, "03ce4c4eac09fe317f365e45c00ffcf2e9639bc0fd792c10f72cdc173c4e5ed879", txoutList[3].CommitmentNonce)
+		assert.Equal(t, "76a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac", txoutList[3].LockingScript)
+		assert.Equal(t, "", txoutList[3].Surjectionproof)
+		assert.Equal(t, "", txoutList[3].Rangeproof)
+	}
+
+	txHandle, err := CfdGoInitializeTxDataHandle(int(KCfdNetworkLiquidv1), txHex)
+	assert.NoError(t, err)
+	if err == nil {
+		txinIndex, err := CfdGoGetTxInIndexByHandle(txHandle, txinList[1].OutPoint.Txid, txinList[1].OutPoint.Vout)
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(1), txinIndex)
+
+		if err == nil {
+			txinIndex, err = CfdGoGetTxInIndexByHandle(txHandle, txinList[0].OutPoint.Txid, txinList[0].OutPoint.Vout)
+			assert.NoError(t, err)
+			assert.Equal(t, uint32(0), txinIndex)
+		}
+		if err == nil {
+			txoutIndex, err := CfdGoGetTxOutIndexByHandle(txHandle, "2dodsWJgP3pTWWidK5hDxuYHqC1U4CEnT3n", "")
+			assert.NoError(t, err)
+			assert.Equal(t, uint32(3), txoutIndex)
+		}
+		if err == nil {
+			txoutIndex, err := CfdGoGetTxOutIndexByHandle(txHandle, "", txoutList[3].LockingScript)
+			assert.NoError(t, err)
+			assert.Equal(t, uint32(3), txoutIndex)
+		}
+		if err == nil {
+			txoutIndex, err := CfdGoGetTxOutIndexByHandle(txHandle, "", txoutList[2].LockingScript)
+			assert.NoError(t, err)
+			assert.Equal(t, uint32(2), txoutIndex)
+		}
+
+		freeErr := CfdGoFreeTxDataHandle(txHandle)
+		assert.NoError(t, freeErr)
+	}
+
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
 func TestCfdSetRawReissueAsset(t *testing.T) {
 	txHex := "0200000000020f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570000000000ffffffff0f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570100000000ffffffff03017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000003b947f6002200d8510dfcf8e2330c0795c771d1e6064daab2f274ac32a6e2708df9bfa893d17a914ef3e40882e17d6e477082fcafeb0f09dc32d377b87010bad521bafdac767421d45b71b29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b9270002cc645552109331726c0ffadccab21620dd7a5a33260c6ac7bd1c78b98cb1e35a1976a9146c22e209d36612e0d9d2a20b814d7d8648cc7a7788ac017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000000000c350000000000000"
 
@@ -2655,6 +2739,68 @@ func TestGetTransactionBitcoin(t *testing.T) {
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
 
+func TestGetTransactionBitcoinByHandle(t *testing.T) {
+	tx := "02000000000102bdebed9413554bb95fffbdf436112c923c334a6850509ae7794d410524b061740000000000ffffffffc16d35d26589dfd54634181aa4a290cb9e06a716ea68620be05fbc46f1e197140100000000ffffffff0200e1f50500000000160014751e76e8199196d454941c45d1b3a323f1433bd620544771000000001600144dc2412fe3dc759e3830b6fb360264c8ce0abe3802473044022047df4e3d86faa587bdeecb15e9d140956dd6e5c58917cd158d08cf62c1b495ad022010b828d155010188ecaaa8110a48c2dd13d69d7ae620d3926632a004a82483d6012103d34d21d3017acdfb033e010574fb73dc83639f97145d83965fe1b19a4c8e2b6b0000000000"
+	network := int(KCfdNetworkMainnet)
+
+	data, txinList, txoutList, err := GetBitcoinTransactionData(tx, true)
+	assert.NoError(t, err)
+
+	if err == nil {
+		// data, err := CfdGoGetTxInfo(network, tx)
+		assert.Equal(t, "e05d74e44d51171f71d3babe67c630a8d9c865d602c91998ec8f27ab21c75150", data.Txid)
+		assert.Equal(t, "ef936bd43061ab4468ba15618d48c01bd1e4457914c261e90c0dd8f5a6f38741", data.Wtxid)
+		assert.Equal(t, uint32(264), data.Size)
+		assert.Equal(t, uint32(182), data.Vsize)
+		assert.Equal(t, uint32(726), data.Weight)
+		assert.Equal(t, uint32(2), data.Version)
+		assert.Equal(t, uint32(0), data.LockTime)
+
+		// txid, vout, sequence, scriptSig, err := CfdGoGetTxIn(network, tx, uint32(0))
+		assert.Equal(t, "7461b02405414d79e79a5050684a333c922c1136f4bdff5fb94b551394edebbd", txinList[0].OutPoint.Txid)
+		assert.Equal(t, uint32(0), txinList[0].OutPoint.Vout)
+		assert.Equal(t, uint32(4294967295), txinList[0].Sequence)
+		assert.Equal(t, "", txinList[0].ScriptSig)
+
+		// stackData, err := CfdGoGetTxInWitness(network, tx, uint32(0), uint32(1))
+		assert.Equal(t, "03d34d21d3017acdfb033e010574fb73dc83639f97145d83965fe1b19a4c8e2b6b", txinList[0].WitnessStack.Stack[1])
+
+		// satoshiAmount, lockingScript, err := CfdGoGetTxOut(network, tx, uint32(1))
+		assert.Equal(t, int64(1900500000), txoutList[1].Amount)
+		assert.Equal(t, "00144dc2412fe3dc759e3830b6fb360264c8ce0abe38", txoutList[1].LockingScript)
+
+		// inCount, err := CfdGoGetTxInCount(network, tx)
+		assert.Equal(t, 2, len(txinList))
+
+		// witnessCount, err := CfdGoGetTxInWitnessCount(network, tx, uint32(0))
+		assert.Equal(t, 2, len(txinList[0].WitnessStack.Stack))
+
+		// outCount, err := CfdGoGetTxOutCount(network, tx)
+		assert.Equal(t, 2, len(txoutList))
+	}
+
+	txHandle, err := CfdGoInitializeTxDataHandle(network, tx)
+	assert.NoError(t, err)
+	if err == nil {
+		txinIndex, err := CfdGoGetTxInIndexByHandle(txHandle, "1497e1f146bc5fe00b6268ea16a7069ecb90a2a41a183446d5df8965d2356dc1", uint32(1))
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(1), txinIndex)
+
+		txoutIndex1, err := CfdGoGetTxOutIndexByHandle(txHandle, "bc1qfhpyztlrm36euwpskmanvqnyer8q403cnzfn9t", "")
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(1), txoutIndex1)
+
+		txoutIndex2, err := CfdGoGetTxOutIndexByHandle(txHandle, "", "0014751e76e8199196d454941c45d1b3a323f1433bd6")
+		assert.NoError(t, err)
+		assert.Equal(t, uint32(0), txoutIndex2)
+
+		freeErr := CfdGoFreeTxDataHandle(txHandle)
+		assert.NoError(t, freeErr)
+	}
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
 func TestKeyChangeApi(t *testing.T) {
 	pubkey := "03662a01c232918c9deb3b330272483c3e4ec0c6b5da86df59252835afeb4ab5f9"
 	privkey := "036b13c5a0dd9935fe175b2b9ff86585c231e734b2148149d788a941f1f4f566"
@@ -2876,6 +3022,12 @@ func BlindLargeTx(t *testing.T) (err error) {
 	// assetAmt := int64(4940 + 2530000 + 5060 + 99939782 + 60218)  // 102540000
 	asset2Amt := int64(49500 + 25300)
 
+	_, txinList, txoutList, err := GetConfidentialTxData(txHex, false)
+	if err != nil {
+		fmt.Printf("GetConfidentialTxData fail[%s]\n", err.Error())
+		return err
+	}
+
 	// blind
 	blindHandle, err := CfdGoInitializeBlindTx()
 	assert.NoError(t, err)
@@ -2887,14 +3039,8 @@ func BlindLargeTx(t *testing.T) (err error) {
 
 	emptyBlinder := "0000000000000000000000000000000000000000000000000000000000000000"
 	for i := 1; i <= maxTxin; i++ {
-		txid, vout, _, _, err := CfdGoGetConfidentialTxIn(txHex, uint32(i-1))
-		assert.NoError(t, err)
-		if err != nil {
-			fmt.Printf("CfdGoGetConfidentialTxIn fail[%s] idx[%d]\n", err.Error(), i)
-			return err
-		}
-
-		//txid := "00000000000000000000000000000000000000000000000000000000" + fmt.Sprintf("%08x", i)
+		txid := txinList[i-1].OutPoint.Txid
+		vout := txinList[i-1].OutPoint.Vout
 		useAsset := asset
 		amt := int64(403600) // 254 num
 		if i == maxTxin {
@@ -2913,12 +3059,7 @@ func BlindLargeTx(t *testing.T) (err error) {
 	}
 
 	for i := 1; i <= maxTxout; i++ {
-		_, _, _, nonce, _, _, _, err := CfdGoGetConfidentialTxOut(txHex, uint32(i-1))
-		assert.NoError(t, err)
-		if err != nil {
-			fmt.Printf("CfdGoGetConfidentialTxIn fail[%s] idx[%d]\n", err.Error(), i)
-			return err
-		}
+		nonce := txoutList[i-1].CommitmentNonce
 
 		if nonce == "" {
 			continue
