@@ -692,11 +692,11 @@ func NewCfdEstimateFeeOption() CfdFeeEstimateOption {
  * param: inputs        inputs to set in the transaction
  * param: option        options for fee estimation
  * return: totalFee     total fee value when all utxos set to input.
- *     (totalFee = txFee + inputFee)
- * return: txFee        base transaction fee value.
- * return: inputFee     fee value all of input set.
+ *     (totalFee = txoutFee + utxoFee)
+ * return: txoutFee     base transaction fee value.
+ * return: utxoFee      fee value all of input set utxo.
  */
-func CfdGoEstimateFee(txHex string, inputs []CfdEstimateFeeInput, option CfdFeeEstimateOption) (totalFee, txFee, inputFee int64, err error) {
+func CfdGoEstimateFee(txHex string, inputs []CfdEstimateFeeInput, option CfdFeeEstimateOption) (totalFee, txoutFee, utxoFee int64, err error) {
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
 		return
@@ -767,8 +767,8 @@ func CfdGoEstimateFee(txHex string, inputs []CfdEstimateFeeInput, option CfdFeeE
 	}
 
 	totalFee = txFeeWork + inputFeeWork
-	txFee = txFeeWork
-	inputFee = inputFeeWork
+	txoutFee = txFeeWork
+	utxoFee = inputFeeWork
 	return
 }
 
