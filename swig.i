@@ -32,7 +32,7 @@
 %include "external/cfd/include/cfdc/cfdcapi_script.h"
 %include "external/cfd/include/cfdc/cfdcapi_transaction.h"
 
-%go_import("fmt", "strings")
+%go_import("encoding/hex", "fmt", "strings")
 %insert(go_wrapper) %{
 
 /**
@@ -3105,103 +3105,6 @@ func CfdGoVerifyEcSignature(sighash string, pubkey string, signature string) (is
 	return isVerify, err
 }
 
-/** CfdGoCalculateSchnorrSignatureWithNonce
- * Calculate schnorr signature. (with nonce)
- * param: oraclePrivkey   oracle privkey.
- * param: kValue          k-value.
- * param: message         message hash(32byte).
- * return: signature      32byte signature.
- * return: err            error
- */
-func CfdGoCalculateSchnorrSignatureWithNonce(oraclePrivkey string, kValue string, message string) (signature string, err error) {
-	signature = ""
-	handle, err := CfdGoCreateHandle()
-	if err != nil {
-		return
-	}
-	defer CfdGoFreeHandle(handle)
-
-	ret := CfdCalculateSchnorrSignatureWithNonce(handle, oraclePrivkey, kValue, message, &signature)
-	err = convertCfdError(ret, handle)
-	return signature, err
-}
-
-/** CfdGoVerifySchnorrSignatureWithNonce
- * Verify schnorr signature with nonce.
- * param: pubkey        oracle pubkey.
- * param: nonce         pubkey nonce.
- * param: signature     signature(32byte).
- * param: message       message hash(32byte).
- * return: isVerify     verify check.
- * return: err          error
- */
-func CfdGoVerifySchnorrSignatureWithNonce(pubkey string, nonce string, signature string, message string) (isVerify bool, err error) {
-	isVerify = false
-	handle, err := CfdGoCreateHandle()
-	if err != nil {
-		return
-	}
-	defer CfdGoFreeHandle(handle)
-
-	ret := CfdVerifySchnorrSignatureWithNonce(handle, pubkey, nonce, signature, message)
-	if ret == (int)(KCfdSuccess) {
-		isVerify = true
-	} else if ret == (int)(KCfdSignVerificationError) {
-		isVerify = false
-	} else {
-		err = convertCfdError(ret, handle)
-	}
-	return isVerify, err
-}
-
-/** CfdGoCalculateSchnorrSignature
- * Calculate schnorr signature. (with nonce)
- * param: oraclePrivkey   oracle privkey.
- * param: kValue          k-value.
- * param: message         message hash(32byte).
- * return: signature      64byte signature.
- * return: err            error
- */
-func CfdGoCalculateSchnorrSignature(oraclePrivkey string, kValue string, message string) (signature string, err error) {
-	signature = ""
-	handle, err := CfdGoCreateHandle()
-	if err != nil {
-		return
-	}
-	defer CfdGoFreeHandle(handle)
-
-	ret := CfdCalculateSchnorrSignature(handle, oraclePrivkey, kValue, message, &signature)
-	err = convertCfdError(ret, handle)
-	return signature, err
-}
-
-/** CfdGoVerifySchnorrSignature
- * Verify schnorr signature with nonce.
- * param: pubkey        oracle pubkey.
- * param: signature     signature(64byte).
- * param: message       message hash(32byte).
- * return: isVerify     verify check.
- * return: err          error
- */
-func CfdGoVerifySchnorrSignature(pubkey string, signature string, message string) (isVerify bool, err error) {
-	isVerify = false
-	handle, err := CfdGoCreateHandle()
-	if err != nil {
-		return
-	}
-	defer CfdGoFreeHandle(handle)
-
-	ret := CfdVerifySchnorrSignature(handle, pubkey, signature, message)
-	if ret == (int)(KCfdSuccess) {
-		isVerify = true
-	} else if ret == (int)(KCfdSignVerificationError) {
-		isVerify = false
-	} else {
-		err = convertCfdError(ret, handle)
-	}
-	return isVerify, err
-}
-
 /** CfdGoCompressPubkey
  * Compress pubkey.
  * param: pubkey              pubkey.
@@ -3403,46 +3306,6 @@ func CfdGoNegatePrivkey(privkey string) (negatePrivkey string, err error) {
 	ret := CfdNegatePrivkey(handle, privkey, &negatePrivkey)
 	err = convertCfdError(ret, handle)
 	return negatePrivkey, err
-}
-
-/** CfdGoGetSchnorrPubkey
- * Get schnorr pubkey.
- * param: oraclePubkey        oracle pubkey.
- * param: rPoint              r-point data.
- * param: message             message hash.
- * return: pubkey             schnorr pubkey.
- * return: err                error
- */
-func CfdGoGetSchnorrPubkey(oraclePubkey string, rPoint string, message string) (pubkey string, err error) {
-	pubkey = ""
-	handle, err := CfdGoCreateHandle()
-	if err != nil {
-		return
-	}
-	defer CfdGoFreeHandle(handle)
-
-	ret := CfdGetSchnorrPubkey(handle, oraclePubkey, rPoint, message, &pubkey)
-	err = convertCfdError(ret, handle)
-	return pubkey, err
-}
-
-/** CfdGoGetSchnorrPublicNonce
- * Get schnorr public nonce.
- * param: privkey             privkey.
- * return: nonce              public nonce.
- * return: err                error
- */
-func CfdGoGetSchnorrPublicNonce(privkey string) (nonce string, err error) {
-	nonce = ""
-	handle, err := CfdGoCreateHandle()
-	if err != nil {
-		return
-	}
-	defer CfdGoFreeHandle(handle)
-
-	ret := CfdGetSchnorrPublicNonce(handle, privkey, &nonce)
-	err = convertCfdError(ret, handle)
-	return nonce, err
 }
 
 /** CfdGoVerifySignature
@@ -4514,6 +4377,344 @@ func CfdGoGetTxOutIndexByHandle(txDataHandle uintptr, address string, directLock
 	ret := CfdGetTxOutIndexByHandle(handle, txDataHandle, address, directLockingScript, indexPtr)
 	err = convertCfdError(ret, handle)
 	return index, err
+}
+
+// v0.2 API ------------------------------------------------------------------
+
+// ByteData This struct holds a byte array.
+type ByteData struct {
+	hex string
+}
+
+// NewByteData This function create a bytedata from a byte array.
+func NewByteData(data []byte) ByteData {
+	var obj ByteData
+	obj.hex = hex.EncodeToString(data)
+	return obj
+}
+
+// NewByteDataFromHex This function create a bytedata from a hex string.
+func NewByteDataFromHex(hexStr string) (ByteData, error) {
+	var obj ByteData
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return obj, convertCfdError(int(KCfdIllegalArgumentError), uintptr(0))
+	}
+	obj.hex = hexStr
+	return obj, nil
+}
+
+// NewByteDataFromHex This function create a bytedata from a hex string. On error, it returns nil.
+func NewByteDataFromHexIgnoreError(hexStr string) *ByteData {
+	var obj ByteData
+	_, osErr := hex.DecodeString(hexStr)
+	if osErr != nil {
+		return nil
+	}
+	obj.hex = hexStr
+	return &obj
+}
+
+// ToHex This function return a hex string.
+func (obj *ByteData) ToHex() string {
+	return obj.hex
+}
+
+// ToHex This function return a byte array.
+func (obj *ByteData) ToSlice() []byte {
+	data, osErr := hex.DecodeString(obj.hex)
+	if osErr != nil {
+		return []byte{}
+	}
+	return data
+}
+
+// EcdsaAdaptorUtil This struct use for the accessing to ecdsa-adaptor function.
+type EcdsaAdaptorUtil struct {
+}
+
+// NewEcdsaAdaptorUtil This function return a EcdsaAdaptorUtil.
+func NewEcdsaAdaptorUtil() *EcdsaAdaptorUtil {
+	return &EcdsaAdaptorUtil{}
+}
+
+// Sign This function return a ecdsa-adaptor's signature and proof.
+func (obj *EcdsaAdaptorUtil) Sign(msg, secretKey, adaptor ByteData) (adaptorSignature, adaptorProof ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var signature string
+	var proof string
+	ret := CfdSignEcdsaAdaptor(handle, msg.ToHex(), secretKey.ToHex(), adaptor.ToHex(), &signature, &proof)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		adaptorSignature = ByteData{hex: signature}
+		adaptorProof = ByteData{hex: proof}
+	}
+	return adaptorSignature, adaptorProof, err
+}
+
+// Adapt This function return a decrypted signature.
+func (obj *EcdsaAdaptorUtil) Adapt(adaptorSignature, adaptorSecret ByteData) (signature ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var ecSignature string
+	ret := CfdAdaptEcdsaAdaptor(handle, adaptorSignature.ToHex(), adaptorSecret.ToHex(), &ecSignature)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		signature = ByteData{hex: ecSignature}
+	}
+	return signature, err
+}
+
+// ExtractSecret This function return a adaptor secret.
+func (obj *EcdsaAdaptorUtil) ExtractSecret(adaptorSignature, signature, adaptor ByteData) (secret ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var adaptorSecret string
+	ret := CfdExtractEcdsaAdaptorSecret(handle, adaptorSignature.ToHex(), signature.ToHex(), adaptor.ToHex(), &adaptorSecret)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		secret = ByteData{hex: adaptorSecret}
+	}
+	return secret, err
+}
+
+// Verify This function verify a ecdsa-adaptor's signature.
+func (obj *EcdsaAdaptorUtil) Verify(adaptorSignature, adaptorProof, adaptor, msg, pubkey ByteData) (isVerify bool, err error) {
+	isVerify = false
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdVerifyEcdsaAdaptor(handle, adaptorSignature.ToHex(), adaptorProof.ToHex(), adaptor.ToHex(), msg.ToHex(), pubkey.ToHex())
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isVerify = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isVerify, err
+}
+
+// SchnorrUtil This struct use for the accessing to schnorr function.
+type SchnorrUtil struct {
+}
+
+// NewSchnorrUtil This function return a SchnorrUtil.
+func NewSchnorrUtil() *SchnorrUtil {
+	return &SchnorrUtil{}
+}
+
+// GetPubkeyFromPrivkey (deprecated) This function return a schnorr's pubkey. Please use GetSchnorrPubkeyFromPrivkey.
+func (obj *SchnorrUtil) GetPubkeyFromPrivkey(key ByteData) (pubkey ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrPubkey string
+	parity := false
+	ret := CfdGetSchnorrPubkeyFromPrivkey(handle, key.ToHex(), &schnorrPubkey, &parity)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: schnorrPubkey}
+	}
+	return pubkey, err
+}
+
+// GetSchnorrPubkeyFromPrivkey This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) GetSchnorrPubkeyFromPrivkey(key ByteData) (pubkey ByteData, parity bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrPubkey string
+	ret := CfdGetSchnorrPubkeyFromPrivkey(handle, key.ToHex(), &schnorrPubkey, &parity)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: schnorrPubkey}
+	}
+	return pubkey, parity, err
+}
+
+// GetSchnorrPubkeyFromPubkey This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) GetSchnorrPubkeyFromPubkey(key ByteData) (pubkey ByteData, parity bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrPubkey string
+	ret := CfdGetSchnorrPubkeyFromPubkey(handle, key.ToHex(), &schnorrPubkey, &parity)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: schnorrPubkey}
+	}
+	return pubkey, parity, err
+}
+
+// TweakAddKeyPair This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) TweakAddKeyPair(key, tweak ByteData) (pubkey ByteData, parity bool, privkey ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var tweakedPubkey string
+	var tweakedPrivkey string
+	ret := CfdSchnorrKeyPairTweakAdd(handle, key.ToHex(), tweak.ToHex(), &tweakedPubkey, &parity, &tweakedPrivkey)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: tweakedPubkey}
+		privkey = ByteData{hex: tweakedPrivkey}
+	}
+	return pubkey, parity, privkey, err
+}
+
+// TweakAddPubkey This function return a schnorr's pubkey.
+func (obj *SchnorrUtil) TweakAddPubkey(key, tweak ByteData) (pubkey ByteData, parity bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var tweakedPubkey string
+	ret := CfdSchnorrPubkeyTweakAdd(handle, key.ToHex(), tweak.ToHex(), &tweakedPubkey, &parity)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		pubkey = ByteData{hex: tweakedPubkey}
+	}
+	return pubkey, parity, err
+}
+
+// IsTweakedPubkey This function return a tweaked flag.
+func (obj *SchnorrUtil) IsTweakedPubkey(key ByteData, parity bool, basePubkey, tweak ByteData) (isTweaked bool, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdCheckTweakAddFromSchnorrPubkey(handle, key.ToHex(), parity, basePubkey.ToHex(), tweak.ToHex())
+	if ret == (int)(KCfdSuccess) {
+		isTweaked = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isTweaked = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isTweaked, err
+}
+
+// Sign This function return a schnorr's signature.
+func (obj *SchnorrUtil) Sign(msg, secretKey, auxRand ByteData) (signature ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrSignature string
+	ret := CfdSignSchnorr(handle, msg.ToHex(), secretKey.ToHex(), auxRand.ToHex(), &schnorrSignature)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		signature = ByteData{hex: schnorrSignature}
+	}
+	return signature, err
+}
+
+// SignWithNonce This function return a schnorr's signature with nonce.
+func (obj *SchnorrUtil) SignWithNonce(msg, secretKey, nonce ByteData) (signature ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrSignature string
+	ret := CfdSignSchnorrWithNonce(handle, msg.ToHex(), secretKey.ToHex(), nonce.ToHex(), &schnorrSignature)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		signature = ByteData{hex: schnorrSignature}
+	}
+	return signature, err
+}
+
+// ComputeSigPoint This function return a sig-point.
+func (obj *SchnorrUtil) ComputeSigPoint(msg, nonce, pubkey ByteData) (sigPoint ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var point string
+	ret := CfdComputeSchnorrSigPoint(handle, msg.ToHex(), nonce.ToHex(), pubkey.ToHex(), &point)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		sigPoint = ByteData{hex: point}
+	}
+	return sigPoint, err
+}
+
+// Verify This function verify a schnorr's signature.
+func (obj *SchnorrUtil) Verify(signature, msg, pubkey ByteData) (isVerify bool, err error) {
+	isVerify = false
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	ret := CfdVerifySchnorr(handle, signature.ToHex(), msg.ToHex(), pubkey.ToHex())
+	if ret == (int)(KCfdSuccess) {
+		isVerify = true
+	} else if ret == (int)(KCfdSignVerificationError) {
+		isVerify = false
+	} else {
+		err = convertCfdError(ret, handle)
+	}
+	return isVerify, err
+}
+
+// SplitSignature This function return schnorr nonce and schnorr privkey.
+func (obj *SchnorrUtil) SplitSignature(signature ByteData) (nonce, key ByteData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	var schnorrNonce string
+	var privkey string
+	ret := CfdSplitSchnorrSignature(handle, signature.ToHex(), &schnorrNonce, &privkey)
+	err = convertCfdError(ret, handle)
+	if err == nil {
+		nonce = ByteData{hex: schnorrNonce}
+		key = ByteData{hex: privkey}
+	}
+	return nonce, key, err
 }
 
 // refine API ------------------------------------------------------------------
