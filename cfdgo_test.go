@@ -1,8 +1,6 @@
 package cfdgo
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"runtime"
 	"strconv"
@@ -2534,117 +2532,6 @@ func TestCfdGoDecodeRawTransaction(t *testing.T) {
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
 
-func TestDlcCombineMultipleMessages(t *testing.T) {
-	// Arrange
-	oraclePrivkey := "0000000000000000000000000000000000000000000000000000000000000001"
-	oraclePubkey, err := CfdGoGetPubkeyFromPrivkey(oraclePrivkey, "", true)
-	assert.NoError(t, err)
-	oracleKValues := []string{
-		"0000000000000000000000000000000000000000000000000000000000000002",
-		"0000000000000000000000000000000000000000000000000000000000000003",
-		"0000000000000000000000000000000000000000000000000000000000000004"}
-	oracleRPoints := []string{"", "", ""}
-	messages := []string{"W", "I", "F"}
-
-	localFundPrivkey := "0000000000000000000000000000000000000000000000000000000000000006"
-	localFundPubkey, err := CfdGoGetPubkeyFromPrivkey(localFundPrivkey, "", true)
-	assert.NoError(t, err)
-	localSweepPrivkey := "0000000000000000000000000000000000000000000000000000000000000006"
-	localSweepPubkey, err := CfdGoGetPubkeyFromPrivkey(localSweepPrivkey, "", true)
-	assert.NoError(t, err)
-
-	for i := 0; i < len(oracleKValues); i++ {
-		oracleRPoints[i], err = CfdGoGetSchnorrPublicNonce(oracleKValues[i])
-		assert.NoError(t, err)
-		if err != nil {
-			break
-		}
-	}
-
-	// Act
-	signatures := []string{"", "", ""}
-	for i := 0; i < len(oracleKValues); i++ {
-		hash := sha256.Sum256([]byte(messages[i]))
-		hashStr := hex.EncodeToString(hash[:])
-		signatures[i], err = CfdGoCalculateSchnorrSignatureWithNonce(oraclePrivkey, oracleKValues[i], hashStr)
-		assert.NoError(t, err)
-		if err != nil {
-			break
-		}
-	}
-
-	pubkeys := []string{"", "", ""}
-	for i := 0; i < len(pubkeys); i++ {
-		hash := sha256.Sum256([]byte(messages[i]))
-		hashStr := hex.EncodeToString(hash[:])
-		pubkeys[i], err = CfdGoGetSchnorrPubkey(oraclePubkey, oracleRPoints[i], hashStr)
-		assert.NoError(t, err)
-		if err != nil {
-			break
-		}
-	}
-
-	committedKey, err := CfdGoCombinePubkey(pubkeys)
-	assert.NoError(t, err)
-	combinePubkey, err := CfdGoCombinePubkeyPair(localFundPubkey, committedKey)
-	assert.NoError(t, err)
-
-	localSweepPubkeyBytes, _ := hex.DecodeString(localSweepPubkey)
-	hashedPrivkey := sha256.Sum256(localSweepPubkeyBytes)
-	hashedPrivkeyStr := hex.EncodeToString(hashedPrivkey[:])
-	hashPubkey, err := CfdGoGetPubkeyFromPrivkey(hashedPrivkeyStr, "", true)
-	combinedPubkey, err := CfdGoCombinePubkeyPair(combinePubkey, hashPubkey)
-	assert.NoError(t, err)
-
-	tweakedKey := localFundPrivkey
-	for i := 0; i < len(signatures); i++ {
-		tweakedKey, err = CfdGoPrivkeyTweakAdd(tweakedKey, signatures[i])
-		assert.NoError(t, err)
-		if err != nil {
-			break
-		}
-	}
-
-	// auto hashstr = HashUtil::Sha256(StringUtil::StringToByte(local_sweep_pubkey_str)).GetHex();
-	tweakPriv, err := CfdGoPrivkeyTweakAdd(tweakedKey, hashedPrivkeyStr)
-	assert.NoError(t, err)
-
-	tweakPub, err := CfdGoGetPubkeyFromPrivkey(tweakPriv, "", true)
-	assert.NoError(t, err)
-	// Assert
-	assert.Equal(t, tweakPub, combinedPubkey)
-	fmt.Printf("%s test done.\n", GetFuncName())
-}
-
-func TestDlcSchnorrSignVerify(t *testing.T) {
-	// Arrange
-	data := "0000000000000000000000000000000000000000000000000000000000000000"
-	privkey := "0000000000000000000000000000000000000000000000000000000000000001"
-	pubkey := "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
-	nonce := "0000000000000000000000000000000000000000000000000000000000000002"
-	bipSchnorrNonce := "58e8f2a1f78f0a591feb75aebecaaa81076e4290894b1c445cc32953604db089"
-
-	bipSchnorrNoncePubkey, err := CfdGoGetPubkeyFromPrivkey(bipSchnorrNonce, "", true)
-	assert.NoError(t, err)
-
-	// Act
-	sig1, err := CfdGoCalculateSchnorrSignatureWithNonce(privkey, nonce, data)
-	assert.NoError(t, err)
-	sig2, err := CfdGoCalculateSchnorrSignatureWithNonce(privkey, nonce, data)
-	assert.NoError(t, err)
-	sig3, err := CfdGoCalculateSchnorrSignatureWithNonce(privkey, bipSchnorrNonce, data)
-	assert.NoError(t, err)
-
-	isValid, err := CfdGoVerifySchnorrSignatureWithNonce(pubkey, bipSchnorrNoncePubkey, sig3, data)
-
-	// Assert
-	assert.Equal(t, sig1, sig2)
-	assert.NotEqual(t, sig1, sig3)
-	assert.Equal(t, "7031a98831859dc34dffeedda86831842ccd0079e1f92af177f7f22cc1dced05", sig3)
-	assert.True(t, isValid)
-	fmt.Printf("%s test done.\n", GetFuncName())
-}
-
 func TestPeginTx(t *testing.T) {
 	peginTx := "0200000001017926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30000004000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000002540ba97c0017a91414b71442e11941fd7807a82eabee13d6ec171ed9870125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000003a84000000000000000000060800e40b54020000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f16001412dcdeef890f60967896391c95b0e02c9258dfe5fdda060200000000010a945efd42ce42de413aa7398a95c35facc14ec5d35bb23e5f980014e94ab96a620000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffffe50b46ecadb5cc52a7ef149a23323464353415f02d7b4a943963b26a9beb2a030000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff67173609ca4c13662356a2507c71e5d497baeff56a3c42af989f3b270bc870560000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff784a9fd151fe2808949fae18afcf52244a77702b9a83950bc7ec52a8239104850000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff259618278cecbae1bed8b7806133d14987c3c6118d2744707f509c58ea2c0e870000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff5c30c2fdcb6ce0b666120777ec18ce5211dd4741f40f033648432694b0919da50000000017160014a8a7c0032d1d283e39889861b3f05156e379cfb6feffffffbb0f857d4b143c74c7fdb678bf41b65e7e3f2e7644b3613ae6370d21c0882ad60000000017160014a8a7c0032d1d283e39889861b3f05156e379cfb6feffffffbce488c283e07bf364edb5057e020aa3d137d8d6130711dc12f03f35564945680000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff258cb927989780ac92a3952ffd1f54e9b65e59fb07219eb106840b5d76b547fb0000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffffe98ec686efbca9bdd18ae85a3a8235a607e1cfb6138bac1461d400cbbabbe00f0000000017160014a8a7c0032d1d283e39889861b3f05156e379cfb6feffffff0100e40b540200000017a91472c44f957fc011d97e3406667dca5b1c930c4026870247304402206b4de54956e864dfe3ff3a4957e329cf171e919498bb8f98c242bef7b0d5e3350220505355401a500aabf193b93492d6bceb93c3b183034f252d65a139245c7486a601210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f40247304402200fc48c7b5bd6de74c951250c60e8e6c9d3a605dc557bdc93ce86e85d2f27834a02205d2a8768adad669683416d1126c8537ab1eb36b0e83d5d9e6a583297b7f9d2cb01210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f40247304402207ad97500fbe6049d559a1e10586cd0b1f02baeb98dc641a971a506a57288aa0002202a6646bc4262904f6d1a9288c12ff586b5a674f5a351dfaba2698c8b8265366f01210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f4024730440220271e41a1e8f953b6817333e43d6a5e2924b291d52120011a5f7f1fb8049ae41b02200f1a25ed9da813122caadf8edf8d01da190f9407c2b61c27d4b671e07136bce701210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022050291184dcd4733de6e6a43d9efb1e21e7d2c563e9138481f04010f3acbb139f02206c01c3bfe4e5b71c4aac524a18f35e25ae7306ca110b3c3b079ae6da2b0a0a5701210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022045a188c10aec4f1a3a6c8a3a3c9f7d4dc63b9eacc011839c907d1c5da206a1390220399ca60516204efd9d220eaa0c804867137133c4d70780223fdde699288af3790121031c01fd031bc09b385d138b3b2f44ec04c03934b66f6485f37a17b4899f1b8d7802473044022053621a5c74b313c648d179041c154152372060941d9c9080340eb913358b705602201ac178f639360356ca7d75656d92bd7801d976e74bd5d2e30d6310a94940d0bc0121031c01fd031bc09b385d138b3b2f44ec04c03934b66f6485f37a17b4899f1b8d780247304402207b4a7a271a8fc03e8045ca367cb64046fa06e5b13a105e67efe7dd6571503fcb022072852e1c3f87eeac039601a0df855fb5d65bbdcd3ad95ff96bfc7b534fd89f7601210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022037e9f0943a79e155a57526e251cfd39e004552b76c0de892448eb939d2d12fdf02203a02f0045e8f90739eddc06c026c95b4a653aeb89528d851ab75952fd7db07b801210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022057a9953ba83d5e710fc64e1c533d81b0913f434b3e1c865cebd6cb106e09fa77022012930afe63ae7f1115a2f3b13039e71387fc2d4ed0e36eaa7be55a754c8c84830121031c01fd031bc09b385d138b3b2f44ec04c03934b66f6485f37a17b4899f1b8d78130e00009700000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f3010500000000"
 
@@ -2959,29 +2846,6 @@ func TestKeyChangeApi(t *testing.T) {
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
 
-func TestSchnorrApi(t *testing.T) {
-	oraclePubkey := "033a04fd443fcc6c2e801ffbb042931e57b02036151ed6f37a5c5051fd542c67ec"
-	oraclePrivkey := "2f6e981e861e300dc980c4a83be11555da0fbb6490044c2f18e786b622c0e97c"
-	pubkey := "03662a01c232918c9deb3b330272483c3e4ec0c6b5da86df59252835afeb4ab5f9"
-	privkey := "036b13c5a0dd9935fe175b2b9ff86585c231e734b2148149d788a941f1f4f566"
-	message := "98430d10471cf697e2661e31ceb8720750b59a85374290e175799ba5dd06508e"
-
-	sig, err := CfdGoCalculateSchnorrSignature(oraclePrivkey, privkey, message)
-	assert.NoError(t, err)
-	assert.Equal(t, "5e0e2b4333f083f1c5917e203e29644d60b23596cac04f9f2fae07b4dd6a3d462e8dc7aa7be5e9298f518cba6578bd2872bf41a705dd3b98f06a6fa023f249e6",
-		sig)
-
-	isVerify, err := CfdGoVerifySchnorrSignature(oraclePubkey, sig, message)
-	assert.NoError(t, err)
-	assert.True(t, isVerify)
-
-	isVerify, err = CfdGoVerifySchnorrSignature(pubkey, sig, message)
-	assert.NoError(t, err)
-	assert.False(t, isVerify)
-
-	fmt.Printf("%s test done.\n", GetFuncName())
-}
-
 func TestSerializeByteData(t *testing.T) {
 	serialized, err := CfdGoSerializeByteData("0123456789ab")
 	assert.NoError(t, err)
@@ -3196,6 +3060,157 @@ func TestUpdateTxOutAmount(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "0100000000010136641869ca081e70f394c6948e8af409e18b619df2ed74aa106c1ca29787b96e0100000023220020a16b5755f7f6f96dbd65f5f0d6ab9418b89af4b1f14a1bb8a09062c35f0dcb54ffffffff0200e9a435000000001976a914389ffce9cd9ae88dcc0631e88a821ffdbe9bfe2688aceaf48f04000000001976a9147480a33f950689af511e6e84c138dbbd3c3ee41588ac080047304402206ac44d672dac41f9b00e28f4df20c52eeb087207e8d758d76d92c6fab3b73e2b0220367750dbbe19290069cba53d096f44530e4f98acaa594810388cf7409a1870ce01473044022068c7946a43232757cbdf9176f009a928e1cd9a1a8c212f15c1e11ac9f2925d9002205b75f937ff2f9f3c1246e547e54f62e027f64eefa2695578cc6432cdabce271502473044022059ebf56d98010a932cf8ecfec54c48e6139ed6adb0728c09cbe1e4fa0915302e022007cd986c8fa870ff5d2b3a89139c9fe7e499259875357e20fcbb15571c76795403483045022100fbefd94bd0a488d50b79102b5dad4ab6ced30c4069f1eaa69a4b5a763414067e02203156c6a5c9cf88f91265f5a942e96213afae16d83321c8b31bb342142a14d16381483045022100a5263ea0553ba89221984bd7f0b13613db16e7a70c549a86de0cc0444141a407022005c360ef0ae5a5d4f9f2f87a56c1546cc8268cab08c73501d6b3be2e1e1a8a08824730440220525406a1482936d5a21888260dc165497a90a15669636d8edca6b9fe490d309c022032af0c646a34a44d1f4576bf6a4a74b67940f8faa84c7df9abe12a01a11e2b4783cf56210307b8ae49ac90a048e9b53357a2354b3334e9c8bee813ecb98e99a7e07e8c3ba32103b28f0c28bfab54554ae8c658ac5c3e0ce6e79ad336331f78c428dd43eea8449b21034b8113d703413d57761b8b9781957b8c0ac1dfe69f492580ca4195f50376ba4a21033400f6afecb833092a9a21cfdf1ed1376e58c5d1f47de74683123987e967a8f42103a6d48b1131e94ba04d9737d61acdaa1322008af9602b3b14862c07a1789aac162102d8b661b0b3302ee2f162b09e07a55ad5dfbe673a9f01d9f0c19617681024306b56ae00000000",
 		txHex)
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestByteData(t *testing.T) {
+	bytedata := []byte{1, 2, 3}
+	data1 := NewByteData(bytedata)
+	assert.Equal(t, "010203", data1.ToHex())
+	assert.Equal(t, bytedata, data1.ToSlice())
+
+	data2, err := NewByteDataFromHex("010203")
+	assert.NoError(t, err)
+	if err == nil {
+		assert.Equal(t, "010203", data2.ToHex())
+		assert.Equal(t, bytedata, data2.ToSlice())
+	}
+
+	var nullPtr *ByteData
+	data3p := NewByteDataFromHexIgnoreError("010203")
+	assert.NotEqual(t, nullPtr, data3p)
+	if data3p != nil {
+		assert.Equal(t, "010203", data3p.ToHex())
+		assert.Equal(t, bytedata, data3p.ToSlice())
+	}
+
+	_, err = NewByteDataFromHex("01023")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Illegal argument passed.")
+
+	data3p = NewByteDataFromHexIgnoreError("01023")
+	assert.Equal(t, nullPtr, data3p)
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestEcdsaAdaptorApi(t *testing.T) {
+	msg, err := NewByteDataFromHex("024bdd11f2144e825db05759bdd9041367a420fad14b665fd08af5b42056e5e2")
+	assert.NoError(t, err)
+	adaptor, err := NewByteDataFromHex("038d48057fc4ce150482114d43201b333bf3706f3cd527e8767ceb4b443ab5d349")
+	assert.NoError(t, err)
+	sk, err := NewByteDataFromHex("90ac0d5dc0a1a9ab352afb02005a5cc6c4df0da61d8149d729ff50db9b5a5215")
+	assert.NoError(t, err)
+	pubkey, err := NewByteDataFromHex("03490cec9a53cd8f2f664aea61922f26ee920c42d2489778bb7c9d9ece44d149a7")
+	assert.NoError(t, err)
+	adaptorSig2, err := NewByteDataFromHex("01099c91aa1fe7f25c41085c1d3c9e73fe04a9d24dac3f9c2172d6198628e57f47bb90e2ad6630900b69f55674c8ad74a419e6ce113c10a21a79345a6e47bc74c1")
+	assert.NoError(t, err)
+	secret, err := NewByteDataFromHex("475697a71a74ff3f2a8f150534e9b67d4b0b6561fab86fcaa51f8c9d6c9db8c6")
+	assert.NoError(t, err)
+	derSignature := "30440220099c91aa1fe7f25c41085c1d3c9e73fe04a9d24dac3f9c2172d6198628e57f4702204d13456e98d8989043fd4674302ce90c432e2f8bb0269f02c72aafec60b72de101"
+
+	obj := NewEcdsaAdaptorUtil()
+	adaptorSignature, proof, err := obj.Sign(msg, sk, adaptor)
+	assert.NoError(t, err)
+	assert.Equal(t, "00cbe0859638c3600ea1872ed7a55b8182a251969f59d7d2da6bd4afedf25f5021a49956234cbbbbede8ca72e0113319c84921bf1224897a6abd89dc96b9c5b208", adaptorSignature.ToHex())
+	assert.Equal(t, "00b02472be1ba09f5675488e841a10878b38c798ca63eff3650c8e311e3e2ebe2e3b6fee5654580a91cc5149a71bf25bcbeae63dea3ac5ad157a0ab7373c3011d0fc2592a07f719c5fc1323f935569ecd010db62f045e965cc1d564eb42cce8d6d", proof.ToHex())
+
+	isVerify, err := obj.Verify(adaptorSignature, proof, adaptor, msg, pubkey)
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
+
+	ecSig, _, _, err := CfdGoDecodeSignatureFromDer(derSignature)
+	assert.NoError(t, err)
+	signature, err := obj.Adapt(adaptorSig2, secret)
+	assert.NoError(t, err)
+	assert.Equal(t, ecSig, signature.ToHex())
+
+	adaptorSecret, err := obj.ExtractSecret(adaptorSig2, signature, adaptor)
+	assert.NoError(t, err)
+	assert.Equal(t, secret.ToHex(), adaptorSecret.ToHex())
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestSchnorrApi(t *testing.T) {
+	msg, err := NewByteDataFromHex("e48441762fb75010b2aa31a512b62b4148aa3fb08eb0765d76b252559064a614")
+	assert.NoError(t, err)
+	sk, err := NewByteDataFromHex("688c77bc2d5aaff5491cf309d4753b732135470d05b7b2cd21add0744fe97bef")
+	assert.NoError(t, err)
+	pk, err := NewByteDataFromHex("03b33cc9edc096d0a83416964bd3c6247b8fecd256e4efa7870d2c854bdeb33390")
+	assert.NoError(t, err)
+	pubkey, err := NewByteDataFromHex("b33cc9edc096d0a83416964bd3c6247b8fecd256e4efa7870d2c854bdeb33390")
+	assert.NoError(t, err)
+	auxRand, err := NewByteDataFromHex("02cce08e913f22a36c5648d6405a2c7c50106e7aa2f1649e381c7f09d16b80ab")
+	assert.NoError(t, err)
+	nonce, err := NewByteDataFromHex("8c8ca771d3c25eb38de7401818eeda281ac5446f5c1396148f8d9d67592440fe")
+	assert.NoError(t, err)
+	schnorrNonce, err := NewByteDataFromHex("f14d7e54ff58c5d019ce9986be4a0e8b7d643bd08ef2cdf1099e1a457865b547")
+	assert.NoError(t, err)
+
+	tweak, err := NewByteDataFromHex("e48441762fb75010b2aa31a512b62b4148aa3fb08eb0765d76b252559064a614")
+	assert.NoError(t, err)
+	expTweakedPk, err := NewByteDataFromHex("1fc8e882e34cc7942a15f39ffaebcbdf58a19239bcb17b7f5aa88e0eb808f906")
+	assert.NoError(t, err)
+	expTweakedSk, err := NewByteDataFromHex("7bf7c9ba025ca01b698d3e9b3e40efce2774f8a388f8c390550481e1407b2a25")
+	assert.NoError(t, err)
+
+	obj := NewSchnorrUtil()
+
+	schnorrPubkey, err := obj.GetPubkeyFromPrivkey(sk)
+	assert.NoError(t, err)
+	assert.Equal(t, pubkey.ToHex(), schnorrPubkey.ToHex())
+
+	schnorrPubkey, parity, err := obj.GetSchnorrPubkeyFromPrivkey(sk)
+	assert.NoError(t, err)
+	assert.Equal(t, pubkey.ToHex(), schnorrPubkey.ToHex())
+	assert.True(t, parity)
+
+	schnorrPubkey, parity, err = obj.GetSchnorrPubkeyFromPubkey(pk)
+	assert.NoError(t, err)
+	assert.Equal(t, pubkey.ToHex(), schnorrPubkey.ToHex())
+	assert.True(t, parity)
+
+	tweakedPubkey, parity, err := obj.TweakAddPubkey(pubkey, tweak)
+	assert.NoError(t, err)
+	assert.Equal(t, expTweakedPk.ToHex(), tweakedPubkey.ToHex())
+	assert.True(t, parity)
+
+	isTweaked, err := obj.IsTweakedPubkey(tweakedPubkey, true, pubkey, tweak)
+	assert.NoError(t, err)
+	assert.True(t, isTweaked)
+
+	isTweaked, err = obj.IsTweakedPubkey(tweakedPubkey, false, pubkey, tweak)
+	assert.NoError(t, err)
+	assert.False(t, isTweaked)
+
+	tweakedPubkey, parity, tweakedPrivkey, err := obj.TweakAddKeyPair(sk, tweak)
+	assert.NoError(t, err)
+	assert.Equal(t, expTweakedPk.ToHex(), tweakedPubkey.ToHex())
+	assert.True(t, parity)
+	assert.Equal(t, expTweakedSk.ToHex(), tweakedPrivkey.ToHex())
+
+	signature, err := obj.Sign(msg, sk, auxRand)
+	assert.NoError(t, err)
+	assert.Equal(t, "6470fd1303dda4fda717b9837153c24a6eab377183fc438f939e0ed2b620e9ee5077c4a8b8dca28963d772a94f5f0ddf598e1c47c137f91933274c7c3edadce8", signature.ToHex())
+
+	signatureWithNonce, err := obj.SignWithNonce(msg, sk, nonce)
+	assert.NoError(t, err)
+	assert.Equal(t, "5da618c1936ec728e5ccff29207f1680dcf4146370bdcfab0039951b91e3637a958e91d68537d1f6f19687cec1fd5db1d83da56ef3ade1f3c611babd7d08af42", signatureWithNonce.ToHex())
+
+	point, err := obj.ComputeSigPoint(msg, schnorrNonce, pubkey)
+	assert.NoError(t, err)
+	assert.Equal(t, "03735acf82eef9da1540efb07a68251d5476dabb11ac77054924eccbb4121885e8", point.ToHex())
+
+	sigsNonce, sigsKey, err := obj.SplitSignature(signature)
+	assert.NoError(t, err)
+	assert.Equal(t, "6470fd1303dda4fda717b9837153c24a6eab377183fc438f939e0ed2b620e9ee", sigsNonce.ToHex())
+	assert.Equal(t, "5077c4a8b8dca28963d772a94f5f0ddf598e1c47c137f91933274c7c3edadce8", sigsKey.ToHex())
+
+	isVerify, err := obj.Verify(signature, msg, pubkey)
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
 
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
