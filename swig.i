@@ -1424,6 +1424,73 @@ func CfdGoFinalizeBlindTx(blindHandle uintptr, txHex string) (outputTxHex string
 }
 
 /**
+ * BlindRawTransaction option data struct.
+ */
+type BlindData struct {
+	// array index
+	Vout uint32
+	// asset
+	Asset string
+	// satoshi amount
+	Amount int64
+	// asset blind factor
+	AssetBlindFactor string
+	// value blind factor
+	ValueBlindFactor string
+	// issuance txid
+	IssuanceTxid string
+	// issuance vout
+	IssuanceVout uint32
+	// is issuance asset
+	IsIssuanceAsset bool
+	// is issuance token
+	IsIssuanceToken bool
+}
+
+/**
+ * Get blind data.
+ * param: blindHandle          blindTx handle
+ * return: blinderList         blind data list
+ * return: err                 error
+ */
+func CfdGoGetBlinderList(blindHandle uintptr) (blinderList []BlindData, err error) {
+	handle, err := CfdGoCreateHandle()
+	if err != nil {
+		return
+	}
+	defer CfdGoFreeHandle(handle)
+
+	err = nil
+	index := 0
+	tempBlinderList := make([]BlindData, 2, 2)
+	for {
+		if len(tempBlinderList) <= index {
+			tempList := make([]BlindData, len(tempBlinderList)*2, len(tempBlinderList)*2)
+			copy(tempList, tempBlinderList)
+			tempBlinderList = tempList
+		}
+		indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
+		voutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&tempBlinderList[index].Vout)))
+		amountPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&tempBlinderList[index].Amount)))
+		issuanceVoutPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&tempBlinderList[index].IssuanceVout)))
+		ret := CfdGetBlindTxBlindData(handle, blindHandle, indexPtr, voutPtr, &tempBlinderList[index].Asset, amountPtr, &tempBlinderList[index].AssetBlindFactor, &tempBlinderList[index].ValueBlindFactor, &tempBlinderList[index].IssuanceTxid, issuanceVoutPtr, &tempBlinderList[index].IsIssuanceAsset, &tempBlinderList[index].IsIssuanceToken)
+		if ret != (int)(KCfdSuccess) {
+			if ret != (int)(KCfdOutOfRangeError) {
+				err = convertCfdError(ret, handle)
+			}
+			break
+		}
+		index += 1
+	}
+
+	if err == nil {
+		blinderList = make([]BlindData, index, index)
+		copy(blinderList, tempBlinderList)
+	}
+	return blinderList, err
+}
+
+/**
  * Free blind handle.
  * param: blindHandle          blindTx handle
  * return: err                 error
@@ -1484,9 +1551,41 @@ type CfdBlindOutputData struct {
  * return: err               error
  */
 func CfdGoBlindRawTransaction(txHex string, txinList []CfdBlindInputData, txoutList []CfdBlindOutputData, option *CfdBlindTxOption) (outputTx string, err error) {
+	outputTx, _, err = CfdGoBlindRawTransactionInternal(txHex, txinList, txoutList, option, false)
+	return outputTx, err
+}
+
+/** CfdGoBlindRawTransactionAndGetBlinder
+ * Execute blindrawtransaction.
+ * param: txHex              transaction hex.
+ * param: txinList           txin utxo list.
+ * param: txoutList          txout target list. (need nonce empty txout)
+ * param: option             blindrawtransaction option.
+ * return: outputTx          blindrawtransaction tx.
+ * return: blinderList       blinder list.
+ * return: err               error
+ */
+func CfdGoBlindRawTransactionAndGetBlinder(txHex string, txinList []CfdBlindInputData, txoutList []CfdBlindOutputData, option *CfdBlindTxOption) (outputTx string, blinderList []BlindData, err error) {
+	outputTx, blinderList, err = CfdGoBlindRawTransactionInternal(txHex, txinList, txoutList, option, true)
+	return outputTx, blinderList, err
+}
+
+/** CfdGoBlindRawTransactionInternal
+ * Execute blindrawtransaction.
+ * param: txHex              transaction hex.
+ * param: txinList           txin utxo list.
+ * param: txoutList          txout target list. (need nonce empty txout)
+ * param: option             blindrawtransaction option.
+ * param: collectBlinder     get blinder flag.
+ * return: outputTx          blindrawtransaction tx.
+ * return: blinderList       blinder list.
+ * return: err               error
+ */
+func CfdGoBlindRawTransactionInternal(txHex string, txinList []CfdBlindInputData, txoutList []CfdBlindOutputData, option *CfdBlindTxOption, collectBlinder bool) (outputTx string, blinderList []BlindData, err error) {
+	blinderList = []BlindData{}
 	handle, err := CfdGoCreateHandle()
 	if err != nil {
-		return "", err
+		return "", blinderList, err
 	}
 	defer CfdGoFreeHandle(handle)
 
@@ -1494,7 +1593,7 @@ func CfdGoBlindRawTransaction(txHex string, txinList []CfdBlindInputData, txoutL
 	ret := CfdInitializeBlindTx(handle, &blindHandle)
 	if ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, handle)
-		return "", err
+		return "", blinderList, err
 	}
 	defer CfdFreeBlindHandle(handle, blindHandle)
 
@@ -1503,21 +1602,30 @@ func CfdGoBlindRawTransaction(txHex string, txinList []CfdBlindInputData, txoutL
 		ret := CfdSetBlindTxOption(handle, blindHandle, int(KCfdBlindOptionMinimumRangeValue), minRangeValPtr)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
-			return "", err
+			return "", blinderList, err
 		}
 
 		exponentPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&(*option).Exponent)))
 		ret = CfdSetBlindTxOption(handle, blindHandle, int(KCfdBlindOptionExponent), exponentPtr)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
-			return "", err
+			return "", blinderList, err
 		}
 
 		minBitsPtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&(*option).MinimumBits)))
 		ret = CfdSetBlindTxOption(handle, blindHandle, int(KCfdBlindOptionMinimumBits), minBitsPtr)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
-			return "", err
+			return "", blinderList, err
+		}
+	}
+	if collectBlinder {
+		collectTrue := int64(1)
+		collectTruePtr := SwigcptrInt64_t(uintptr(unsafe.Pointer(&collectTrue)))
+		ret = CfdSetBlindTxOption(handle, blindHandle, int(KCfdBlindOptionCollectBlinder), collectTruePtr)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return "", blinderList, err
 		}
 	}
 
@@ -1527,7 +1635,7 @@ func CfdGoBlindRawTransaction(txHex string, txinList []CfdBlindInputData, txoutL
 		ret = CfdAddBlindTxInData(handle, blindHandle, txinList[i].Txid, voutPtr, txinList[i].Asset, txinList[i].AssetBlindFactor, txinList[i].ValueBlindFactor, amountPtr, txinList[i].AssetBlindingKey, txinList[i].TokenBlindingKey)
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
-			return "", err
+			return "", blinderList, err
 		}
 	}
 
@@ -1545,7 +1653,7 @@ func CfdGoBlindRawTransaction(txHex string, txinList []CfdBlindInputData, txoutL
 			ret = CfdParseConfidentialAddress(handle, txoutList[i].ConfidentialAddress, &address, &confidentialKey, &networkType)
 			if ret != (int)(KCfdSuccess) {
 				err = convertCfdError(ret, handle)
-				return "", err
+				return "", blinderList, err
 			}
 			index := uint32(txoutList[i].Index)
 			indexPtr := SwigcptrUint32_t(uintptr(unsafe.Pointer(&index)))
@@ -1553,16 +1661,23 @@ func CfdGoBlindRawTransaction(txHex string, txinList []CfdBlindInputData, txoutL
 		}
 		if ret != (int)(KCfdSuccess) {
 			err = convertCfdError(ret, handle)
-			return "", err
+			return "", blinderList, err
 		}
 	}
 
 	ret = CfdFinalizeBlindTx(handle, blindHandle, txHex, &outputTx)
 	if ret != (int)(KCfdSuccess) {
 		err = convertCfdError(ret, handle)
-		return
+		return "", blinderList, err
 	}
-	return outputTx, nil
+	if collectBlinder {
+		blinderList, err = CfdGoGetBlinderList(blindHandle)
+		if ret != (int)(KCfdSuccess) {
+			err = convertCfdError(ret, handle)
+			return "", blinderList, err
+		}
+	}
+	return outputTx, blinderList, nil
 }
 
 /**

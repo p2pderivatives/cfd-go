@@ -7,6 +7,12 @@ on:
     - develop
     - features/sprint*
     - feature/code_scanning
+    paths:
+    - '**.go'
+    - '**.cpp'
+    - '**.h'
+    - '**/code_scanner.yml'
+    - '**/external_project_local_setting.config'
   pull_request:
     branches:
     - master
@@ -16,7 +22,7 @@ on:
 jobs:
   analyze-CodeQL:
     name: CodeQL
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     strategy:
       fail-fast: false

@@ -1005,7 +1005,7 @@ func TestCfdBlindTransaction2(t *testing.T) {
 	// already set confidentialNonce in baseTxHex
 	txoutList := []CfdBlindOutputData{}
 
-	txHex, err := CfdGoBlindRawTransaction(baseTxHex, txinList, txoutList, nil)
+	txHex, blinderList, err := CfdGoBlindRawTransactionAndGetBlinder(baseTxHex, txinList, txoutList, nil)
 	// txHex, err := CfdGoBlindRawTransaction(baseTxHex, txinList, txoutList, &option)
 	assert.NoError(t, err)
 	if err == nil {
@@ -1019,6 +1019,7 @@ func TestCfdBlindTransaction2(t *testing.T) {
 		assert.Equal(t, uint32(14413), txData.Weight)
 		assert.Equal(t, uint32(2), txData.Version)
 		assert.Equal(t, uint32(0), txData.LockTime)
+		assert.Equal(t, 4, len(blinderList))
 	}
 
 	// unblind test
@@ -1036,6 +1037,9 @@ func TestCfdBlindTransaction2(t *testing.T) {
 		assert.Equal(t, int64(0), tokenValue)
 		assert.Equal(t, "", tabf)
 		assert.Equal(t, "", tvbf)
+		if len(blinderList) == 4 {
+			assert.Equal(t, avbf, blinderList[0].ValueBlindFactor)
+		}
 	}
 
 	if err == nil {
@@ -1047,6 +1051,10 @@ func TestCfdBlindTransaction2(t *testing.T) {
 		assert.Equal(t, int64(999587680), value)
 		assert.NotEqual(t, "0000000000000000000000000000000000000000000000000000000000000000", abf)
 		assert.NotEqual(t, "0000000000000000000000000000000000000000000000000000000000000000", vbf)
+		if len(blinderList) == 4 {
+			assert.Equal(t, abf, blinderList[1].AssetBlindFactor)
+			assert.Equal(t, vbf, blinderList[1].ValueBlindFactor)
+		}
 	}
 
 	if err == nil {
@@ -1058,6 +1066,10 @@ func TestCfdBlindTransaction2(t *testing.T) {
 		assert.Equal(t, int64(700000000), value)
 		assert.NotEqual(t, "0000000000000000000000000000000000000000000000000000000000000000", abf)
 		assert.NotEqual(t, "0000000000000000000000000000000000000000000000000000000000000000", vbf)
+		if len(blinderList) == 4 {
+			assert.Equal(t, abf, blinderList[2].AssetBlindFactor)
+			assert.Equal(t, vbf, blinderList[2].ValueBlindFactor)
+		}
 	}
 
 	if err == nil {
@@ -1069,6 +1081,10 @@ func TestCfdBlindTransaction2(t *testing.T) {
 		assert.Equal(t, int64(600000000), value)
 		assert.NotEqual(t, "0000000000000000000000000000000000000000000000000000000000000000", abf)
 		assert.NotEqual(t, "0000000000000000000000000000000000000000000000000000000000000000", vbf)
+		if len(blinderList) == 4 {
+			assert.Equal(t, abf, blinderList[3].AssetBlindFactor)
+			assert.Equal(t, vbf, blinderList[3].ValueBlindFactor)
+		}
 	}
 
 	if err != nil {
