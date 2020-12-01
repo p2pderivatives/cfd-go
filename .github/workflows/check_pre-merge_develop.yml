@@ -25,15 +25,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-20.04, ubuntu-18.04]
+        os: [macos-10.15, macos-11.0, windows-2019, ubuntu-20.04, ubuntu-18.04]
         go-version: [1.13.x, 1.14.x, 1.15.x]
         exclude:
-          - os: macos-latest
+          - os: macos-10.15
+            go-version: 1.13.x
+          - os: macos-11.0
             go-version: 1.13.x
         include:
-          - os: windows-latest
+          - os: windows-2019
             generator: MSYS Makefiles
-          - os: macos-latest
+          - os: macos-10.15
+            generator: Unix Makefiles
+          - os: macos-11.0
             generator: Unix Makefiles
           - os: ubuntu-20.04
             generator: Unix Makefiles

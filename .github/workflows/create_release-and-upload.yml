@@ -8,7 +8,7 @@ on:
 jobs:
   create_releases:
     name: create-releases
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     outputs:
       release_url: ${{ steps.output_url.outputs.upload_url }}
 
@@ -44,7 +44,7 @@ jobs:
   upload-object-windows-mingw:
     name: upload-object-win-mingw
     needs: create_releases
-    runs-on: windows-latest
+    runs-on: windows-2019
     strategy:
       fail-fast: false
       matrix:
@@ -168,7 +168,7 @@ jobs:
   upload-object-alpine-3-10:
     name: upload-object-alpine-3.10
     needs: create_releases
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
     - name: checkout
@@ -219,7 +219,7 @@ jobs:
   upload-object-alpine-3-12:
     name: upload-object-alpine-3.12
     needs: create_releases
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
     - name: checkout
@@ -270,7 +270,7 @@ jobs:
   upload-object-macos:
     name: upload-object-macos
     needs: create_releases
-    runs-on: macos-latest
+    runs-on: macos-10.15
     strategy:
       fail-fast: false
       matrix:

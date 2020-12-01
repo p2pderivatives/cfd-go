@@ -2,7 +2,7 @@ FROM alpine:3.10
 
 WORKDIR /workspace
 
-ARG CFDGO_VER=v0.1.5
+ARG CFDGO_VER=v0.2.2
 
 RUN apk add --update --no-cache musl gcc g++ make git cmake
 
