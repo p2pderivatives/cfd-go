@@ -1,4 +1,4 @@
-module github.com/cryptogarageinc/cfd-go
+module github.com/p2pderivatives/cfd-go
 
 go 1.16
 
