@@ -241,6 +241,16 @@ func TestCfdGoGetAddressInfo(t *testing.T) {
 	assert.Equal(t, (int)(KCfdWitnessVersion0), info.WitnessVersion)
 	assert.Equal(t, "0020d2fa4bd23f2f8178792329cc7dc11b99d5940569b86c49d22cb2d4af8cd07097", info.LockingScript)
 
+	addr = "tb1pzamhq9jglfxaj0r5ahvatr8uc77u973s5tm04yytdltsey5r8naskf8ee6"
+	info, err = CfdGoGetAddressInfo(addr)
+	assert.NoError(t, err)
+	assert.Equal(t, addr, info.Address)
+	assert.Equal(t, (int)(KCfdNetworkTestnet), info.NetworkType)
+	assert.Equal(t, (int)(KCfdTaproot), info.HashType)
+	assert.Equal(t, (int)(KCfdWitnessVersion1), info.WitnessVersion)
+	assert.Equal(t, "51201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb", info.LockingScript)
+	assert.Equal(t, "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb", info.Hash)
+
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
 
@@ -1107,7 +1117,7 @@ func TestCfdBlindTransaction3(t *testing.T) {
 			Vout:             uint32(0),
 			Asset:            "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
 			AssetBlindFactor: "ebfecaae1665f32a3843ce65c42fb6e3f51136fa9d37274b810887923ae89339",
-			Amount:           int64(2000000000),
+			Amount:           int64(100000200),
 			ValueBlindFactor: "80af7bd339db43ad22c1fa9109eea6d617c8b87b91c4bde2b5fafcbb1902211a",
 			AssetBlindingKey: "",
 			TokenBlindingKey: "",
@@ -1167,15 +1177,13 @@ func TestCfdBlindTransaction3(t *testing.T) {
 	assert.NoError(t, err)
 	// assert.Equal(t, "", txHex2)
 
-	inputs := []CfdEstimateFeeInput{
+	inputs := []CfdUtxo{
 		{
-			Utxo: CfdUtxo{
-				Txid:       "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
-				Vout:       uint32(0),
-				Amount:     int64(100000000),
-				Asset:      "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
-				Descriptor: "wpkh(030000000000000000000000000000000000000000000000000000000000000a01)",
-			},
+			Txid:            "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+			Vout:            uint32(0),
+			Amount:          int64(100000000),
+			Asset:           "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+			Descriptor:      "wpkh(030000000000000000000000000000000000000000000000000000000000000a01)",
 			IsIssuance:      false,
 			IsBlindIssuance: false,
 			IsPegin:         false,
@@ -1189,12 +1197,12 @@ func TestCfdBlindTransaction3(t *testing.T) {
 	feeOption.FeeAsset = "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225"
 	feeOption.RequireBlind = true
 	feeOption.MinimumBits = 36
-	totalFee, txFee, inputFee, err := CfdGoEstimateFee(baseTxHex3, inputs, feeOption)
+	totalFee, txFee, inputFee, err := CfdGoEstimateFeeUsingUtxo(baseTxHex3, inputs, feeOption)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(99), totalFee)
 	assert.Equal(t, int64(92), txFee)
 	assert.Equal(t, int64(7), inputFee)
-	totalFee, txFee, inputFee, err = CfdGoEstimateFee(txHex2, inputs, feeOption)
+	totalFee, txFee, inputFee, err = CfdGoEstimateFeeUsingUtxo(txHex2, inputs, feeOption)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(99), totalFee)
 	assert.Equal(t, int64(92), txFee)
@@ -1982,7 +1990,7 @@ func TestCfdCoinSelection(t *testing.T) {
 
 	selectUtxos, totalAmounts, utxoFee, err := CfdGoCoinSelection(utxos, targets, option)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(9100), utxoFee)
+	assert.Equal(t, int64(9200), utxoFee)
 	assert.Equal(t, 5, len(selectUtxos))
 	assert.Equal(t, 3, len(totalAmounts))
 
@@ -2160,9 +2168,9 @@ func TestCfdGoEstimateFee(t *testing.T) {
 		option.RequireBlind = false
 		totalFee, txFee, inputFee, err := CfdGoEstimateFee(txHex, inputs, option)
 		assert.NoError(t, err)
-		assert.Equal(t, int64(10760), totalFee)
-		assert.Equal(t, int64(1060), txFee)
-		assert.Equal(t, int64(9700), inputFee)
+		assert.Equal(t, int64(10840), totalFee)
+		assert.Equal(t, int64(1100), txFee)
+		assert.Equal(t, int64(9740), inputFee)
 	})
 
 	t.Run("ElementsTest", func(t *testing.T) {
@@ -2172,9 +2180,9 @@ func TestCfdGoEstimateFee(t *testing.T) {
 		option.FeeAsset = asset[0]
 		totalFee, txFee, inputFee, err := CfdGoEstimateFee(txHex, inputs, option)
 		assert.NoError(t, err)
-		assert.Equal(t, int64(46120), totalFee)
+		assert.Equal(t, int64(46160), totalFee)
 		assert.Equal(t, int64(36360), txFee)
-		assert.Equal(t, int64(9760), inputFee)
+		assert.Equal(t, int64(9800), inputFee)
 	})
 
 	fmt.Printf("%s test done.\n", GetFuncName())
@@ -2902,8 +2910,8 @@ func TestFundRawTransactionBtc(t *testing.T) {
 
 	outputTx, fee, usedAddressList, err := CfdGoFundRawTransactionBtc(txHex, txinList, utxos, int64(0), "bc1qfhpyztlrm36euwpskmanvqnyer8q403cnzfn9t", &option)
 	assert.NoError(t, err)
-	assert.Equal(t, "02000000000102f1993fe8e7189542ee4506258e170201be292703cd275acb09ece16672fd848b0000000017160014703e50206e4d27ad1340a7b6a0d94563a3fb768afeffffff040b0000000000000000000000000000000000000000000000000000000000000000000000ffffffff03080410240100000017a9141e60c63c6d099ee2b48eded11acfdf3a79a891f48700e1f5050000000017a9142699570770f32e0cf3e1d12d81064fbc45899e8a87a5f41901000000001600144dc2412fe3dc759e3830b6fb360264c8ce0abe380247304402202b12edc9a75edd70a0e4261c5816efa2c5256e3f8bcffdd49182bd9f791c74e902201e3ae5c1062a83d787098322b3071fe68c4b181e0088b0e0087020495adaf6e3012102f466d403c0c4057257e7bcbed1d172880fe75f337c77df5490ad9bc8cc2d6a160000000000", outputTx)
-	assert.Equal(t, int64(1425), fee)
+	assert.Equal(t, "02000000000102f1993fe8e7189542ee4506258e170201be292703cd275acb09ece16672fd848b0000000017160014703e50206e4d27ad1340a7b6a0d94563a3fb768afeffffff040b0000000000000000000000000000000000000000000000000000000000000000000000ffffffff03080410240100000017a9141e60c63c6d099ee2b48eded11acfdf3a79a891f48700e1f5050000000017a9142699570770f32e0cf3e1d12d81064fbc45899e8a878cf41901000000001600144dc2412fe3dc759e3830b6fb360264c8ce0abe380247304402202b12edc9a75edd70a0e4261c5816efa2c5256e3f8bcffdd49182bd9f791c74e902201e3ae5c1062a83d787098322b3071fe68c4b181e0088b0e0087020495adaf6e3012102f466d403c0c4057257e7bcbed1d172880fe75f337c77df5490ad9bc8cc2d6a160000000000", outputTx)
+	assert.Equal(t, int64(1450), fee)
 	assert.Equal(t, 1, len(usedAddressList))
 	if len(usedAddressList) == 1 {
 		assert.Equal(t, "bc1qfhpyztlrm36euwpskmanvqnyer8q403cnzfn9t", usedAddressList[0])
@@ -3227,6 +3235,442 @@ func TestSchnorrApi(t *testing.T) {
 	isVerify, err := obj.Verify(signature, msg, pubkey)
 	assert.NoError(t, err)
 	assert.True(t, isVerify)
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestDescriptorStruct(t *testing.T) {
+	// FIXME Descriptorテスト（コピってくる）
+
+	// PKH
+	networkType := (int)(KCfdNetworkLiquidv1)
+	desc := NewDescriptorFromString(
+		"pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)",
+		networkType)
+	descriptorDataList, multisigList, err := desc.Parse()
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 1 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptPkh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "76a91406afd46bcdfd22ef94ac122aa11f241244a37ecc88ac", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "PwsjpD1YkjcfZ95WGVZuvGfypkKmpogoA3", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2pkh), descriptorDataList[0].HashType)
+		assert.Equal(t, "", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyPublic), descriptorDataList[0].KeyType)
+		assert.Equal(t, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+	desc2 := NewDescriptorFromPubkey(int(KCfdP2pkh), "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5", networkType)
+	assert.Equal(t, desc.OutputDescriptor, desc2.OutputDescriptor)
+
+	// p2sh-p2wsh(pkh)
+	networkType = (int)(KCfdNetworkLiquidv1)
+	desc = NewDescriptorFromString(
+		"sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))",
+		networkType)
+	descriptorDataList, multisigList, err = desc.Parse()
+	assert.NoError(t, err)
+	assert.Equal(t, 3, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 3 {
+		// 0
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptSh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "a91455e8d5e8ee4f3604aba23c71c2684fa0a56a3a1287", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "Gq1mmExLuSEwfzzk6YtUxJ769grv6T5Tak", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2shP2wsh), descriptorDataList[0].HashType)
+		assert.Equal(t, "0020fc5acc302aab97f821f9a61e1cc572e7968a603551e95d4ba12b51df6581482f", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[0].KeyType)
+		assert.Equal(t, "", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
+		// 1
+		assert.Equal(t, uint32(1), descriptorDataList[1].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[1].ScriptType)
+		assert.Equal(t, "0020fc5acc302aab97f821f9a61e1cc572e7968a603551e95d4ba12b51df6581482f", descriptorDataList[1].LockingScript)
+		assert.Equal(t, "ex1ql3dvcvp24wtlsg0e5c0pe3tju7tg5cp428546jap9dga7evpfqhs0htdlf", descriptorDataList[1].Address)
+		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[1].HashType)
+		assert.Equal(t, "76a914c42e7ef92fdb603af844d064faad95db9bcdfd3d88ac", descriptorDataList[1].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[1].KeyType)
+		assert.Equal(t, "", descriptorDataList[1].Pubkey)
+		assert.Equal(t, "", descriptorDataList[1].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[1].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[1].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[1].ReqSigNum)
+		// 2
+		assert.Equal(t, uint32(2), descriptorDataList[2].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptPkh), descriptorDataList[2].ScriptType)
+		assert.Equal(t, "76a914c42e7ef92fdb603af844d064faad95db9bcdfd3d88ac", descriptorDataList[2].LockingScript)
+		assert.Equal(t, "QF9hGPQMVAPc8RxTHALgSvNPWEjGbL9bse", descriptorDataList[2].Address)
+		assert.Equal(t, (int)(KCfdP2pkh), descriptorDataList[2].HashType)
+		assert.Equal(t, "", descriptorDataList[2].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyPublic), descriptorDataList[2].KeyType)
+		assert.Equal(t, "02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13", descriptorDataList[2].Pubkey)
+		assert.Equal(t, "", descriptorDataList[2].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[2].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[2].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[2].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	// multisig (bitcoin)
+	networkType = (int)(KCfdNetworkMainnet)
+	desc = NewDescriptorFromString(
+		"wsh(multi(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*))",
+		networkType)
+	descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("0")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(descriptorDataList))
+	assert.Equal(t, 2, len(multisigList))
+	if len(descriptorDataList) == 1 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "002064969d8cdca2aa0bb72cfe88427612878db98a5f07f9a7ec6ec87b85e9f9208b", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bc1qvjtfmrxu524qhdevl6yyyasjs7xmnzjlqlu60mrwepact60eyz9s9xjw0c", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[0].HashType)
+		assert.Equal(t, "51210205f8f73d8a553ad3287a506dbd53ed176cadeb200c8e4f7d68a001b1aed871062102c04c4e03921809fcbef9a26da2d62b19b2b4eb383b3e6cfaaef6370e7514477452ae", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[0].KeyType)
+		assert.Equal(t, "", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, true, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(1), descriptorDataList[0].ReqSigNum)
+	}
+	if len(multisigList) == 2 {
+		assert.Equal(t, (int)(KCfdDescriptorKeyBip32), multisigList[0].KeyType)
+		assert.Equal(t, "0205f8f73d8a553ad3287a506dbd53ed176cadeb200c8e4f7d68a001b1aed87106", multisigList[0].Pubkey)
+		assert.Equal(t, "xpub6BgWskLoyHmAUeKWgUXCGfDdCMRXseEjRCMEMvjkedmHpnvWtpXMaCRm8qcADw9einPR8o2c49ZpeHRZP4uYwGeMU2T63G7uf2Y1qJavrWQ", multisigList[0].ExtPubkey)
+		assert.Equal(t, "", multisigList[0].ExtPrivkey)
+		assert.Equal(t, (int)(KCfdDescriptorKeyBip32), multisigList[1].KeyType)
+		assert.Equal(t, "02c04c4e03921809fcbef9a26da2d62b19b2b4eb383b3e6cfaaef6370e75144774", multisigList[1].Pubkey)
+		assert.Equal(t, "xpub6EKMC2gSMfKgQJ3iNMZVNB4GLH1Dc4hNPah1iMbbztxdUPRo84MMcTgkPATWNRyzr7WifKrt5VvQi4GEqRwybCP1LHoXBKLN6cB15HuBKPE", multisigList[1].ExtPubkey)
+		assert.Equal(t, "", multisigList[1].ExtPrivkey)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+	desc2 = NewDescriptorFromMultisig(int(KCfdP2wsh), []string{
+		"xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*",
+		"xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*",
+	}, 1, networkType)
+	assert.Equal(t, desc.OutputDescriptor, desc2.OutputDescriptor)
+
+	// miniscript wsh
+	networkType = (int)(KCfdNetworkMainnet)
+	desc = NewDescriptorFromString(
+		"wsh(thresh(2,multi(2,03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7,036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00),a:multi(1,036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00),ac:pk_k(022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01)))",
+		networkType)
+	descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("0")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 1 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "00206a6c42f62db9fab091ffaf930e0a847646898d225e1ad94ff43226e20180b9d1", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bc1qdfky9a3dh8atpy0l47fsuz5ywergnrfztcddjnl5xgnwyqvqh8gschn2ch", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[0].HashType)
+		assert.Equal(t, "522103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c721036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a0052ae6b5121036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a0051ae6c936b21022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01ac6c935287", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[0].KeyType)
+		assert.Equal(t, "", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	// miniscript wsh derive
+	networkType = (int)(KCfdNetworkMainnet)
+	desc = NewDescriptorFromString(
+		"sh(wsh(c:or_i(andor(c:pk_h(xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*),pk_h(xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*),pk_h(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)),pk_k(02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e))))",
+		networkType)
+	descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("44")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 2 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptSh), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "a914a7a9f411001e3e3db96d7f02fc9ab1d0dc6aa69187", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "3GyYN9WnJBoMn8M5tuqVcFJq1BvbAcdPAt", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdP2shP2wsh), descriptorDataList[0].HashType)
+		assert.Equal(t, "0020e29b7f3e543d581c99c92b59d45218b008b82c2d406bba3c7384d52e568124aa", descriptorDataList[0].RedeemScript)
+
+		assert.Equal(t, uint32(1), descriptorDataList[1].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptWsh), descriptorDataList[1].ScriptType)
+		assert.Equal(t, "0020e29b7f3e543d581c99c92b59d45218b008b82c2d406bba3c7384d52e568124aa", descriptorDataList[1].LockingScript)
+		assert.Equal(t, "bc1qu2dh70j584vpexwf9dvag5sckqytstpdgp4m50rnsn2ju45pyj4qudazmh", descriptorDataList[1].Address)
+		assert.Equal(t, (int)(KCfdP2wsh), descriptorDataList[1].HashType)
+		assert.Equal(t, "6376a914520e6e72bcd5b616bc744092139bd759c31d6bbe88ac6476a91406afd46bcdfd22ef94ac122aa11f241244a37ecc886776a9145ab62f0be26fe9d6205a155403f33e2ad2d31efe8868672102d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e68ac", descriptorDataList[1].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyNull), descriptorDataList[1].KeyType)
+		assert.Equal(t, "", descriptorDataList[1].Pubkey)
+		assert.Equal(t, "", descriptorDataList[1].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[1].ExtPrivkey)
+		assert.Equal(t, false, descriptorDataList[1].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[1].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestTaprootSchnorr1(t *testing.T) {
+	util := NewSchnorrUtil()
+	sk, err := NewByteDataFromHex("305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27")
+	assert.NoError(t, err)
+	spk, _, err := util.GetSchnorrPubkeyFromPrivkey(sk)
+	assert.NoError(t, err)
+	assert.Equal(t, "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb", spk.hex)
+
+	addr, _, _, err := CfdGoCreateAddress(int(KCfdTaproot), spk.ToHex(), "", int(KCfdNetworkTestnet))
+	assert.NoError(t, err)
+	assert.Equal(t, "tb1pzamhq9jglfxaj0r5ahvatr8uc77u973s5tm04yytdltsey5r8naskf8ee6", addr)
+
+	txHex := "020000000116d975e4c2cea30f72f4f5fe528f5a0727d9ea149892a50c030d44423088ea2f0000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d500000000"
+	networkType := (int)(KCfdNetworkMainnet)
+	utxos := []CfdUtxo{
+		{
+			Txid:       "2fea883042440d030ca5929814ead927075a8f52fef5f4720fa3cec2e475d916",
+			Vout:       uint32(0),
+			Amount:     int64(2499999000),
+			Descriptor: "raw(51201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb)",
+		},
+	}
+	txid := utxos[0].Txid
+	vout := utxos[0].Vout
+
+	option := CfdFeeEstimateOption{
+		EffectiveFeeRate: 2.0,
+	}
+	fee, _, _, err := CfdGoEstimateFeeUsingUtxo(txHex, utxos, option)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(202), fee)
+
+	sighashType := NewSigHashType(int(KCfdSigHashAll))
+	sighash, err := CfdGoGetSighashByKey(networkType, txHex, utxos, txid, vout, sighashType, &spk, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, "e5b11ddceab1e4fc49a8132ae589a39b07acf49cabb2b0fbf6104bc31da12c02", sighash)
+
+	sighashBytes, err := NewByteDataFromHex(sighash)
+	assert.NoError(t, err)
+	emptyBytes := ByteData{}
+	signature, err := util.Sign(sighashBytes, sk, emptyBytes)
+	assert.NoError(t, err)
+	sig, err := util.AddSighashTypeInSignature(&signature, sighashType)
+	assert.NoError(t, err)
+	assert.Equal(t, "61f75636003a870b7a1685abae84eedf8c9527227ac70183c376f7b3a35b07ebcbea14749e58ce1a87565b035b2f3963baa5ae3ede95e89fd607ab7849f2087201", sig.ToHex())
+
+	txHex, err = CfdGoAddTaprootSchnorrSign(networkType, txHex, txid, vout, sig, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, "0200000000010116d975e4c2cea30f72f4f5fe528f5a0727d9ea149892a50c030d44423088ea2f0000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d5014161f75636003a870b7a1685abae84eedf8c9527227ac70183c376f7b3a35b07ebcbea14749e58ce1a87565b035b2f3963baa5ae3ede95e89fd607ab7849f208720100000000", txHex)
+
+	isVerify, reason, err := CfdGoVerifySign(networkType, txHex, utxos, txid, vout)
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
+	assert.Equal(t, "", reason)
+
+	// verify signature
+	isVerify, err = util.Verify(signature, sighashBytes, spk)
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestTaprootSchnorr2(t *testing.T) {
+	util := NewSchnorrUtil()
+	sk, err := NewByteDataFromHex("305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27")
+	assert.NoError(t, err)
+	spk, _, err := util.GetSchnorrPubkeyFromPrivkey(sk)
+	assert.NoError(t, err)
+	assert.Equal(t, "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb", spk.hex)
+
+	txHex := "020000000116d975e4c2cea30f72f4f5fe528f5a0727d9ea149892a50c030d44423088ea2f0000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d500000000"
+	networkType := (int)(KCfdNetworkMainnet)
+	utxos := []CfdUtxo{
+		{
+			Txid:       "2fea883042440d030ca5929814ead927075a8f52fef5f4720fa3cec2e475d916",
+			Vout:       uint32(0),
+			Amount:     int64(2499999000),
+			Descriptor: "raw(51201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb)",
+		},
+	}
+	txid := utxos[0].Txid
+	vout := utxos[0].Vout
+	sighashType := NewSigHashType(int(KCfdSigHashAll))
+	txHex, err = CfdGoAddTxSignWithPrivkeyByUtxoList(networkType, txHex, utxos, txid, vout, sk.ToHex(), sighashType, true, nil, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, "0200000000010116d975e4c2cea30f72f4f5fe528f5a0727d9ea149892a50c030d44423088ea2f0000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d5014161f75636003a870b7a1685abae84eedf8c9527227ac70183c376f7b3a35b07ebcbea14749e58ce1a87565b035b2f3963baa5ae3ede95e89fd607ab7849f208720100000000", txHex)
+
+	isVerify, reason, err := CfdGoVerifySign(networkType, txHex, utxos, txid, vout)
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
+	assert.Equal(t, "", reason)
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestTapScript(t *testing.T) {
+	util := NewSchnorrUtil()
+	sk, err := NewByteDataFromHex("305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27")
+	assert.NoError(t, err)
+	spk, _, err := util.GetSchnorrPubkeyFromPrivkey(sk)
+	assert.NoError(t, err)
+	assert.Equal(t, "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb", spk.hex)
+
+	scriptCheckSig, err := NewScriptFromAsmList([]string{spk.ToHex(), "OP_CHECKSIG"})
+	assert.NoError(t, err)
+
+	tree, err := NewTapBranchFromTapScript(&scriptCheckSig)
+	assert.NoError(t, err)
+	tree.AddBranchByHash(NewByteDataFromHexIgnoreError("4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d"))
+	assert.NoError(t, err)
+	tree.AddBranchByHash(NewByteDataFromHexIgnoreError("dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54"))
+	assert.NoError(t, err)
+	tweakedPubkey, tapLeafHash, controlBlock, err := tree.GetTweakedPubkey(&spk)
+	assert.NoError(t, err)
+	assert.Equal(t, "3dee5a5387a2b57902f3a6e9da077726d19c6cc8c8c7b04bcf5a197b2a9b01d2", tweakedPubkey.hex)
+	assert.Equal(t, "dfc43ba9fc5f8a9e1b6d6a50600c704bb9e41b741d9ed6de6559a53d2f38e513", tapLeafHash.hex)
+	assert.Equal(t, "c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54", controlBlock.hex)
+
+	tweakedPrivkey, err := tree.GetTweakedPrivkey(&sk)
+	assert.NoError(t, err)
+	assert.Equal(t, "a7d17bee0b6313cf864a1ac6f203aafd74a40703ffc050f66517e4f83ff41a03", tweakedPrivkey.hex)
+
+	networkType := (int)(KCfdNetworkMainnet)
+	addr, _, _, err := CfdGoCreateAddress(int(KCfdTaproot), tweakedPubkey.ToHex(), "", networkType)
+	assert.NoError(t, err)
+	assert.Equal(t, "bc1p8hh955u8526hjqhn5m5a5pmhymgecmxgerrmqj70tgvhk25mq8fqw77n40", addr)
+
+	txHex := "02000000015b80a1af0e00c700bee9c8e4442bec933fcdc0c686dac2dc336caaaf186c5d190000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d500000000"
+	utxos := []CfdUtxo{
+		{
+			Txid:       "195d6c18afaa6c33dcc2da86c6c0cd3f93ec2b44e4c8e9be00c7000eafa1805b",
+			Vout:       uint32(0),
+			Amount:     int64(2499999000),
+			Descriptor: "raw(51203dee5a5387a2b57902f3a6e9da077726d19c6cc8c8c7b04bcf5a197b2a9b01d2)",
+		},
+	}
+	txid := utxos[0].Txid
+	vout := utxos[0].Vout
+	sighashType := NewSigHashType(int(KCfdSigHashAll))
+	sighash, err := CfdGoGetSighashByTapScript(networkType, txHex, utxos, txid, vout, sighashType, nil, tapLeafHash, nil, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, "80e53eaee13048aee9c6c13fa5a8529aad7fe2c362bfc16f1e2affc71f591d36", sighash)
+
+	sighashBytes, err := NewByteDataFromHex(sighash)
+	assert.NoError(t, err)
+	emptyBytes := ByteData{}
+	signature, err := util.Sign(sighashBytes, sk, emptyBytes)
+	assert.NoError(t, err)
+	sig, err := util.AddSighashTypeInSignature(&signature, sighashType)
+	assert.NoError(t, err)
+	assert.Equal(t, "f5aa6b260f9df687786cd3813ba83b476e195041bccea800f2571212f4aae9848a538b6175a4f8ea291d38e351ea7f612a3d700dca63cd3aff05d315c5698ee901", sig.ToHex())
+
+	signDataList := []ByteData{*sig}
+	txHex, err = CfdGoAddTapScriptSign(networkType, txHex, txid, vout, signDataList, &scriptCheckSig, controlBlock, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, "020000000001015b80a1af0e00c700bee9c8e4442bec933fcdc0c686dac2dc336caaaf186c5d190000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d50341f5aa6b260f9df687786cd3813ba83b476e195041bccea800f2571212f4aae9848a538b6175a4f8ea291d38e351ea7f612a3d700dca63cd3aff05d315c5698ee90122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d5400000000", txHex)
+
+	isVerify, reason, err := CfdGoVerifySign(networkType, txHex, utxos, txid, vout)
+	assert.Error(t, err)
+	assert.False(t, isVerify)
+	assert.Equal(t, "The script analysis of tapscript is not supported.", reason)
+
+	// verify signature
+	isVerify, err = util.Verify(signature, sighashBytes, spk)
+	assert.NoError(t, err)
+	assert.True(t, isVerify)
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestTapScriptTree(t *testing.T) {
+	util := NewSchnorrUtil()
+	sk, err := NewByteDataFromHex("305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27")
+	assert.NoError(t, err)
+	spk, _, err := util.GetSchnorrPubkeyFromPrivkey(sk)
+	assert.NoError(t, err)
+	assert.Equal(t, "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb", spk.hex)
+
+	scriptCheckSig, err := NewScriptFromAsmList([]string{spk.ToHex(), "OP_CHECKSIG"})
+	assert.NoError(t, err)
+	scriptOpTrue, err := NewScriptFromAsm("OP_TRUE")
+	assert.NoError(t, err)
+	scriptCheckSig2, err := NewScriptFromAsmList([]string{
+		"ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440",
+		"OP_CHECKSIG",
+	})
+	assert.NoError(t, err)
+
+	tree, err := NewTapBranchFromTapScript(&scriptCheckSig)
+	assert.NoError(t, err)
+	err = tree.AddBranchByTapScript(&scriptOpTrue)
+	assert.NoError(t, err)
+	err = tree.AddBranchByTapScript(&scriptCheckSig2)
+	assert.NoError(t, err)
+	assert.Equal(t, "{tl(20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac),{tl(51),tl(201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac)}}", tree.GetTreeString())
+	count, err := tree.GetMaxBranchCount()
+	assert.Equal(t, uint32(2), count)
+
+	// deserialize
+	treeStr := "{{{tl(51),{tl(204a7af8660f2b0bdb92d2ce8b88ab30feb916343228d2e7bd15da02e1f6a31d47ac),tl(2000d134c42fd51c90fa82c6cfdaabd895474d979118525362c0cd236c857e29d9ac)}},{{tl(20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac),{tl(2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aac),tl(51)}},tl(2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac)}},tl(2008f8280d68e02e807ccffee141c4a6b7ac31d3c283ae0921892d95f691742c44ad20b0f8ce3e1df406514a773414b5d9e5779d8e68ce816e9db39b8e53255ac3b406ac)}"
+	controlNodes := []string{
+		"06b46c960d6824f0da5af71d9ecc55714de5b2d2da51be60bd12c77df20a20df",
+		"4691fbb1196f4675241c8958a7ab6378a63aa0cc008ed03d216fd038357f52fd",
+		"e47f58011f27e9046b8195d0ab6a2acbc68ce281437a8d5132dadf389b2a5ebb",
+		"32a0a039ec1412be2803fd7b5f5444c03d498e5e8e107ee431a9597c7b5b3a7c",
+		"d7b0b8d070638ff4f0b7e7d2aa930c58ec2d39853fd04c29c4c6688fdcb2ae75",
+	}
+	tree2, err := NewTapBranchFromStringByNodes(
+		treeStr,
+		&scriptOpTrue,
+		controlNodes,
+	)
+	assert.NoError(t, err)
+	count, err = tree2.GetMaxBranchCount()
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(5), count)
+	assert.Equal(t, treeStr, tree2.GetTreeString())
+	nodeList, err := tree2.GetControlNodeList()
+	assert.NoError(t, err)
+	assert.Equal(t, 5, len(nodeList))
+	if len(nodeList) == 5 {
+		for index := 0; index < len(nodeList); index++ {
+			assert.Equal(t, controlNodes[index], nodeList[index])
+		}
+	}
+	branch, err := tree2.GetBranch(3)
+	assert.NoError(t, err)
+	assert.Equal(t, "{tl(51),{tl(204a7af8660f2b0bdb92d2ce8b88ab30feb916343228d2e7bd15da02e1f6a31d47ac),tl(2000d134c42fd51c90fa82c6cfdaabd895474d979118525362c0cd236c857e29d9ac)}}", branch.GetTreeString())
+
+	tree3, err := NewTapBranchFromString(
+		"{{tl(20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac),{tl(2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aac),tl(51)}},tl(2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac)}",
+		&scriptOpTrue,
+	)
+	assert.NoError(t, err)
+	err = tree3.AddBranchByBranch(branch)
+	assert.NoError(t, err)
+	err = tree3.AddBranchByString("tl(2008f8280d68e02e807ccffee141c4a6b7ac31d3c283ae0921892d95f691742c44ad20b0f8ce3e1df406514a773414b5d9e5779d8e68ce816e9db39b8e53255ac3b406ac)")
+	assert.NoError(t, err)
+	assert.Equal(t, tree2.GetTreeString(), tree3.GetTreeString())
 
 	fmt.Printf("%s test done.\n", GetFuncName())
 }

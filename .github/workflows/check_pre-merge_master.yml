@@ -16,9 +16,6 @@ on:
     - master
     - v[0-9]+
 
-env:
-  CMAKE_VERSION: 3.17.2
-
 jobs:
   cmake-build:
     name: cmake build
@@ -26,12 +23,12 @@ jobs:
     strategy:
       matrix:
         os: [macos-10.15, macos-11.0, windows-2019, ubuntu-20.04, ubuntu-18.04]
-        go-version: [1.13.x, 1.14.x, 1.15.x]
+        go-version: [1.14.x, 1.15.x, 1.16.x]
         exclude:
           - os: macos-10.15
-            go-version: 1.13.x
+            go-version: 1.14.x
           - os: macos-11.0
-            go-version: 1.13.x
+            go-version: 1.14.x
         include:
           - os: windows-2019
             generator: MSYS Makefiles
@@ -43,9 +40,6 @@ jobs:
             generator: Unix Makefiles
           - os: ubuntu-18.04
             generator: Unix Makefiles
-          - os: ubuntu-18.04
-            generator: Unix Makefiles
-            go-version: 1.12.x
 
     steps:
     - name: setup go
@@ -61,6 +55,10 @@ jobs:
       run: |
         cmake --version
         cmake --build build --config Release --parallel 2
+    - name: go-mod
+      run: go mod download
+    - name: go-build
+      run: go build
     - name: go_test-windows
       if: runner.os == 'Windows'
       run: .\go_test.bat
