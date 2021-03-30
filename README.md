@@ -1,10 +1,55 @@
 # Crypto Finance Development Kit for Go (CFD-GO)
 
-<!-- TODO: Write Summary and Overview
+CFD library for Go.
 
 ## Overview
 
--->
+This library is development kit for crypto finance application.
+Useful when developing applications for cryptocurrencies.
+
+### Target Network
+
+- Bitcoin
+- Liquid Network
+
+### Support function by cfd
+
+- Bitcoin
+  - Bitcoin Script (builder, viewer)
+  - Transaction
+    - Create, Parse, Decode
+    - Simple pubkey-hash sign / verify
+    - Estimate Fee
+    - Coin Selection (FundRawTransaction)
+  - PSBT (v0. v2 & taproot is not yet.)
+    - Create, Parse, Decode
+    - Simple pubkey-hash sign / verify
+    - Estimate Fee
+    - Coin Selection (FundRawTransaction)
+  - ECDSA Pubkey/Privkey (TweakAdd/Mul, Negate, Sign, Verify)
+  - BIP32, BIP39
+  - Output Descriptor (contains miniscript parser)
+  - Schnorr/Taproot
+  - Bitcoin Address (Segwit-v0, Segwit-v1, P2PKH/P2SH)
+- Liquid Network
+  - Confidential Transaction
+    - Blind, Unblind
+    - Reissuance
+  - Confidential Address
+
+### Libraries for each language
+
+- Go : cfd-go
+  - C/C++ : cfd
+    - Extend the cfd-core library. Defines the C language API and extension classes.
+  - C++ : cfd-core
+    - Core library. Definition base class.
+- other language:
+  - JavaScript : cfd-js
+  - WebAssembly : cfd-js-wasm
+  - Python : cfd-python
+  - C# : cfd-csharp
+  - Rust : cfd-rust
 
 ## Dependencies
 
@@ -66,6 +111,7 @@ When using the cmake-js package and npm script, the options for compilation are 
 ```Shell
 npm install
 npm run cmake_release
+go mod download
 go build
 ```
 
@@ -78,6 +124,7 @@ mkdir build && cd $_
 cmake .. -DENABLE_SHARED=on -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DENABLE_CAPI=on -DTARGET_RPATH=/usr/local/lib/
 make
 cd ..
+go mod download
 go build
 ```
 
@@ -111,7 +158,7 @@ The fastest and easiest way.
 sudo ./tools/cleanup_install_files.sh
 
 (download)
-wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.5/cfdgo-v0.1.5-ubuntu1804-gcc-x86_64.zip
+wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.3.0/cfdgo-v0.1.5-ubuntu1804-gcc-x86_64.zip
 
 (unzip)
 sudo unzip -q cfdgo-v0.1.5-ubuntu1804-gcc-x86_64.zip -d /
@@ -119,7 +166,7 @@ sudo unzip -q cfdgo-v0.1.5-ubuntu1804-gcc-x86_64.zip -d /
 
 - windows
   1. cleanup: `c:/usr/local` directory.
-  2. download: https://github.com/p2pderivatives/cfd-go/releases/download/v0.1.5/cfdgo-v0.1.5-win-gcc-static-x86_64.zip
+  2. download: https://github.com/p2pderivatives/cfd-go/releases/download/v0.3.0/cfdgo-v0.1.5-win-gcc-static-x86_64.zip
   3. Unzip and extract to `c:/usr/local` directory.
 
 ### install (after build)
@@ -217,7 +264,7 @@ go.mod
 
 ```
 require (
-  github.com/p2pderivatives/cfd-go v0.1.5
+  github.com/p2pderivatives/cfd-go v0.3.0
   ...
 )
 ```

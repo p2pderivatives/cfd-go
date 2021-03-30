@@ -1,5 +1,8 @@
 project(external_download NONE)
 
+include(../cmake/EnableCcache.cmake)
+include(../cmake/ConvertSrclistFunction.cmake)
+
 # env check
 if($ENV{CFD_CMAKE_GIT_SSH})
 if($ENV{CFD_CMAKE_GIT_SSH} STREQUAL "1")
@@ -43,7 +46,7 @@ if(CFD_TARGET_VERSION)
 set(CFD_TARGET_TAG  ${CFD_TARGET_VERSION})
 message(STATUS "[external project local] cfd target=${CFD_TARGET_VERSION}")
 else()
-set(CFD_TARGET_TAG  v0.2.2)
+set(CFD_TARGET_TAG  v0.3.0)
 endif()
 if(CFD_TARGET_URL)
 set(CFD_TARGET_REP  ${CFD_TARGET_URL})
