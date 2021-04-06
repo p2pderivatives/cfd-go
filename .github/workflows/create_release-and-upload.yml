@@ -76,8 +76,7 @@ jobs:
       run: mkdir dist
     - name: cmake-build
       run: |
-        cmake -S . -B build -G "${{ matrix.generator }}"
-        cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_CAPI=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off --build build
+        cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_CAPI=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off
         cmake --build build --parallel 2 --config Release
       timeout-minutes: 20
     - name: cmake-install
