@@ -45,7 +45,6 @@ func TestCfdGetLastError(t *testing.T) {
 	assert.Equal(t, (int)(KCfdSuccess), lastErr)
 
 	_, _, _, err = CfdGoCreateAddress(200, "", "", 200)
-	lastErr = CfdGetLastErrorCode(handle)
 	assert.Contains(t, err.Error(), fmt.Sprintf("code=[%d]", KCfdIllegalArgumentError))
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Illegal network type.")
@@ -429,6 +428,124 @@ func TestCfdGoParseDescriptor(t *testing.T) {
 		assert.Equal(t, false, descriptorDataList[1].IsMultisig)
 		assert.Equal(t, uint32(0), descriptorDataList[1].ReqSigNum)
 	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestCfdGoParseDescriptorData(t *testing.T) {
+	// PKH
+	networkType := (int)(KCfdNetworkLiquidv1)
+	rootData, _, _, err := CfdGoParseDescriptorData(
+		"pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)",
+		networkType,
+		"")
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptPkh), rootData.ScriptType)
+	assert.Equal(t, "76a91406afd46bcdfd22ef94ac122aa11f241244a37ecc88ac", rootData.LockingScript)
+	assert.Equal(t, "PwsjpD1YkjcfZ95WGVZuvGfypkKmpogoA3", rootData.Address)
+	assert.Equal(t, (int)(KCfdP2pkh), rootData.HashType)
+	assert.Equal(t, "", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeyPublic), rootData.KeyType)
+	assert.Equal(t, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	// p2sh-p2wsh(pkh)
+	networkType = (int)(KCfdNetworkLiquidv1)
+	rootData, _, _, err = CfdGoParseDescriptorData(
+		"sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))",
+		networkType, "")
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptSh), rootData.ScriptType)
+	assert.Equal(t, "a91455e8d5e8ee4f3604aba23c71c2684fa0a56a3a1287", rootData.LockingScript)
+	assert.Equal(t, "Gq1mmExLuSEwfzzk6YtUxJ769grv6T5Tak", rootData.Address)
+	assert.Equal(t, (int)(KCfdP2shP2wsh), rootData.HashType)
+	assert.Equal(t, "76a914c42e7ef92fdb603af844d064faad95db9bcdfd3d88ac", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeyPublic), rootData.KeyType)
+	assert.Equal(t, "02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	// multisig (bitcoin)
+	networkType = (int)(KCfdNetworkMainnet)
+	rootData, _, _, err = CfdGoParseDescriptorData(
+		"wsh(multi(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*))",
+		networkType,
+		"0")
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptWsh), rootData.ScriptType)
+	assert.Equal(t, "002064969d8cdca2aa0bb72cfe88427612878db98a5f07f9a7ec6ec87b85e9f9208b", rootData.LockingScript)
+	assert.Equal(t, "bc1qvjtfmrxu524qhdevl6yyyasjs7xmnzjlqlu60mrwepact60eyz9s9xjw0c", rootData.Address)
+	assert.Equal(t, (int)(KCfdP2wsh), rootData.HashType)
+	assert.Equal(t, "51210205f8f73d8a553ad3287a506dbd53ed176cadeb200c8e4f7d68a001b1aed871062102c04c4e03921809fcbef9a26da2d62b19b2b4eb383b3e6cfaaef6370e7514477452ae", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeyNull), rootData.KeyType)
+	assert.Equal(t, "", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, true, rootData.IsMultisig)
+	assert.Equal(t, uint32(1), rootData.ReqSigNum)
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	// miniscript wsh
+	networkType = (int)(KCfdNetworkMainnet)
+	rootData, _, _, err = CfdGoParseDescriptorData(
+		"wsh(thresh(2,multi(2,03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7,036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00),a:multi(1,036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00),ac:pk_k(022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01)))",
+		networkType,
+		"0")
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptWsh), rootData.ScriptType)
+	assert.Equal(t, "00206a6c42f62db9fab091ffaf930e0a847646898d225e1ad94ff43226e20180b9d1", rootData.LockingScript)
+	assert.Equal(t, "bc1qdfky9a3dh8atpy0l47fsuz5ywergnrfztcddjnl5xgnwyqvqh8gschn2ch", rootData.Address)
+	assert.Equal(t, (int)(KCfdP2wsh), rootData.HashType)
+	assert.Equal(t, "522103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c721036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a0052ae6b5121036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a0051ae6c936b21022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01ac6c935287", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeyNull), rootData.KeyType)
+	assert.Equal(t, "", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	// miniscript wsh derive
+	networkType = (int)(KCfdNetworkMainnet)
+	rootData, _, _, err = CfdGoParseDescriptorData(
+		"sh(wsh(c:or_i(andor(c:pk_h(xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*),pk_h(xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*),pk_h(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)),pk_k(02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e))))",
+		networkType,
+		"44")
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptSh), rootData.ScriptType)
+	assert.Equal(t, "a914a7a9f411001e3e3db96d7f02fc9ab1d0dc6aa69187", rootData.LockingScript)
+	assert.Equal(t, "3GyYN9WnJBoMn8M5tuqVcFJq1BvbAcdPAt", rootData.Address)
+	assert.Equal(t, (int)(KCfdP2shP2wsh), rootData.HashType)
+	assert.Equal(t, "6376a914520e6e72bcd5b616bc744092139bd759c31d6bbe88ac6476a91406afd46bcdfd22ef94ac122aa11f241244a37ecc886776a9145ab62f0be26fe9d6205a155403f33e2ad2d31efe8868672102d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e68ac", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeyNull), rootData.KeyType)
+	assert.Equal(t, "", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
 	if err != nil {
 		fmt.Print("[error message] " + err.Error() + "\n")
 	}
@@ -2063,6 +2180,9 @@ func TestCfdCoinSelectionUnuseFee(t *testing.T) {
 }
 
 func GetCoinSelectionTestData() (assets []string, utxos []CfdUtxo) {
+	// mnemonic: token hair neglect leader furnace obtain sadness tool you father paddle skate remain carry impact dinosaur correct essay rent illness predict mercy exist ring
+	// xpriv: xprv9s21ZrQH143K4QXrTfC9L43GKCuLcDiBCWjyVqfZUTzoPJWUstD4HTJKGz1U5jAGZzKshcX6cCyZ1ZdxSUQLz92pEZWEGwxa39ks2vhTsfA
+	// derive: 44h/0h/0h/0/*
 	assets = []string{
 		"aa00000000000000000000000000000000000000000000000000000000000000",
 		"bb00000000000000000000000000000000000000000000000000000000000000",
@@ -2074,84 +2194,84 @@ func GetCoinSelectionTestData() (assets []string, utxos []CfdUtxo) {
 			Vout:       uint32(0),
 			Amount:     int64(312500000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(037ca81dd22c934747f4f5ab7844178445fe931fb248e0704c062b8f4fbd3d500a))",
+			Descriptor: "sh(wpkh(0329165ca5832de80305c92d4b1415f10340d267ba05cbffcfe02d386dc5020e4d))",
 		},
 		{
 			Txid:       "30f71f39d210f7ee291b0969c6935debf11395b0935dca84d30c810a75339a0a",
 			Vout:       uint32(0),
 			Amount:     int64(78125000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(0330f71f39d210f7ee291b0969c6935debf11395b0935dca84d30c810a75339a0a))",
+			Descriptor: "sh(wpkh(022db3cb17d98db6cd8d513f88b095dbe80ef9e57acd5b1d9e8bd7f24618079451))",
 		},
 		{
 			Txid:       "9e1ead91c432889cb478237da974dd1e9009c9e22694fd1e3999c40a1ef59b0a",
 			Vout:       uint32(0),
 			Amount:     int64(1250000000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(039e1ead91c432889cb478237da974dd1e9009c9e22694fd1e3999c40a1ef59b0a))",
+			Descriptor: "sh(wpkh(032d04e0b1474a82ad68c0ef37e1a7cf6c75ef01b22c00882e8e4e127a942823a1))",
 		},
 		{
 			Txid:       "8f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a",
 			Vout:       uint32(0),
 			Amount:     int64(39062500),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(038f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a))",
+			Descriptor: "sh(wpkh(03a7fb569db921abf70f1b6b9ad9ac863196deecd99d606b139bba7d740d1cc5bf))",
 		},
 		{
 			Txid:       "4d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a",
 			Vout:       uint32(0),
 			Amount:     int64(156250000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(034d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a))",
+			Descriptor: "sh(wpkh(02df74fc8124ff6f3982e90afb318f3e955b10f58c4c6014b3a767e16160f811d9))",
 		},
 		{
 			Txid:       "b9720ed2265a4ced42425bffdb4ef90a473b4106811a802fce53f7c57487fa0b",
 			Vout:       uint32(0),
 			Amount:     int64(2500000000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(03b9720ed2265a4ced42425bffdb4ef90a473b4106811a802fce53f7c57487fa0b))",
+			Descriptor: "sh(wpkh(029222484db385d268a2a4604ea40fd2228401061f741ad9da8c907ba9df29c2d3))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000b01",
 			Vout:       uint32(0),
 			Amount:     int64(26918400),
 			Asset:      assets[1],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b01))",
+			Descriptor: "sh(wpkh(038f9011753b74fa0134d4b64a1491f99e0c4c0e16da616627c1f6a93c5e7555c0))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000b02",
 			Vout:       uint32(0),
 			Amount:     int64(750000),
 			Asset:      assets[1],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b02))",
+			Descriptor: "sh(wpkh(0302f567f9671b570dbcf179f3ba5f2fb381ea7e8db6ab9e0968c07d40325c3fcd))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000b03",
 			Vout:       uint32(0),
 			Amount:     int64(346430050),
 			Asset:      assets[1],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b03))",
+			Descriptor: "sh(wpkh(034ff60d8fb18ae88019f6f905cfaa0e1841f75edfa1f3c0a5bfaf77b796243901))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000b04",
 			Vout:       uint32(0),
 			Amount:     int64(18476350),
 			Asset:      assets[1],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000b04))",
+			Descriptor: "sh(wpkh(029f2126cd8b55af7cc3cee8154c44de7cb7cb214809f81144d6b323d9c7a3993e))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000c01",
 			Vout:       uint32(0),
 			Amount:     int64(37654200),
 			Asset:      assets[2],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000c01))",
+			Descriptor: "sh(wpkh(02f1d2c28388e3fd609ff383f022b615f1cd8a1931632706f63bfb6e253875ca03))",
 		},
 		{
 			Txid:       "0000000000000000000000000000000000000000000000000000000000000c02",
 			Vout:       uint32(0),
 			Amount:     int64(127030000),
 			Asset:      assets[2],
-			Descriptor: "sh(wpkh(030000000000000000000000000000000000000000000000000000000000000c02))",
+			Descriptor: "sh(wpkh(02cca4482dc1e7d54c879c0d9069e3d66c3bf91b2bf46eddc74f18d76c659dfd10))",
 		},
 	}
 
@@ -2189,6 +2309,9 @@ func TestCfdGoEstimateFee(t *testing.T) {
 }
 
 func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
+	// mnemonic: token hair neglect leader furnace obtain sadness tool you father paddle skate remain carry impact dinosaur correct essay rent illness predict mercy exist ring
+	// xpriv: xprv9s21ZrQH143K4QXrTfC9L43GKCuLcDiBCWjyVqfZUTzoPJWUstD4HTJKGz1U5jAGZzKshcX6cCyZ1ZdxSUQLz92pEZWEGwxa39ks2vhTsfA
+	// derive: 44h/0h/0h/0/*
 	assets = []string{
 		"aa00000000000000000000000000000000000000000000000000000000000000",
 		"bb00000000000000000000000000000000000000000000000000000000000000",
@@ -2200,7 +2323,7 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 				Vout:       uint32(0),
 				Amount:     int64(100000000),
 				Asset:      assets[0],
-				Descriptor: "pkh(030000000000000000000000000000000000000000000000000000000000000a01)",
+				Descriptor: "pkh(0329165ca5832de80305c92d4b1415f10340d267ba05cbffcfe02d386dc5020e4d)",
 			},
 			IsIssuance:      false,
 			IsBlindIssuance: false,
@@ -2214,7 +2337,7 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 				Vout:       uint32(0),
 				Amount:     int64(200000000),
 				Asset:      assets[0],
-				Descriptor: "sh(multi(1,020000000000000000000000000000000000000000000000000000000000000a02,030000000000000000000000000000000000000000000000000000000000000a02))",
+				Descriptor: "sh(multi(1,022db3cb17d98db6cd8d513f88b095dbe80ef9e57acd5b1d9e8bd7f24618079451,032d04e0b1474a82ad68c0ef37e1a7cf6c75ef01b22c00882e8e4e127a942823a1))",
 			},
 			IsIssuance:      false,
 			IsBlindIssuance: false,
@@ -2228,7 +2351,7 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 				Vout:       uint32(1),
 				Amount:     int64(30000000),
 				Asset:      assets[1],
-				Descriptor: "wpkh(030000000000000000000000000000000000000000000000000000000000000b01)",
+				Descriptor: "wpkh(03a7fb569db921abf70f1b6b9ad9ac863196deecd99d606b139bba7d740d1cc5bf)",
 			},
 			IsIssuance:      false,
 			IsBlindIssuance: false,
@@ -2242,7 +2365,7 @@ func GetEstimateFeeTestData() (assets []string, inputs []CfdEstimateFeeInput) {
 				Vout:       uint32(2),
 				Amount:     int64(40000000),
 				Asset:      assets[1],
-				Descriptor: "wsh(multi(1,020000000000000000000000000000000000000000000000000000000000000b02,030000000000000000000000000000000000000000000000000000000000000b02))",
+				Descriptor: "wsh(multi(1,02df74fc8124ff6f3982e90afb318f3e955b10f58c4c6014b3a767e16160f811d9,029222484db385d268a2a4604ea40fd2228401061f741ad9da8c907ba9df29c2d3))",
 			},
 			IsIssuance:      false,
 			IsBlindIssuance: false,
@@ -2263,14 +2386,14 @@ func TestCfdGoVerifyConfidentialTxSignature(t *testing.T) {
 		vout := uint32(1)
 
 		// prepare pkh signature
-		pubkey, _, wif, err := CfdGoCreateKeyPair(true, (int)(KCfdNetworkElementsRegtest))
+		pubkey, _, wif, err := CfdGoCreateKeyPair(true, (int)(KCfdNetworkRegtest))
 		assert.NoError(t, err)
 		sighashType := (int)(KCfdSigHashAll)
 		satoshiValue := int64(1000000000)
 		sighash, err := CfdGoCreateConfidentialSighash(txHex, txid, vout,
 			(int)(KCfdP2pkh), pubkey, "", satoshiValue, "", sighashType, false)
 		assert.NoError(t, err)
-		signature, err := CfdGoCalculateEcSignature(sighash, "", wif, (int)(KCfdNetworkElementsRegtest), true)
+		signature, err := CfdGoCalculateEcSignature(sighash, "", wif, (int)(KCfdNetworkRegtest), true)
 		assert.NoError(t, err)
 
 		// check signature
@@ -2289,14 +2412,14 @@ func TestCfdGoVerifyConfidentialTxSignature(t *testing.T) {
 		vout := uint32(1)
 
 		// prepare pkh signature
-		pubkey, _, wif, err := CfdGoCreateKeyPair(true, (int)(KCfdNetworkElementsRegtest))
+		pubkey, _, wif, err := CfdGoCreateKeyPair(true, (int)(KCfdNetworkRegtest))
 		assert.NoError(t, err)
 		sighashType := (int)(KCfdSigHashAll)
 		satoshiValue := int64(1000000000)
 		sighash, err := CfdGoCreateConfidentialSighash(txHex, txid, vout,
 			(int)(KCfdP2pkh), pubkey, "", satoshiValue, "", sighashType, false)
 		assert.NoError(t, err)
-		signature, err := CfdGoCalculateEcSignature(sighash, "", wif, (int)(KCfdNetworkElementsRegtest), true)
+		signature, err := CfdGoCalculateEcSignature(sighash, "", wif, (int)(KCfdNetworkRegtest), true)
 		assert.NoError(t, err)
 
 		// check signature
@@ -2317,7 +2440,7 @@ func TestCfdGoVerifyConfidentialTxSignature(t *testing.T) {
 
 		// prepare signature
 		pubkey, privkey, _, err := CfdGoCreateKeyPair(
-			true, (int)(KCfdNetworkElementsRegtest))
+			true, (int)(KCfdNetworkRegtest))
 		assert.NoError(t, err)
 		dummyPubkey := "0229ebd1cac7855ca60b0846bd179ff3d411f807f3f3a43abf498e0a415c94d622"
 		redeemScript, err := CfdGoCreateScript(
@@ -2472,6 +2595,7 @@ func TestCfdGoAddConfidentialTxMultisigSign(t *testing.T) {
 	pubkey2 := "02bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d71"
 	privkey2 := "cQUTZ8VbWNYBEtrB7xwe41kqiKMQPRZshTvBHmkoJGaUfmS5pxzR"
 	networkType := (int)(KCfdNetworkLiquidv1)
+	networkKeyType := (int)(KCfdNetworkTestnet)
 	sigHashType := (int)(KCfdSigHashAll)
 	hashType := (int)(KCfdP2wsh)
 	addressType := (int)(KCfdP2wshAddress)
@@ -2507,12 +2631,12 @@ func TestCfdGoAddConfidentialTxMultisigSign(t *testing.T) {
 	if err == nil {
 		// user1
 		signature1, err := CfdGoCalculateEcSignature(
-			sighash, "", privkey1, networkType, true)
+			sighash, "", privkey1, networkKeyType, true)
 		assert.NoError(t, err)
 
 		// user2
 		signature2, err := CfdGoCalculateEcSignature(
-			sighash, "", privkey2, networkType, true)
+			sighash, "", privkey2, networkKeyType, true)
 		assert.NoError(t, err)
 
 		signDataList := []CfdMultisigSignData{
@@ -3000,35 +3124,35 @@ func TestFundRawTransaction2(t *testing.T) {
 			Vout:       uint32(0),
 			Amount:     int64(95000000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(039e1ead91c432889cb478237da974dd1e9009c9e22694fd1e3999c40a1ef59b0a))",
+			Descriptor: "sh(wpkh(032d04e0b1474a82ad68c0ef37e1a7cf6c75ef01b22c00882e8e4e127a942823a1))",
 		},
 		{
 			Txid:       "8f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a",
 			Vout:       uint32(0),
 			Amount:     int64(100000000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(038f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a))",
+			Descriptor: "sh(wpkh(03a7fb569db921abf70f1b6b9ad9ac863196deecd99d606b139bba7d740d1cc5bf))",
 		},
 		{
 			Txid:       "4d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a",
 			Vout:       uint32(0),
 			Amount:     int64(99992500),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(034d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a))",
+			Descriptor: "sh(wpkh(02df74fc8124ff6f3982e90afb318f3e955b10f58c4c6014b3a767e16160f811d9))",
 		},
 		{
 			Txid:       "4d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a",
 			Vout:       uint32(1),
 			Amount:     int64(94992500),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(034d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a))",
+			Descriptor: "sh(wpkh(029222484db385d268a2a4604ea40fd2228401061f741ad9da8c907ba9df29c2d3))",
 		},
 		{
 			Txid:       "4d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a",
 			Vout:       uint32(2),
 			Amount:     int64(5000000),
 			Asset:      assets[0],
-			Descriptor: "sh(wpkh(034d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a))",
+			Descriptor: "sh(wpkh(038f9011753b74fa0134d4b64a1491f99e0c4c0e16da616627c1f6a93c5e7555c0))",
 		},
 	}
 	netType := int(KCfdNetworkLiquidv1)
@@ -3053,6 +3177,74 @@ func TestFundRawTransaction2(t *testing.T) {
 	assert.Equal(t, 1, len(usedAddressList))
 	if len(usedAddressList) == 1 {
 		assert.Equal(t, "ex1qdnf34k9c255nfa9anjx0sj5ne0t6f80p5rne4e", usedAddressList[0])
+	}
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestFundRawTransaction3(t *testing.T) {
+	assets := []string{
+		"6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d",
+		"f59c5f3e8141f322276daa63ed5f307085808aea6d4ef9ba61e28154533fdec7",
+	}
+	utxos := []CfdUtxo{
+		{
+			Txid:       "cd4433fd3d014187050aefe878f76ab76aa8b1eef3ba965cb8dc76b0d271d002",
+			Vout:       uint32(2),
+			Amount:     int64(999799),
+			Asset:      assets[0],
+			Descriptor: "wpkh(02db28ad892aa1e500d1e88ffa24200088bc82a8a87807cd13a1d1a1c7799c41e5)",
+		},
+		{
+			Txid:       "62ac8a5272b67aab0ca60db859bed64729463de72ee1743fd7eb9c72f4437b06",
+			Vout:       uint32(0),
+			Amount:     int64(19999),
+			Asset:      assets[1],
+			Descriptor: "wpkh(023004f49c61a63e339fa554e218774d6b4752bbfcfca61fe1c567b96af196b524)",
+		},
+		{
+			Txid:       "376906dfec46e2abc2c98cc4a51d725cb8bbc5ece38ae1127c90802823202988",
+			Vout:       uint32(2),
+			Amount:     int64(1),
+			Asset:      assets[1],
+			Descriptor: "wpkh(02272bcdbec1c0a2170e72f2d8cf42188d59ea7eae9296d60d435af3fe465d9bb5)",
+		},
+	}
+
+	netType := int(KCfdNetworkLiquidv1)
+	option := NewCfdFundRawTxOption(netType)
+	option.EffectiveFeeRate = float64(0.15)
+	option.FeeAsset = assets[0]
+	option.KnapsackMinChange = int64(0)
+	targets := []CfdFundRawTxTargetAmount{
+		{
+			Amount:          int64(0),
+			Asset:           assets[1],
+			ReservedAddress: "lq1qqwqawne0jyc2swqv9qp8fstrgxuux2824zxkqew9gdak4yudxvwhha0kwdv2p3j0lyekhchrzmuekp94fpfp6fkeggjkerfr8",
+		},
+		{
+			Amount:          int64(0),
+			Asset:           assets[0],
+			ReservedAddress: "lq1qqgv5wwfp4h0pfnyy2kkxl0kg3qnahcpfq7emrxu9xusz879axq0spg9cxu8wf72ktsft5r8vxnkfd8s5kmg32fvy8texp5p6s",
+		},
+	}
+	txinList := []CfdUtxo{}
+
+	txHex, err := CfdGoAddConfidentialTxOut(
+		"0200000000000000000000",
+		"f59c5f3e8141f322276daa63ed5f307085808aea6d4ef9ba61e28154533fdec7",
+		int64(20000), "",
+		"lq1qqg0hpf63fs29e7cpep63hy4vtv6334v947e9dkhfh397ge9l234vv2d2jzk547809pvaq4e7d884v72hagesq35ggggjtedtw", "", "")
+	assert.NoError(t, err)
+	assert.Equal(t, "0200000000000101c7de3f535481e261baf94e6dea8a808570305fed63aa6d2722f341813e5f9cf5010000000000004e20021f70a7514c145cfb01c8751b92ac5b3518d585afb256dae9bc4be464bf546ac616001429aa90ad4af8ef2859d0573e69cf567957ea330000000000", txHex)
+
+	outputTx, fee, usedAddressList, err := CfdGoFundRawTransaction(netType, txHex, txinList, utxos, targets, &option)
+	assert.NoError(t, err)
+	assert.Equal(t, "02000000000302d071d2b076dcb85c96baf3eeb1a86ab76af778e8ef0a058741013dfd3344cd0200000000ffffffff067b43f4729cebd73f74e12ee73d462947d6be59b80da60cab7ab672528aac620000000000ffffffff882920232880907c12e18ae3ecc5bbb85c721da5c48cc9c2abe246ecdf0669370200000000ffffffff0301c7de3f535481e261baf94e6dea8a808570305fed63aa6d2722f341813e5f9cf5010000000000004e20021f70a7514c145cfb01c8751b92ac5b3518d585afb256dae9bc4be464bf546ac616001429aa90ad4af8ef2859d0573e69cf567957ea3300016d521c38ec1ea15734ae22b7c46064412829c0d0579f0a713d1c04ede979026f01000000000000013a0000016d521c38ec1ea15734ae22b7c46064412829c0d0579f0a713d1c04ede979026f0100000000000f403d0219473921adde14cc8455ac6fbec88827dbe02907b3b19b85372023f8bd301f00160014a0b8370ee4f9565c12ba0cec34ec969e14b6d11500000000", outputTx)
+	assert.Equal(t, int64(314), fee)
+	assert.Equal(t, 1, len(usedAddressList))
+	if len(usedAddressList) == 1 {
+		assert.Equal(t, "lq1qqgv5wwfp4h0pfnyy2kkxl0kg3qnahcpfq7emrxu9xusz879axq0spg9cxu8wf72ktsft5r8vxnkfd8s5kmg32fvy8texp5p6s", usedAddressList[0])
 	}
 
 	fmt.Printf("%s test done.\n", GetFuncName())
@@ -3240,15 +3432,27 @@ func TestSchnorrApi(t *testing.T) {
 }
 
 func TestDescriptorStruct(t *testing.T) {
-	// FIXME Descriptorテスト（コピってくる）
-
 	// PKH
 	networkType := (int)(KCfdNetworkLiquidv1)
 	desc := NewDescriptorFromString(
 		"pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)",
 		networkType)
-	descriptorDataList, multisigList, err := desc.Parse()
+	rootData, descriptorDataList, multisigList, err := desc.Parse()
 	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptPkh), rootData.ScriptType)
+	assert.Equal(t, "76a91406afd46bcdfd22ef94ac122aa11f241244a37ecc88ac", rootData.LockingScript)
+	assert.Equal(t, "PwsjpD1YkjcfZ95WGVZuvGfypkKmpogoA3", rootData.Address)
+	assert.Equal(t, (int)(KCfdP2pkh), rootData.HashType)
+	assert.Equal(t, "", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeyPublic), rootData.KeyType)
+	assert.Equal(t, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, "", rootData.SchnorrPubkey)
+	assert.Equal(t, "", rootData.TreeString)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
 	assert.Equal(t, 1, len(descriptorDataList))
 	assert.Equal(t, 0, len(multisigList))
 	if len(descriptorDataList) == 1 {
@@ -3276,8 +3480,22 @@ func TestDescriptorStruct(t *testing.T) {
 	desc = NewDescriptorFromString(
 		"sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))",
 		networkType)
-	descriptorDataList, multisigList, err = desc.Parse()
+	rootData, descriptorDataList, multisigList, err = desc.Parse()
 	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptSh), rootData.ScriptType)
+	assert.Equal(t, "a91455e8d5e8ee4f3604aba23c71c2684fa0a56a3a1287", rootData.LockingScript)
+	assert.Equal(t, "Gq1mmExLuSEwfzzk6YtUxJ769grv6T5Tak", rootData.Address)
+	assert.Equal(t, (int)(KCfdP2shP2wsh), rootData.HashType)
+	assert.Equal(t, "76a914c42e7ef92fdb603af844d064faad95db9bcdfd3d88ac", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeyPublic), rootData.KeyType)
+	assert.Equal(t, "02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, "", rootData.SchnorrPubkey)
+	assert.Equal(t, "", rootData.TreeString)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
 	assert.Equal(t, 3, len(descriptorDataList))
 	assert.Equal(t, 0, len(multisigList))
 	if len(descriptorDataList) == 3 {
@@ -3330,8 +3548,22 @@ func TestDescriptorStruct(t *testing.T) {
 	desc = NewDescriptorFromString(
 		"wsh(multi(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*))",
 		networkType)
-	descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("0")
+	rootData, descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("0")
 	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptWsh), rootData.ScriptType)
+	assert.Equal(t, "002064969d8cdca2aa0bb72cfe88427612878db98a5f07f9a7ec6ec87b85e9f9208b", rootData.LockingScript)
+	assert.Equal(t, "bc1qvjtfmrxu524qhdevl6yyyasjs7xmnzjlqlu60mrwepact60eyz9s9xjw0c", rootData.Address)
+	assert.Equal(t, (int)(KCfdP2wsh), rootData.HashType)
+	assert.Equal(t, "51210205f8f73d8a553ad3287a506dbd53ed176cadeb200c8e4f7d68a001b1aed871062102c04c4e03921809fcbef9a26da2d62b19b2b4eb383b3e6cfaaef6370e7514477452ae", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeyNull), rootData.KeyType)
+	assert.Equal(t, "", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, "", rootData.SchnorrPubkey)
+	assert.Equal(t, "", rootData.TreeString)
+	assert.Equal(t, true, rootData.IsMultisig)
+	assert.Equal(t, uint32(1), rootData.ReqSigNum)
 	assert.Equal(t, 1, len(descriptorDataList))
 	assert.Equal(t, 2, len(multisigList))
 	if len(descriptorDataList) == 1 {
@@ -3372,8 +3604,22 @@ func TestDescriptorStruct(t *testing.T) {
 	desc = NewDescriptorFromString(
 		"wsh(thresh(2,multi(2,03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7,036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00),a:multi(1,036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a00),ac:pk_k(022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01)))",
 		networkType)
-	descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("0")
+	rootData, descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("0")
 	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptWsh), rootData.ScriptType)
+	assert.Equal(t, "00206a6c42f62db9fab091ffaf930e0a847646898d225e1ad94ff43226e20180b9d1", rootData.LockingScript)
+	assert.Equal(t, "bc1qdfky9a3dh8atpy0l47fsuz5ywergnrfztcddjnl5xgnwyqvqh8gschn2ch", rootData.Address)
+	assert.Equal(t, (int)(KCfdP2wsh), rootData.HashType)
+	assert.Equal(t, "522103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c721036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a0052ae6b5121036d2b085e9e382ed10b69fc311a03f8641ccfff21574de0927513a49d9a688a0051ae6c936b21022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01ac6c935287", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeyNull), rootData.KeyType)
+	assert.Equal(t, "", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, "", rootData.SchnorrPubkey)
+	assert.Equal(t, "", rootData.TreeString)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
 	assert.Equal(t, 1, len(descriptorDataList))
 	assert.Equal(t, 0, len(multisigList))
 	if len(descriptorDataList) == 1 {
@@ -3399,8 +3645,22 @@ func TestDescriptorStruct(t *testing.T) {
 	desc = NewDescriptorFromString(
 		"sh(wsh(c:or_i(andor(c:pk_h(xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*),pk_h(xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*),pk_h(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)),pk_k(02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e))))",
 		networkType)
-	descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("44")
+	rootData, descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("44")
 	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptSh), rootData.ScriptType)
+	assert.Equal(t, "a914a7a9f411001e3e3db96d7f02fc9ab1d0dc6aa69187", rootData.LockingScript)
+	assert.Equal(t, "3GyYN9WnJBoMn8M5tuqVcFJq1BvbAcdPAt", rootData.Address)
+	assert.Equal(t, (int)(KCfdP2shP2wsh), rootData.HashType)
+	assert.Equal(t, "6376a914520e6e72bcd5b616bc744092139bd759c31d6bbe88ac6476a91406afd46bcdfd22ef94ac122aa11f241244a37ecc886776a9145ab62f0be26fe9d6205a155403f33e2ad2d31efe8868672102d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e68ac", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeyNull), rootData.KeyType)
+	assert.Equal(t, "", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, "", rootData.SchnorrPubkey)
+	assert.Equal(t, "", rootData.TreeString)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
 	assert.Equal(t, 2, len(descriptorDataList))
 	assert.Equal(t, 0, len(multisigList))
 	if len(descriptorDataList) == 2 {
@@ -3423,6 +3683,182 @@ func TestDescriptorStruct(t *testing.T) {
 		assert.Equal(t, "", descriptorDataList[1].ExtPrivkey)
 		assert.Equal(t, false, descriptorDataList[1].IsMultisig)
 		assert.Equal(t, uint32(0), descriptorDataList[1].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestTaprootDescriptorStruct(t *testing.T) {
+	// taproot schnorr
+	networkType := (int)(KCfdNetworkRegtest)
+	desc := NewDescriptorFromString(
+		"tr(ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a)",
+		networkType)
+	rootData, descriptorDataList, multisigList, err := desc.Parse()
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), rootData.ScriptType)
+	assert.Equal(t, "5120ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", rootData.LockingScript)
+	assert.Equal(t, "bcrt1paag57xhtzja2dnzh4vex37ejnjj5p3yy2nmlgem3a4e3ud962gdqqctzwn", rootData.Address)
+	assert.Equal(t, (int)(KCfdTaproot), rootData.HashType)
+	assert.Equal(t, "", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeySchnorr), rootData.KeyType)
+	assert.Equal(t, "", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", rootData.SchnorrPubkey)
+	assert.Equal(t, "", rootData.TreeString)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
+	assert.Equal(t, 1, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 1 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "5120ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bcrt1paag57xhtzja2dnzh4vex37ejnjj5p3yy2nmlgem3a4e3ud962gdqqctzwn", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdTaproot), descriptorDataList[0].HashType)
+		assert.Equal(t, "", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeySchnorr), descriptorDataList[0].KeyType)
+		assert.Equal(t, "", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", descriptorDataList[0].SchnorrPubkey)
+		assert.Equal(t, "", descriptorDataList[0].TreeString)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	// taproot extpubkey
+	networkType = (int)(KCfdNetworkMainnet)
+	desc = NewDescriptorFromString(
+		"tr([bd16bee5/0]xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*)",
+		networkType)
+	rootData, descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("1")
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), rootData.ScriptType)
+	assert.Equal(t, "51208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", rootData.LockingScript)
+	assert.Equal(t, "bc1p33h4j4kre3e9r4yrl35rlgrtyt2w9hw8f94zty9vacmvfgcnlqtq0txdxt", rootData.Address)
+	assert.Equal(t, (int)(KCfdTaproot), rootData.HashType)
+	assert.Equal(t, "", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeyBip32), rootData.KeyType)
+	assert.Equal(t, "038c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", rootData.Pubkey)
+	assert.Equal(t, "xpub6EKMC2gSMfKgSwn7V9VZn7x1MvoeeVzSmmtSJ4z2L2d6R4WxvdQMouokypZHVp4fgKycrrQnGr6WJ5ED5jG9Q9FiA1q5gKYUc8u6JHJhdo8", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, "8c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", rootData.SchnorrPubkey)
+	assert.Equal(t, "", rootData.TreeString)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
+	assert.Equal(t, 1, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 1 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "51208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bc1p33h4j4kre3e9r4yrl35rlgrtyt2w9hw8f94zty9vacmvfgcnlqtq0txdxt", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdTaproot), descriptorDataList[0].HashType)
+		assert.Equal(t, "", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeyBip32), descriptorDataList[0].KeyType)
+		assert.Equal(t, "038c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "xpub6EKMC2gSMfKgSwn7V9VZn7x1MvoeeVzSmmtSJ4z2L2d6R4WxvdQMouokypZHVp4fgKycrrQnGr6WJ5ED5jG9Q9FiA1q5gKYUc8u6JHJhdo8", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, "", descriptorDataList[0].SchnorrPubkey)
+		assert.Equal(t, "", descriptorDataList[0].TreeString)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	// taproot  tapscript single
+	networkType = (int)(KCfdNetworkRegtest)
+	desc = NewDescriptorFromString(
+		"tr(ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a,c:pk_k(8c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816))",
+		networkType)
+	rootData, descriptorDataList, multisigList, err = desc.Parse()
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), rootData.ScriptType)
+	assert.Equal(t, "51205347c06cc9ed4b2286efcf4ed292a810ee451bdc50a4f0ab4a534a3f594763d5", rootData.LockingScript)
+	assert.Equal(t, "bcrt1p2druqmxfa49j9ph0ea8d9y4gzrhy2x7u2zj0p2622d9r7k28v02s6x9jx3", rootData.Address)
+	assert.Equal(t, (int)(KCfdTaproot), rootData.HashType)
+	assert.Equal(t, "", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeySchnorr), rootData.KeyType)
+	assert.Equal(t, "", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", rootData.SchnorrPubkey)
+	assert.Equal(t, "tl(208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816ac)", rootData.TreeString)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
+	assert.Equal(t, 1, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 1 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "51205347c06cc9ed4b2286efcf4ed292a810ee451bdc50a4f0ab4a534a3f594763d5", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bcrt1p2druqmxfa49j9ph0ea8d9y4gzrhy2x7u2zj0p2622d9r7k28v02s6x9jx3", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdTaproot), descriptorDataList[0].HashType)
+		assert.Equal(t, "", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeySchnorr), descriptorDataList[0].KeyType)
+		assert.Equal(t, "", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", descriptorDataList[0].SchnorrPubkey)
+		assert.Equal(t, "", descriptorDataList[0].TreeString)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
+	}
+	if err != nil {
+		fmt.Print("[error message] " + err.Error() + "\n")
+	}
+
+	// taproot tapscript tapbranch
+	networkType = (int)(KCfdNetworkRegtest)
+	desc = NewDescriptorFromString(
+		"tr(ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a,{c:pk_k(8c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816),{c:pk_k([bd16bee5/0]xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*),thresh(2,c:pk_k(5cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc),s:sha256(e38990d0c7fc009880a9c07c23842e886c6bbdc964ce6bdd5817ad357335ee6f),a:hash160(dd69735817e0e3f6f826a9238dc2e291184f0131))}})",
+		networkType)
+	rootData, descriptorDataList, multisigList, err = desc.ParseWithDerivationPath("1")
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(0), rootData.Depth)
+	assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), rootData.ScriptType)
+	assert.Equal(t, "51204f009acbd8c905be4470df1b92c70be16a71d354ba55cc0e6517853f77d79651", rootData.LockingScript)
+	assert.Equal(t, "bcrt1pfuqf4j7ceyzmu3rsmude93ctu948r565hf2ucrn9z7zn7a7hjegskj3rsv", rootData.Address)
+	assert.Equal(t, (int)(KCfdTaproot), rootData.HashType)
+	assert.Equal(t, "", rootData.RedeemScript)
+	assert.Equal(t, (int)(KCfdDescriptorKeySchnorr), rootData.KeyType)
+	assert.Equal(t, "", rootData.Pubkey)
+	assert.Equal(t, "", rootData.ExtPubkey)
+	assert.Equal(t, "", rootData.ExtPrivkey)
+	assert.Equal(t, "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", rootData.SchnorrPubkey)
+	assert.Equal(t, "{tl(208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816ac),{tl(208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816ac),tl(205cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bcac7c82012088a820e38990d0c7fc009880a9c07c23842e886c6bbdc964ce6bdd5817ad357335ee6f87936b82012088a914dd69735817e0e3f6f826a9238dc2e291184f0131876c935287)}}", rootData.TreeString)
+	assert.Equal(t, false, rootData.IsMultisig)
+	assert.Equal(t, uint32(0), rootData.ReqSigNum)
+	assert.Equal(t, 1, len(descriptorDataList))
+	assert.Equal(t, 0, len(multisigList))
+	if len(descriptorDataList) == 1 {
+		assert.Equal(t, uint32(0), descriptorDataList[0].Depth)
+		assert.Equal(t, (int)(KCfdDescriptorScriptTaproot), descriptorDataList[0].ScriptType)
+		assert.Equal(t, "51204f009acbd8c905be4470df1b92c70be16a71d354ba55cc0e6517853f77d79651", descriptorDataList[0].LockingScript)
+		assert.Equal(t, "bcrt1pfuqf4j7ceyzmu3rsmude93ctu948r565hf2ucrn9z7zn7a7hjegskj3rsv", descriptorDataList[0].Address)
+		assert.Equal(t, (int)(KCfdTaproot), descriptorDataList[0].HashType)
+		assert.Equal(t, "", descriptorDataList[0].RedeemScript)
+		assert.Equal(t, (int)(KCfdDescriptorKeySchnorr), descriptorDataList[0].KeyType)
+		assert.Equal(t, "", descriptorDataList[0].Pubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPubkey)
+		assert.Equal(t, "", descriptorDataList[0].ExtPrivkey)
+		assert.Equal(t, "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", descriptorDataList[0].SchnorrPubkey)
+		assert.Equal(t, "", descriptorDataList[0].TreeString)
+		assert.Equal(t, false, descriptorDataList[0].IsMultisig)
+		assert.Equal(t, uint32(0), descriptorDataList[0].ReqSigNum)
 	}
 	if err != nil {
 		fmt.Print("[error message] " + err.Error() + "\n")
@@ -3628,6 +4064,7 @@ func TestTapScriptTree(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "{tl(20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac),{tl(51),tl(201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac)}}", tree.GetTreeString())
 	count, err := tree.GetMaxBranchCount()
+	assert.NoError(t, err)
 	assert.Equal(t, uint32(2), count)
 
 	// deserialize
@@ -3671,6 +4108,429 @@ func TestTapScriptTree(t *testing.T) {
 	err = tree3.AddBranchByString("tl(2008f8280d68e02e807ccffee141c4a6b7ac31d3c283ae0921892d95f691742c44ad20b0f8ce3e1df406514a773414b5d9e5779d8e68ce816e9db39b8e53255ac3b406ac)")
 	assert.NoError(t, err)
 	assert.Equal(t, tree2.GetTreeString(), tree3.GetTreeString())
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestSplitTxOut(t *testing.T) {
+	txHex, err := CfdGoSplitTxOut(
+		"0200000001ffa8db90b81db256874ff7a98fb7202cdc0b91b5b02d7c3427c4190adc66981f0000000000ffffffff0118f50295000000002251201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb00000000",
+		0,
+		[]CfdTxOut{
+			{
+				Amount:  499999000,
+				Address: "bc1qz33wef9ehrvd7c64p27jf5xtvn50946xfzpxx4",
+			},
+		},
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, "0200000001ffa8db90b81db256874ff7a98fb7202cdc0b91b5b02d7c3427c4190adc66981f0000000000ffffffff0200943577000000002251201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb1861cd1d000000001600141462eca4b9b8d8df63550abd24d0cb64e8f2d74600000000", txHex)
+
+	txHex, err = CfdGoSplitTxOut(
+		"0200000001ffa8db90b81db256874ff7a98fb7202cdc0b91b5b02d7c3427c4190adc66981f0000000000ffffffff0118f50295000000002251201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb00000000",
+		0,
+		[]CfdTxOut{
+			{
+				Amount:        400000000,
+				LockingScript: "00141462eca4b9b8d8df63550abd24d0cb64e8f2d746",
+			},
+			{
+				Amount:        99999000,
+				LockingScript: "0014164e985d0fc92c927a66c0cbaf78e6ea389629d5",
+			},
+		},
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, "0200000001ffa8db90b81db256874ff7a98fb7202cdc0b91b5b02d7c3427c4190adc66981f0000000000ffffffff0300943577000000002251201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb0084d717000000001600141462eca4b9b8d8df63550abd24d0cb64e8f2d74618ddf50500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d500000000", txHex)
+
+	indexes, err := CfdGoGetTxOutIndexes(
+		int(KCfdNetworkMainnet),
+		"02000000034cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff81ddd34c6c0c32544e3b89f5e24c6cd7afca62f2b5069281ac9fced6251191d20000000000ffffffff81ddd34c6c0c32544e3b89f5e24c6cd7afca62f2b5069281ac9fced6251191d20100000000ffffffff040200000000000000220020c5ae4ff17cec055e964b573601328f3f879fa441e53ef88acdfd4d8e8df429ef406f400100000000220020ea5a7208cddfbc20dd93e12bf29deb00b68c056382a502446c9c5b55490954d215cd5b0700000000220020f39f6272ba6b57918eb047c5dc44fb475356b0f24c12fca39b19284e80008a42406f400100000000220020ea5a7208cddfbc20dd93e12bf29deb00b68c056382a502446c9c5b55490954d200000000",
+		"bc1qafd8yzxdm77zphvnuy4l980tqzmgcptrs2jsy3rvn3d42jgf2nfqc4zt4j",
+		"")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(indexes))
+	if len(indexes) == 2 {
+		assert.Equal(t, uint32(1), indexes[0])
+		assert.Equal(t, uint32(3), indexes[1])
+	}
+
+	txHex, err = CfdGoUpdateWitnessStack(
+		int(KCfdNetworkMainnet),
+		"020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a91426b9ba9cf5d822b70cf490ad0394566f9db20c63870247304402200b3ca71e82551a333fe5c8ce9a8f8454eb8f08aa194180e5a87c79ccf2e46212022065c1f2a363ebcb155a80e234258394140d08f6ab807581953bb21a58f2d229a6012102fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad800000000",
+		"ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
+		0,
+		1,
+		"03aab896d53a8e7d6433137bbba940f9c521e085dd07e60994579b64a6d992cf79")
+	assert.NoError(t, err)
+	assert.Equal(t, "020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a91426b9ba9cf5d822b70cf490ad0394566f9db20c63870247304402200b3ca71e82551a333fe5c8ce9a8f8454eb8f08aa194180e5a87c79ccf2e46212022065c1f2a363ebcb155a80e234258394140d08f6ab807581953bb21a58f2d229a6012103aab896d53a8e7d6433137bbba940f9c521e085dd07e60994579b64a6d992cf7900000000", txHex)
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestSplitTxOutByElements(t *testing.T) {
+	txHex, err := CfdGoSplitConfidentialTxOut(
+		"02000000000109c4149d4e59119f2b11b3e160b02694bc4ecbf56f6de4ab587128f86bf4e7d30000000000ffffffff0201f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f010000000005ee3fe00374eb131b54a7b528e5449b3827bcaa5069c259346810f20cf9079bd17b32fe481976a914d753351535a2a55f33ab39bbd6c70a55d46904e788ac01f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f01000000000007a120000000000000",
+		0,
+		[]CfdConfidentialTxOut{
+			{
+				Amount:  9000000,
+				Address: "ert1qz33wef9ehrvd7c64p27jf5xtvn50946xeekx50",
+			},
+			{
+				Amount:  500000,
+				Address: "XWMioJVK77vhKHgnSpaCcSBDgf93LFHzYg",
+			},
+		},
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, "02000000000109c4149d4e59119f2b11b3e160b02694bc4ecbf56f6de4ab587128f86bf4e7d30000000000ffffffff0401f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f0100000000055d4a800374eb131b54a7b528e5449b3827bcaa5069c259346810f20cf9079bd17b32fe481976a914d753351535a2a55f33ab39bbd6c70a55d46904e788ac01f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f01000000000007a120000001f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f010000000000895440001600141462eca4b9b8d8df63550abd24d0cb64e8f2d74601f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f01000000000007a1200017a914d081b8e259b744aa903e1831cfce8956941273ce8700000000", txHex)
+
+	txHex, err = CfdGoSplitConfidentialTxOut(
+		"020000000002a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000ffffffffa38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0200000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c8400000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000befe33cc397c03f234757d0e00e6a7a7a3b4b2b31fb0328d7b9f755cd1093d9f61892fef3116871976a91435ef6d4b59f26089dfe2abca21408e15fee42a3388ac00000000",
+		1,
+		[]CfdConfidentialTxOut{
+			{
+				Amount:  9997999992700,
+				Address: "lq1qqf6e92446smp3hdp87a8rcue8nt4z7n39576f9nycphwr0farac2laprx8zp3m69z7axgjkka87fj6q66sunwxxytxeqzrd9w",
+			},
+			{
+				Amount:  1000000000,
+				Address: "Azpn9vbC1Sjvwc2evnjaZjEHPdQxvdr4sTew6psnwxoomvdDBfpfDJNXU4Zthvhy1TkUgX4USjTZpjSL",
+			},
+		},
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, "020000000002a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000ffffffffa38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0200000000ffffffff040125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c8400000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000b5e620f4800003f234757d0e00e6a7a7a3b4b2b31fb0328d7b9f755cd1093d9f61892fef3116871976a91435ef6d4b59f26089dfe2abca21408e15fee42a3388ac0125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000917d73cef7c027592aab5d43618dda13fba71e3993cd7517a712d3da49664c06ee1bd3d1f70af160014f42331c418ef4517ba644ad6e9fc99681ad439370125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000003b9aca00027592aab5d43618dda13fba71e3993cd7517a712d3da49664c06ee1bd3d1f70af17a9149ec42b6cfa1b0bc3f55f07af29867057cb0b8a2e8700000000", txHex)
+
+	txHex, err = CfdGoSplitConfidentialTxOut(
+		"020000000002a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000ffffffffa38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0200000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c8400000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000befe33cc397c03f234757d0e00e6a7a7a3b4b2b31fb0328d7b9f755cd1093d9f61892fef3116871976a91435ef6d4b59f26089dfe2abca21408e15fee42a3388ac00000000",
+		1,
+		[]CfdConfidentialTxOut{
+			{
+				Amount:          9997999992700,
+				LockingScript:   "0014f42331c418ef4517ba644ad6e9fc99681ad43937",
+				CommitmentNonce: "027592aab5d43618dda13fba71e3993cd7517a712d3da49664c06ee1bd3d1f70af",
+			},
+			{
+				Amount:          1000000000,
+				LockingScript:   "a9149ec42b6cfa1b0bc3f55f07af29867057cb0b8a2e87",
+				CommitmentNonce: "027592aab5d43618dda13fba71e3993cd7517a712d3da49664c06ee1bd3d1f70af",
+			},
+		},
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, "020000000002a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000ffffffffa38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0200000000ffffffff040125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c8400000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000b5e620f4800003f234757d0e00e6a7a7a3b4b2b31fb0328d7b9f755cd1093d9f61892fef3116871976a91435ef6d4b59f26089dfe2abca21408e15fee42a3388ac0125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000917d73cef7c027592aab5d43618dda13fba71e3993cd7517a712d3da49664c06ee1bd3d1f70af160014f42331c418ef4517ba644ad6e9fc99681ad439370125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000003b9aca00027592aab5d43618dda13fba71e3993cd7517a712d3da49664c06ee1bd3d1f70af17a9149ec42b6cfa1b0bc3f55f07af29867057cb0b8a2e8700000000", txHex)
+
+	indexes, err := CfdGoGetTxOutIndexes(
+		int(KCfdNetworkLiquidv1),
+		"020000000002a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000ffffffffa38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0200000000ffffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c8400000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000befe33cc397c03f234757d0e00e6a7a7a3b4b2b31fb0328d7b9f755cd1093d9f61892fef3116871976a91435ef6d4b59f26089dfe2abca21408e15fee42a3388ac0125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000befe33cc397c03f234757d0e00e6a7a7a3b4b2b31fb0328d7b9f755cd1093d9f61892fef3116871976a91435ef6d4b59f26089dfe2abca21408e15fee42a3388ac00000000",
+		"2deLw2MsbXTr44ZXKBS91midF2WzJPfQ8cz",
+		"")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(indexes))
+	if len(indexes) == 2 {
+		assert.Equal(t, uint32(1), indexes[0])
+		assert.Equal(t, uint32(2), indexes[1])
+	}
+
+	txHex, err = CfdGoUpdateWitnessStack(
+		int(KCfdNetworkLiquidv1),
+		"0200000001010e3c60901da7ffc518253e5736b9b73fd8aa5f79f249fa75bfe662c0f6ee42c301000000171600140c2eade9f3c984d0b2cedc79075a5793b0f5ce05ffffffff0201f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f010000000005f5e100001976a914b3c03c18599d13a481d1eb8a0ac2cc156564b4c688ac01f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f01000000000007a1200000000000000000024730440220437d443d290dcbd21b9dfdc612ac6cc5134f5acca19aa3c90b870ec41480839d02205662e29994c06cbeba70640aa74c7a4aafa50dba52ff45117800a1680240af6b0104111111110000000000",
+		"c342eef6c062e6bf75fa49f2795faad83fb7b936573e2518c5ffa71d90603c0e",
+		1,
+		1,
+		"02d8595abf5033d37a8a04947a537e8b28e2cb863e1ccd742012334c47e2c87a09")
+	assert.NoError(t, err)
+	assert.Equal(t, "0200000001010e3c60901da7ffc518253e5736b9b73fd8aa5f79f249fa75bfe662c0f6ee42c301000000171600140c2eade9f3c984d0b2cedc79075a5793b0f5ce05ffffffff0201f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f010000000005f5e100001976a914b3c03c18599d13a481d1eb8a0ac2cc156564b4c688ac01f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f01000000000007a1200000000000000000024730440220437d443d290dcbd21b9dfdc612ac6cc5134f5acca19aa3c90b870ec41480839d02205662e29994c06cbeba70640aa74c7a4aafa50dba52ff45117800a1680240af6b012102d8595abf5033d37a8a04947a537e8b28e2cb863e1ccd742012334c47e2c87a090000000000", txHex)
+
+	txHex, err = CfdGoUpdatePeginWitnessStack(
+		"0200000001017926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30000004000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000002540ba97c0017a91414b71442e11941fd7807a82eabee13d6ec171ed9870125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000003a84000000000000000000060800e40b54020000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f16001412dcdeef890f60967896391c95b0e02c9258dfe5fdda060200000000010a945efd42ce42de413aa7398a95c35facc14ec5d35bb23e5f980014e94ab96a620000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffffe50b46ecadb5cc52a7ef149a23323464353415f02d7b4a943963b26a9beb2a030000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff67173609ca4c13662356a2507c71e5d497baeff56a3c42af989f3b270bc870560000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff784a9fd151fe2808949fae18afcf52244a77702b9a83950bc7ec52a8239104850000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff259618278cecbae1bed8b7806133d14987c3c6118d2744707f509c58ea2c0e870000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff5c30c2fdcb6ce0b666120777ec18ce5211dd4741f40f033648432694b0919da50000000017160014a8a7c0032d1d283e39889861b3f05156e379cfb6feffffffbb0f857d4b143c74c7fdb678bf41b65e7e3f2e7644b3613ae6370d21c0882ad60000000017160014a8a7c0032d1d283e39889861b3f05156e379cfb6feffffffbce488c283e07bf364edb5057e020aa3d137d8d6130711dc12f03f35564945680000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff258cb927989780ac92a3952ffd1f54e9b65e59fb07219eb106840b5d76b547fb0000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffffe98ec686efbca9bdd18ae85a3a8235a607e1cfb6138bac1461d400cbbabbe00f0000000017160014a8a7c0032d1d283e39889861b3f05156e379cfb6feffffff0100e40b540200000017a91472c44f957fc011d97e3406667dca5b1c930c4026870247304402206b4de54956e864dfe3ff3a4957e329cf171e919498bb8f98c242bef7b0d5e3350220505355401a500aabf193b93492d6bceb93c3b183034f252d65a139245c7486a601210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f40247304402200fc48c7b5bd6de74c951250c60e8e6c9d3a605dc557bdc93ce86e85d2f27834a02205d2a8768adad669683416d1126c8537ab1eb36b0e83d5d9e6a583297b7f9d2cb01210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f40247304402207ad97500fbe6049d559a1e10586cd0b1f02baeb98dc641a971a506a57288aa0002202a6646bc4262904f6d1a9288c12ff586b5a674f5a351dfaba2698c8b8265366f01210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f4024730440220271e41a1e8f953b6817333e43d6a5e2924b291d52120011a5f7f1fb8049ae41b02200f1a25ed9da813122caadf8edf8d01da190f9407c2b61c27d4b671e07136bce701210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022050291184dcd4733de6e6a43d9efb1e21e7d2c563e9138481f04010f3acbb139f02206c01c3bfe4e5b71c4aac524a18f35e25ae7306ca110b3c3b079ae6da2b0a0a5701210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022045a188c10aec4f1a3a6c8a3a3c9f7d4dc63b9eacc011839c907d1c5da206a1390220399ca60516204efd9d220eaa0c804867137133c4d70780223fdde699288af3790121031c01fd031bc09b385d138b3b2f44ec04c03934b66f6485f37a17b4899f1b8d7802473044022053621a5c74b313c648d179041c154152372060941d9c9080340eb913358b705602201ac178f639360356ca7d75656d92bd7801d976e74bd5d2e30d6310a94940d0bc0121031c01fd031bc09b385d138b3b2f44ec04c03934b66f6485f37a17b4899f1b8d780247304402207b4a7a271a8fc03e8045ca367cb64046fa06e5b13a105e67efe7dd6571503fcb022072852e1c3f87eeac039601a0df855fb5d65bbdcd3ad95ff96bfc7b534fd89f7601210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022037e9f0943a79e155a57526e251cfd39e004552b76c0de892448eb939d2d12fdf02203a02f0045e8f90739eddc06c026c95b4a653aeb89528d851ab75952fd7db07b801210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022057a9953ba83d5e710fc64e1c533d81b0913f434b3e1c865cebd6cb106e09fa77022012930afe63ae7f1115a2f3b13039e71387fc2d4ed0e36eaa7be55a754c8c84830121031c01fd031bc09b385d138b3b2f44ec04c03934b66f6485f37a17b4899f1b8d78130e00009700000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f3010500000000",
+		"f393f3eb0c3c4642ae586301dcf9299d78d3bb0f4f1ddad0f4c2fd5093292679",
+		0,
+		5,
+		"000000204e28f541a3b2400720e1b7034c037e98e4806deb13f93927bf325eea3bcd5436a701767035de031ba3471b589ea214b54f0baa26d1118d2fb13a679f7b4b472e71128b5dffff7f2000000000020000000237f9a1552febc7194d5fac93e52a10dde4009ff485fbcc172b22d621b58c2d69109d857925ebfb477c6e6e70069814f279e4a6d871af9165631df4e5982e22710105")
+	assert.NoError(t, err)
+	assert.Equal(t, "0200000001017926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30000004000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000002540ba97c0017a91414b71442e11941fd7807a82eabee13d6ec171ed9870125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000003a84000000000000000000060800e40b54020000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f16001412dcdeef890f60967896391c95b0e02c9258dfe5fdda060200000000010a945efd42ce42de413aa7398a95c35facc14ec5d35bb23e5f980014e94ab96a620000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffffe50b46ecadb5cc52a7ef149a23323464353415f02d7b4a943963b26a9beb2a030000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff67173609ca4c13662356a2507c71e5d497baeff56a3c42af989f3b270bc870560000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff784a9fd151fe2808949fae18afcf52244a77702b9a83950bc7ec52a8239104850000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff259618278cecbae1bed8b7806133d14987c3c6118d2744707f509c58ea2c0e870000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff5c30c2fdcb6ce0b666120777ec18ce5211dd4741f40f033648432694b0919da50000000017160014a8a7c0032d1d283e39889861b3f05156e379cfb6feffffffbb0f857d4b143c74c7fdb678bf41b65e7e3f2e7644b3613ae6370d21c0882ad60000000017160014a8a7c0032d1d283e39889861b3f05156e379cfb6feffffffbce488c283e07bf364edb5057e020aa3d137d8d6130711dc12f03f35564945680000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffff258cb927989780ac92a3952ffd1f54e9b65e59fb07219eb106840b5d76b547fb0000000017160014ca2041536307bbe086e8c7fe8563e1c9b9b6eb84feffffffe98ec686efbca9bdd18ae85a3a8235a607e1cfb6138bac1461d400cbbabbe00f0000000017160014a8a7c0032d1d283e39889861b3f05156e379cfb6feffffff0100e40b540200000017a91472c44f957fc011d97e3406667dca5b1c930c4026870247304402206b4de54956e864dfe3ff3a4957e329cf171e919498bb8f98c242bef7b0d5e3350220505355401a500aabf193b93492d6bceb93c3b183034f252d65a139245c7486a601210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f40247304402200fc48c7b5bd6de74c951250c60e8e6c9d3a605dc557bdc93ce86e85d2f27834a02205d2a8768adad669683416d1126c8537ab1eb36b0e83d5d9e6a583297b7f9d2cb01210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f40247304402207ad97500fbe6049d559a1e10586cd0b1f02baeb98dc641a971a506a57288aa0002202a6646bc4262904f6d1a9288c12ff586b5a674f5a351dfaba2698c8b8265366f01210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f4024730440220271e41a1e8f953b6817333e43d6a5e2924b291d52120011a5f7f1fb8049ae41b02200f1a25ed9da813122caadf8edf8d01da190f9407c2b61c27d4b671e07136bce701210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022050291184dcd4733de6e6a43d9efb1e21e7d2c563e9138481f04010f3acbb139f02206c01c3bfe4e5b71c4aac524a18f35e25ae7306ca110b3c3b079ae6da2b0a0a5701210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022045a188c10aec4f1a3a6c8a3a3c9f7d4dc63b9eacc011839c907d1c5da206a1390220399ca60516204efd9d220eaa0c804867137133c4d70780223fdde699288af3790121031c01fd031bc09b385d138b3b2f44ec04c03934b66f6485f37a17b4899f1b8d7802473044022053621a5c74b313c648d179041c154152372060941d9c9080340eb913358b705602201ac178f639360356ca7d75656d92bd7801d976e74bd5d2e30d6310a94940d0bc0121031c01fd031bc09b385d138b3b2f44ec04c03934b66f6485f37a17b4899f1b8d780247304402207b4a7a271a8fc03e8045ca367cb64046fa06e5b13a105e67efe7dd6571503fcb022072852e1c3f87eeac039601a0df855fb5d65bbdcd3ad95ff96bfc7b534fd89f7601210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022037e9f0943a79e155a57526e251cfd39e004552b76c0de892448eb939d2d12fdf02203a02f0045e8f90739eddc06c026c95b4a653aeb89528d851ab75952fd7db07b801210281465587e09d80f5a7b8ce94bab4a4571dc8cff4483cc9eb89e76ecfa650b6f402473044022057a9953ba83d5e710fc64e1c533d81b0913f434b3e1c865cebd6cb106e09fa77022012930afe63ae7f1115a2f3b13039e71387fc2d4ed0e36eaa7be55a754c8c84830121031c01fd031bc09b385d138b3b2f44ec04c03934b66f6485f37a17b4899f1b8d78130e000097000000204e28f541a3b2400720e1b7034c037e98e4806deb13f93927bf325eea3bcd5436a701767035de031ba3471b589ea214b54f0baa26d1118d2fb13a679f7b4b472e71128b5dffff7f2000000000020000000237f9a1552febc7194d5fac93e52a10dde4009ff485fbcc172b22d621b58c2d69109d857925ebfb477c6e6e70069814f279e4a6d871af9165631df4e5982e2271010500000000", txHex)
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestIssuance(t *testing.T) {
+	blindingKey := "1c9c3636830860edfe1cc70649417f33b0799959ea7197a4e75a5ba2a326ddd3"
+	confidentialAddress := "CTErYaEfjCbu7recW9N2PoJq4Qt6XAqSoEAq31vfjGjJvvLV3hRGnfGgFuyJw9AqYGgZh57nYLjzHGcM"
+	tokenAmount := int64(1000000000)
+
+	entropy, asset, token, txHex, err := CfdGoSetRawIssueAsset(
+		"020000000001db3e7442a3a033e04def374fe6e3ce4351122655705e55e9fb02c7135508775e0000000000ffffffff02017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000003b9328e00017a9149d4a252d04e5072497ef2ac59574b1b14a7831b187017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000000007a120000000000000",
+		"5e77085513c702fbe9555e705526125143cee3e64f37ef4de033a0a342743edb",
+		0,
+		"0000000000000000000000000000000000000000000000000000000000000000",
+		500000000,
+		"CTEmp5tY22tBaWCEUiEUReuRcQV95geubpwi1By249nnCbFU94iv75V1Y1ESRET7gU8JqbxrBTSjkaUx",
+		"",
+		tokenAmount,
+		confidentialAddress,
+		"",
+		false)
+	assert.NoError(t, err)
+	assert.Equal(t, "020000000001db3e7442a3a033e04def374fe6e3ce4351122655705e55e9fb02c7135508775e0000008000ffffffff0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000001dcd650001000000003b9aca0004017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000003b9328e00017a9149d4a252d04e5072497ef2ac59574b1b14a7831b187017981c1f171d7973a1fd922652f559f47d6d1506a4be2394b27a54951957f6c1801000000000007a12000000154d634b51f6463ef827c1aca10ebf9758ca38ed0b969d6be1f5e28afe021406e01000000001dcd6500024e93dfae62a90ff7ebf8813fd9ffcf1d22115b88c9020ac3a144eccef98e8b981976a9148bba9241b14f785130e7ff186901997a5a1cc65688ac019f8e8c650b600dd566a087727cf24c01a02095c0e4329c82f27bceb31cc880c901000000003b9aca0002fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad81976a914e55f5b7134f05f779d0913413b6e0cb7d208780488ac00000000", txHex)
+	assert.Equal(t, "6e4021e0af285e1fbed669b9d08ea38c75f9eb10ca1a7c82ef63641fb534d654", asset)
+	assert.Equal(t, "c980c81cb3ce7bf2829c32e4c09520a0014cf27c7287a066d50d600b658c8e9f", token)
+
+	// blind
+	baseAsset := "186c7f955149a5274b39e24b6a50d1d6479f552f6522d91f3a97d771f1c18179"
+	txinList := []CfdBlindInputData{
+		{
+			Txid:             "5e77085513c702fbe9555e705526125143cee3e64f37ef4de033a0a342743edb",
+			Vout:             0,
+			Asset:            baseAsset,
+			Amount:           1000000000,
+			AssetBlindFactor: "28093061ab2e407c6015f8cb33f337ffb118eaf3beb2d254de64203aa27ecbf7",
+			ValueBlindFactor: "f87734c279533d8beba96c5369e169e6caf5f307a34d72d4a0f9c9a7b8f8f269",
+		},
+	}
+	txHex, err = CfdGoBlindRawTransaction(txHex, txinList, []CfdBlindOutputData{}, nil)
+	assert.NoError(t, err)
+	txHex, err = CfdGoAddTxSignWithPrivkey(
+		int(KCfdNetworkLiquidv1), txHex,
+		"5e77085513c702fbe9555e705526125143cee3e64f37ef4de033a0a342743edb", 0,
+		int(KCfdP2wpkh),
+		"03f942716865bb9b62678d99aa34de4632249d066d99de2b5a2e542e54908450d6",
+		"cU4KjNUT7GjHm7CkjRjG46SzLrXHXoH3ekXmqa2jTCFPMkQ64sw1",
+		int64(1000000000), int(KCfdSigHashAll), false, true)
+	assert.NoError(t, err)
+	assert.Equal(t, "6e4021e0af285e1fbed669b9d08ea38c75f9eb10ca1a7c82ef63641fb534d654", asset)
+
+	data, err := CfdGoGetConfidentialTxData(txHex)
+	assert.NoError(t, err)
+
+	feeUtxoIndex := uint32(0)
+	tokenIndex := uint32(3)
+	tokenAsset, tokenAmount2, assetBlinder, blinder, err := CfdGoUnblindTxOut(txHex, tokenIndex, blindingKey)
+	assert.NoError(t, err)
+	assert.Equal(t, token, tokenAsset)
+	assert.Equal(t, tokenAmount, tokenAmount2)
+	assert.NotEqual(t, "0000000000000000000000000000000000000000000000000000000000000000", assetBlinder)
+	assert.NotEqual(t, "0000000000000000000000000000000000000000000000000000000000000000", blinder)
+
+	// create reissue base tx
+	txHandle, err := InitializeTransaction(int(KCfdNetworkLiquidv1), uint32(2), uint32(0))
+	assert.NoError(t, err)
+	if err == nil {
+		defer FreeTransactionHandle(txHandle)
+		err = AddTransactionInput(txHandle, data.Txid, feeUtxoIndex, uint32(KCfdSequenceLockTimeFinal))
+		assert.NoError(t, err)
+
+		err = AddTransactionInput(txHandle, data.Txid, tokenIndex, uint32(KCfdSequenceLockTimeFinal))
+		assert.NoError(t, err)
+
+		// [0](change)=999000000
+		err = AddTransactionOutput(txHandle, int64(999000000), "el1qqf4026u44983693n58xhxd9ej6l0q4seka289pluyqr4seext7v5jl9xs3ya8x54m2guds5rsu04s7m5k3wpv3dr07xgxdla8kdvflhxv603xs3tm3wz", "", baseAsset)
+		assert.NoError(t, err)
+		// [1](fee)=500000
+		err = AddTransactionOutput(txHandle, int64(500000), "", "", baseAsset)
+		assert.NoError(t, err)
+		// [2](token)=1000000000
+		err = AddTransactionOutput(txHandle, tokenAmount, "AzpotonWHeKeBs4mZfXbnVvNCR23oKZ5UzpccaAZeP3igcWZLT2anN1QdrTYPMcFBMRD5411hS7pmATo", "", token)
+		assert.NoError(t, err)
+
+		// set reissuance
+		asset, err = SetReissueAsset(
+			txHandle, data.Txid, tokenIndex, int64(300000000),
+			assetBlinder, entropy, "AzpkYfJkupsG2p8Px1BafsjzaxKEoMUFKypr2x7jd6kZQHcRyx6zYtZHCUEEzzSayr8Kj9JPNnWceL7W", "")
+		assert.NoError(t, err)
+		assert.Equal(t, "6e4021e0af285e1fbed669b9d08ea38c75f9eb10ca1a7c82ef63641fb534d654", asset)
+
+		asset2, assetAmount, _, _, lockingScript, _, _, err := CfdGoGetConfidentialTxOutByHandle(txHandle, 3)
+		assert.NoError(t, err)
+		assert.Equal(t, asset, asset2)
+		assert.Equal(t, int64(300000000), assetAmount)
+		assert.Equal(t, "a914f70fa95299789b76e11b35164ad9ff94b24954f587", lockingScript)
+	}
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestPegin(t *testing.T) {
+	// fedpeg script
+	fedpegScript := "522103aab896d53a8e7d6433137bbba940f9c521e085dd07e60994579b64a6d992cf79210291b7d0b1b692f8f524516ed950872e5da10fb1b808b5a526dedc6fed1cf29807210386aa9372fbab374593466bc5451dc59954e90787f08060964d95c87ef34ca5bb53ae"
+	privkey := "cUfipPioYnHU61pfYTH9uuNoswRXx8rtzXhJZrsPeVV1LRFdTxvp"
+	pubkey, err := CfdGoGetPubkeyFromPrivkey("", privkey, true)
+	assert.NoError(t, err)
+
+	// create pegin address
+	peginAddress, claimScript, _, err := CfdGoGetPeginAddress(int(KCfdNetworkRegtest), fedpegScript, int(KCfdP2shP2wsh), pubkey, "")
+	assert.NoError(t, err)
+	assert.Equal(t, "2MvmzAFKZ5xh44vyb7qY7NB2AoDuS55rVFW", peginAddress)
+	assert.Equal(t, "0014e794713e386d83f32baa0e9d03e47c0839dc57a8", claimScript)
+
+	// create bitcoin tx
+	var btcTx string
+	var btcTxData CfdTxData
+	amount := int64(100000000)
+	peginAmount := amount - int64(500)
+	txHandle, err := InitializeTransaction(int(KCfdNetworkRegtest), uint32(2), uint32(0))
+	assert.NoError(t, err)
+	if err == nil {
+		defer FreeTransactionHandle(txHandle)
+		err = AddTransactionInput(txHandle, "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c", 0, uint32(KCfdSequenceLockTimeFinal))
+		assert.NoError(t, err)
+
+		err = AddTransactionOutput(txHandle, peginAmount, peginAddress, "", "")
+		assert.NoError(t, err)
+		// add sign
+		utxos := []CfdUtxo{
+			{
+				Txid:       "ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c",
+				Vout:       uint32(0),
+				Amount:     amount,
+				Descriptor: "wpkh(cNYKHjNc33ZyNMcDck59yWm1CYohgPhr2DYyCtmWNkL6sqb5L1rH)",
+			},
+		}
+		err = SetUtxoListByHandle(txHandle, utxos)
+		assert.NoError(t, err)
+		sighashType := NewSigHashType(int(KCfdSigHashAll))
+		err = SignWithPrivkeyByHandle(txHandle,
+			"ea9d5a9e974af1d167305aa6ee598706d63274e8a40f4f33af97db37a7adde4c", 0,
+			"cNYKHjNc33ZyNMcDck59yWm1CYohgPhr2DYyCtmWNkL6sqb5L1rH",
+			sighashType, true, nil, nil)
+		assert.NoError(t, err)
+
+		btcTx, err = GetTransactionHex(txHandle)
+		assert.NoError(t, err)
+		assert.Equal(t, "020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a91426b9ba9cf5d822b70cf490ad0394566f9db20c63870247304402200b3ca71e82551a333fe5c8ce9a8f8454eb8f08aa194180e5a87c79ccf2e46212022065c1f2a363ebcb155a80e234258394140d08f6ab807581953bb21a58f2d229a6012102fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad800000000", btcTx)
+
+		btcTxData, err = CfdGoGetTxInfoByHandle(txHandle)
+		assert.NoError(t, err)
+		assert.Equal(t, "12708508f0baf8691a3d7e22fd19afbf9bd8bf0d358e3310838bcc7916539c7b", btcTxData.Txid)
+	}
+	peginIndex := uint32(0)
+
+	txoutProof := "00000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30105"
+
+	// create pegin tx
+	var txHex string
+	genesisBlockHash := "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"
+	asset := "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225"
+	peginTxHandle, err := InitializeTransaction(int(KCfdNetworkElementsRegtest), uint32(2), uint32(0))
+	assert.NoError(t, err)
+	if err == nil {
+		defer FreeTransactionHandle(peginTxHandle)
+		err = AddPeginInput(peginTxHandle, btcTxData.Txid, peginIndex, peginAmount,
+			asset, genesisBlockHash, claimScript, btcTx, txoutProof)
+		assert.NoError(t, err)
+
+		// amount: 99999500
+		// [0]=99998500
+		err = AddTransactionOutput(peginTxHandle, int64(99998500),
+			"el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex", "", asset)
+		assert.NoError(t, err)
+		// [1](fee)=1000
+		err = AddTransactionOutput(peginTxHandle, int64(1000), "", "", asset)
+		assert.NoError(t, err)
+
+		txHex, err = GetTransactionHex(peginTxHandle)
+		assert.NoError(t, err)
+
+		// add dummy output (for blind)
+		txHex, err = CfdGoAddConfidentialTxOut(txHex, asset, 0, "", "", "6a", "03662a01c232918c9deb3b330272483c3e4ec0c6b5da86df59252835afeb4ab5f9")
+		assert.NoError(t, err)
+		assert.Equal(t, "0200000001017b9c531679cc8b8310338e350dbfd89bbfaf19fd227e3d1a69f8baf0088570120000004000ffffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000005f5db2402fe5ec67a3f8f932a9c7b987e501f105362630fc2576d5174506dde5a94902dd7160014a7b2b1da77ffa99d565b00d9f7b1c2e44a6907a80125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e800000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000000000000003662a01c232918c9deb3b330272483c3e4ec0c6b5da86df59252835afeb4ab5f9016a0000000000000006080cdff505000000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f160014e794713e386d83f32baa0e9d03e47c0839dc57a8c0020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a91426b9ba9cf5d822b70cf490ad0394566f9db20c63870247304402200b3ca71e82551a333fe5c8ce9a8f8454eb8f08aa194180e5a87c79ccf2e46212022065c1f2a363ebcb155a80e234258394140d08f6ab807581953bb21a58f2d229a6012102fd54c734e48c544c3c3ad1aab0607f896eb95e23e7058b174a580826a7940ad8000000009700000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30105000000000000", txHex)
+	}
+
+	// blind
+	txinList := []CfdBlindInputData{
+		{
+			Txid:   btcTxData.Txid,
+			Vout:   peginIndex,
+			Asset:  asset,
+			Amount: peginAmount,
+		},
+	}
+	txHex, err = CfdGoBlindRawTransaction(txHex, txinList, []CfdBlindOutputData{}, nil)
+	assert.NoError(t, err)
+	// add sign
+	_, err = CfdGoAddConfidentialTxSignWithPrivkey(
+		txHex, btcTxData.Txid, peginIndex, int(KCfdP2wpkh), pubkey, privkey,
+		peginAmount, "", int(KCfdSigHashAll), false, true)
+	assert.NoError(t, err)
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestPegout(t *testing.T) {
+	// mainchain address descriptor
+	mainchainXpubkey := "xpub6A53gzNdDBQYCtFFpZT7kUpoBGpzWigaukrdF9xoUZt7cYMD2qCAHVLsstNoQEDMFJWdX78KvT6yxpC76aGCN5mENVdWtFGcWZoKdtLq5jW"
+	mainchainPubkey, err := CfdGoGetPubkeyFromExtkey(mainchainXpubkey, int(KCfdNetworkMainnet))
+	assert.NoError(t, err)
+	negateMainchainPubkey, err := CfdGoNegatePubkey(mainchainPubkey)
+	assert.NoError(t, err)
+	mainchainOutputDescriptor := "pkh(" + mainchainXpubkey + "/0/*)"
+	bip32Counter := uint32(0)
+
+	onlinePrivkey := "L52AgshDAE14NHJuovwAw8hyrTNK4YQjuiPC9EES4sfM7oBPzU4o"
+	onlinePubkey, err := CfdGoGetPubkeyFromPrivkey("", onlinePrivkey, true)
+	assert.NoError(t, err)
+	// whitelist
+	pakEntry := negateMainchainPubkey + onlinePubkey
+	whitelist := pakEntry
+
+	// create pegout tx
+	genesisBlockHash := "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"
+	asset := "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225"
+	pegoutTxHandle, err := InitializeTransaction(int(KCfdNetworkElementsRegtest), uint32(2), uint32(0))
+	assert.NoError(t, err)
+	if err == nil {
+		defer FreeTransactionHandle(pegoutTxHandle)
+		err = AddTransactionInput(pegoutTxHandle, "4aa201f333e80b8f62ba5b593edb47b4730212e2917b21279f389ba1c14588a3", 0, 4294967293)
+		assert.NoError(t, err)
+
+		err = AddTransactionOutput(pegoutTxHandle, int64(209998999992700),
+			"XBMr6srTXmWuHifFd8gs54xYfiCBsvrksA", "", asset)
+		assert.NoError(t, err)
+		address, err := AddPegoutOutput(pegoutTxHandle, asset, int64(1000000000),
+			int(KCfdNetworkMainnet), int(KCfdNetworkLiquidv1), genesisBlockHash, onlinePubkey, onlinePrivkey, mainchainOutputDescriptor, bip32Counter, whitelist)
+		assert.NoError(t, err)
+		assert.Equal(t, "1NrcpiZmCxjC7KVKAYT22SzVhhcXtp5o4v", address)
+
+		err = AddTransactionOutput(pegoutTxHandle, int64(7300), "", "", asset)
+		assert.NoError(t, err)
+
+		txHex, err := GetTransactionHex(pegoutTxHandle)
+		assert.NoError(t, err)
+		assert.Equal(t, "020000000001a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000fdffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000befe33cc397c0017a914001d6db698e75a5a8af771730c4ab258af30546b870125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000003b9aca0000a06a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f1976a914efbced4774546c03a8554ce2da27c0300c9dd43b88ac2103700dcb030588ed828d85f645b48971de0d31e8c0244da46710d18681627f5a4a4101044e949dcf8ac2daac82a3e4999ee28e2711661793570c4daab34cd38d76a425d6bfe102f3fea8be12109925fad32c78b65afea4de1d17a826e7375d0e2d00660125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c84000000000000", txHex)
+	}
+
+	fmt.Printf("%s test done.\n", GetFuncName())
+}
+
+func TestSighashRangeproof(t *testing.T) {
+	txHex := "020000000101b7fc3ad65a21649fdf9a225a6165a2f945e895f2eac6b2bbc1d2f3681080f8030000000000ffffffff030b3584c0a40110d0a208aad09ca9be67dbe5fc7343b6287a8abb122439def1cc8c094d982039de127c6ffb3a012d7a54cb790baf1e923f48307eefd189aaa830dd4f03536ffcfc5365ae010225b8011f8b94e495574b4d0527350fef11fdbd93dbe21b17a914a3949e9a8b0b813db67c8fc5ad14194a297979cd870bcf3a513f93f3098858ba760efdcea670e9675930b210b9b7e5c33a87ebe3823d08e6b041a5120606213de33e800d38636a5a18277badf9f9393db822b15f3973aa03eaa4f0b5baacb04a6d8b37b5e70584550be4962178e20a9c0aec5faef855ccc617a914a3949e9a8b0b813db67c8fc5ad14194a297979cd870125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000027100000000000000000000043010001033a6e5463aeaf8460ef48520746c9a162f4b715eb6d4f00cb975e3b7a01e57092012829e2e1e87787fe5e04512e0b68500f97ae8771a44c05a87d3646e9215bfd4d0b602300000000000000014d3500fbe175b8e442af9d8322a0c892e2bca2c25561799c01c07f66cbb936e9c90404338f40bcf348912cc25855cbd38621076efd088b36b1933baf9513aea1bbd522551c82a478a7fa34e1dcda8ef648761031332ad5388ccbc171f9475c9fde056908bdec0b0c408c41691c4bed297da4b1740bbf0f81eb2ccf0f112ba6ca2c6f1d6bf3c1cecc613aaac01153bfaf7906df82402dcc8d0867eecd212fee82827e1ab5fb7ab448b36bed57bc9edb153544a961ee5e22a33385336e77f2b67dd6274c4d0232635c3112f7cb9dbb758beeac7db0ca1945c3497d1187aee1106181b2b2bd8c5602b1460085d2ac1319d0df500169a9344528feed3304ad212678e79946ebcf915cbbb9be47b0e850e0022c058e95e6e18d73227d354910b6d2ef7435c8a5f6e1355c2e35173e7bef86924a14a0f3e747562af1898a8c65ac52ba31bd860e81090f3cc1da296557685c4529681b25066d4db6febed3cbc3252e87df247a96a6f8c44550ebaf0610b3ebfdc80c744d41b4cb80b17d3ffa95024fac8ec40cbad4a2e442479e334021ee50218dabfec1d68bfda180d7d509e0d2da389f589ee6024791c2557b4175aae469e7e11b2779d1a8433ffe99ac7db6cbc7a4296c1eba50636839b1a378ad27c9fca08859689d5f08103c45f8de0eedabe7987afa9dd3aeb970cb8276c22fd329f182b8200b1d1a4baa88f2a82e54b40ae07cb10bd7c9bad09e59b461ea0f955791ace19af8dd90cb7b55cd09d319abc75686d15606b88356cf1f6838f59d61d473d4d128821d7628ac3c9b9068e65acfbab69fcbe498ee115fcb1cb3133d51d66e4727a4c37a56b66b940d40f4aaa16be4fc7a8c58d1df13614905472354a996f463c0102503a5191c4677a9666f3190555022a1f447d0cc45f65a845dd8a0a9fd9835948fe4aee490ead426df02327ce189458c85d08aad605810e5b9372023992040213e0df83c1d775c248edd7095271f88d065c073a15b37c3455b23ae946fa4cb7e40a14dc8810614deacf8ccab5634bce2f6475c35867c0c71add1d2af013269bc0973d8a54a78b2f6234c9520ea490f188aa493d612f5bef278cfb9f48e525f7eb202f3603bfe5d978b1233447872dff46a21b1d19ec8a8f6a9c4dc1c4ee3ebb4124b4c2a9d7d28705eecb04b9c592cee292155c7204a5a3f781cbc970d9549f5afba68d2e1ddc4b08ee3af6085716c7af487c92a1abe79d7c9f5027cb03190c9f47e05db5896cd94b119c53de617533dd7bdce57e9f3ce69cf8f25b6bcfce6d8abdcf14e098551d8f72256c2c04a5fb835f5b9f5ba1c7a5989a1c93e181240cb175e34ecedb9f2ef23614054f44cbaacb732e5529f02a7622c2ffaf811d205ed2be83f723ff8ba4ff23dbca65aabad5196c44c37982bbd5a54f9b38e776b52b8e817ca2f2c246dcd7b68922f9b2b4e8792c4a00c02a81de950afa532ce77ded61182f8fb65a49d416ffd697a8bab26feff05c9e0e7bcf028fd4775566f5864c4cdd51e425756369d9d4478ca027907511cedab3dcd098f9c9a019714a6ce3b40f54fcfaa6e035c4c8e566bb050ef9b9f4ac995155f2fcda379f94a3cf2819e5d57221ebe63af2dbcf319942728ada876379a0d98991d25125168307e089bd2bc24843d0b58f958d75b37f097dced7d7579d94346127d7a2029c1966ccf7e80ede17511da539ed2e4cb7b65f644e906f9c57c5a17ec9375ab5b9b867d1ab68a00371cbb5fa209d6badae3728723e0dff89cd5f9bd38dec57321b43b32c747b0f645e02df0ce9d946a723243d53a85232c4f26853b2d788c7f5c6e9974da549af5cf23813eaf88a409198729f12f5b83cccff34b6153e0d3adb79a3ce11dde701807519db5df63939d4ed44abd34971bc14a477ed35a7596907753477aabdfc15265f2625787d8a152f9b5deabc5371682657b0c9bd4dc20ca95e388de3454ec80ded9b9b268ec55e2f0816be7e9b979a81685e2885bce1f0c873d6f268fda1a8d4fe8f736e95842fc9b05f84ed1d14a67566dfe931fa13ffff2672d9f9d30b13e62ecca4ff20f462be0626c0b93493446ff90d7ff1bddd867c8c6d9ccee603ab0fb0896544a20f2f9a5f5928e026bfd0ea93cc4c26abcf6159fa2c15245f2f3190cfc201316985a17b666e16230598a84e4bc31a6ae90491ea1f4550f96360778342c84c494c9faa073624396d8ca2e1ced3b545959040be0a5cb9d8bedd9584ba2db6f3bbf2dca734806076cb406432793f7b3ba7bc4ac35325e97d1f48d219c9e0e5a1555cb49cd97fdbfda3034ef08073a490624e2e1b76450e091d878c3caf9fe066680b96af0db14d9939c489dfd387b2e86b89ecd4bf1e6cc4c7a7f0e4533c6dcb510bec483faac1a9bc73cf2e1e595e8ffad98c7c400601b56840766f4d7934b2cbd6aa70bf6ebd18436d23f963b1a7711b3966415e50a0b0c67cb6de142e1a1ba5d7dfa77542c44bbbaa0e95ed0e702a506fdab23ee7aaa7843083266693dfb6c31be76e0bc3b33fa18b11e95888a18cdc4793ae7bc1a4686c546a52c9843fa19739522cdbbf874ec59d0c38b6a4b3aedbfbe72d82b8efba6deac3cbdb2f18ac25de8c8f095f1c921431e6a7c342fb17e8d3a5cb809521765de4adb001ae63d92e109317d090425dcdc197dfdbe7440b857824ef6128397653e20c33f995b4c782db036b420945b4c2c3d953ead32378939e9b74537e2dd26cd360bac1dbf752f66f1ddbb03eede3c76efc619bb06ebac2a0cfbb6c40f9a2762995e0911950c07eb7b5ca642234e0c0df99db32dfe99253003c052db72d4f744e423cc28620e1742363e5745ba759d15b62f77bb9c6534bcc13ee8ef1381219ac07219f8a75caa256ab7c3fffd0c40f93556541c929a1754c289235c4f80b68f0cd0043c9e0c2922e512a0730a80c2b4bf038ee9d5ece4e5dbc1f84258a81da43e4921278f1e4aeffa6cbfb8b2f83e9dc756811a00a44a48498b7f0f1b8ab9b1808914cb66b3fd41e6d4ff6579747b2174b4651c66382fd6000b6db2dec4763f61667115113469b73de1d911af384a36f7e4c960e10102e015b8d1250af9ea7981e79d84b49f714aa3210fb6e7f9b2a860d9df18c981f69b479bfd744a6c054df476919407bd227c58c76f244c8b8ea4265912e95b4285da68be013e3888b92d57b8689ad1ef5c6f0d3c0bed3cf25e86931e7c4bf14042d8ca9b7c323b2875b981eb9b5883c4e3bd75233cd9ae19568a3adede390bcfa787067596ab704c9b057d6a91b77c514de5c034a96cb31db3393ead266aab3eaebf2fbeffa63c4202c5febaa3f2b848878a5c2235619071c10f6146868e735971c8a53f59d3235b0e3b4a460473e7173f29d42982f69cef40207d43e2fd308a7ff6421044c8960c991f33a9d3334a8d63109251f672fd89f75ae1d9b32559b73c5a22e019f46a503f9dfb5bc82deb5103dde9e91f145c7507ad55b21e0ff8f96b5dcb6222dc8c5e428ddd9e9c7658a8ba8d318aa6180e75c260bb83e16898a68711be33c0ba8906e3233c8c1f31c9fc75857655ef26ba7b53952dab096a48ccf9258490a0b6e05304da43a43878eb0740fe1f952b9028d450b904ebca2d00d036bd38a435ffcf73d795397a84ec18f72a93cdddd4b8dfdac4c6c7877e16b480e819857c8e18920beb0ee09e6c3b2b6baadcffeac776591744394eb512d5814c1f68ff0c73e2bb3e2f4e0186282cd8da6b8e96e1d5bca47c98329608edaebe36c01895638a7c728cf871d2f19d5833234d2277d3acfd60ebd6c4add790eee3758bd840bc22962f1fa2227ae2853813cc36b5be46e37b246f6a9b0a21b6159a82b5f92800941e33df02188761bc730c2b284aa15dd4545ae0f4c4229a4d8c9b415a691a355e1858a26c7433195a42e55c020cbc0efcb51b560d561715c546091d655dd5cac04b4ce0986941229591f33f7c96e9acef7e878043c49a4a420de859ff20695196c37660511276e43705f73751d68f7ef1929b3ab8e32faabc3c83ac13466c543650220aa2669a3ed7fe34d6f6e6ddb44e390b7338a8a3056a8643010001ff410fe519866271fcc3d47b83120429858ebaa008dce79ae35b4455d7ec3f3045ffab1a938bbf628ff8c14f87f08943acca6bdeebfb06c18b58ec8f4d1d9c51fd4d0b60230000000000000001e20700490755f44beb25382ec7d71b25290f105ca685a456ebd1a7c560386ec9d03fbcb13ae429d8a04902b5daf4ef10010551a2848a31c42a43dc4037705a3ccd2e329f4ae6b02bebe80e58062b374e35d099147cdb36dcbf174ced965c6697a4187f68eb482706f30b24c4312a93a576f07398cd3c5a001645885aa6fdd659a1aeebfd51fe2fe0fc8f26ca9071ee7480de50a9c0637a9c551fedb0215045a888c40d4629109d8c93be540df83c991ac8c1ac9c3e2bb798fcea1c4a4791925c01d349e4ee5832b6e3d53a6d2dc2193b78d97b3b0dd951a846d48d83ceb067518e558214fa17837b747285b80aa92200c5340bdfb727e55d72c26dbc7816073a3654b084022e2d951463a0838f4683ec74184f18af1c0fddbebe292b6615c3c12b7bc381943f2a0968df482be55dd45ce19491349f2cb982935c092cd281f24e3ccffea71f3c776dc79cd4338fc93e393d92de1456166bc1019c1252932f43408338c3a84716dc842cea2a069b057a968d73892429ffd02225550bef7faa19e580cda00ec18d1d60d8e338a9cab95aaa857c579904eea03873c96b23bdd7b2d7aa39d402d5e81cf3585d390c990ba6d786ff2e8183c15e8ca4faeebefd7630b54179a6edea020f6de31ba0b8f36173ba0caf6eace25d9aaaf2ec1ec3cf6a87caef74787447017a2f661598ca5252baccedcf3b7cab0d1bf3d13d69651d92c0dda2baed6f979b5bf5b1f9e4b60592da53cad89bdc53111aafa7a9d8874e7d9f145e128162b709db2557456a1f06789ff8508bce78b47fcd6d63914753e3c5002b1a3a31cf5ac6e42ab6638499c0b964681e854e7284a9fad3a96e5c53ead3ea652e9d0af6e6b86fd920edb6187fe22a03f47fb617ab4232155fd249922d4893d2c786abb074bd399b210e4461c75169f13b0ddedc25c4def03f9a7e6e58e1a9575fe59556cefab31114c3b59fcfe80883920aede6ca6db4db539367894bf9c0a465a0448c6b2f370a3c41e1a9790dcad74918f41dcc7f568559401bc4a471102e43489a731328aad4cb8f9cb459298569a724048b2e879964143837eee75e8a4906fc3bfa22581589f3ca9f6b9958c46a30747e54b5c7fe66f510c77d658458f2311140287b9fc421a48e17073707087f37c1098e9d60b67bac01f1b5b2feef6c1902bbe5581a1b13836f555e63f6fefcc715f4b818acb499ac17e9a3633bf97e975ac49cbf76aaa1ef85411a3fb9062195e202d03a6aed9b652bcb380424032cbaadc3a8b808414836fe68f29b62d27a22abdb5a618191707b442e9dba525fb13698c1af1d00db5927e8178eb7e69ecd21b3199b3eb10ce7d9619428070fa17664b0b8134b45c6c532c74fb32b581a63f3af2d675a74ab467703f4dfede85c7f570fe65c21f71c709db4ae94e4b6fb92314aafb88f953dc8ed3b28da983910413fc9bdc78627c98b519bcaec8de7cf21abbe44deea9c3bd4ead89433bbffaf7a00f1712c09601df224c9635612f97df35812b64fe88a6055d7a971611b358ff7c65320a4eec533a007824fbfb1f0640f5634a0875189321a692fda6e4b39c2e339e3072e181dd228603c82d232f3e7370d344512ea0c0ae8428835974600bbb5870bb922de9f47be0c4fc2f3632f4ae44c7029589f3463ea4418e51c4038788942306cf7715ff8a09bd27413211db78d165fd0a698968f1f1b1023feccb850c99596933da86be7cea9590ec25d487739a25f1552a7f06f8265111dbd65b20241557234a6ddff88a42222e3622c2bb8c0020ed5e21cbce129b734df3cccb008386f78eab530f9625117a0d6d29a396e849564a0c74ec2198da0200dd80a5071fb23f282d0ef2c9bb0290bbad54f91fb3175d38b66cd7b729e370f64948fccdd69703c99196afef66b2187f7a8b9ad13a012cd344e43dc16b3cfc28a680a9764c150c93bf1db12ccb98414aaefa426ef91360acdad7cc13be34660751a8af8f11975ebfb646e8fe5293b51553dfe22d8be3c7d1ab1c4850a362ce11d12b2048a64e8b6398eb5e2078a14eebd532542917b337033b6e82b35a8630cccf170bd73f7e6868634409f1c3351fc83ad399afb3847fbaa7beb4c534bbdbd87df1cb49c9462901f46f00d9e4a1c02c8d817ed31a8e77cdc271ca8f05498951dba32abc0153637790377917ce9d872a4853c67ea639befdc9873ebeb66c30b803d9866c8118e5c7ced668fab3a80b2d4b68f8a387dd0efe3b493888cd02479c7186eea9b58f6b4b8dca92dea056ba78a81d35b29e2586a25385e3574ba4e28ce2702fe1d781b38aae3dd7ab7375014e631421fedfef38b00bc2e622422c3e5cfaf92180c20903e1ab4e983ef8fa20201f47674ce3f85f37691c611155367075ed9e131606105973b428d2e2f7badd32bb4d460735aa5d5774835d5b25369a3959bc71e60a53696c7473101c76a36fcf84192dd3f8ed934c7485033519d1704c78aecda9c8abf0dc118879779dbf4ca888dfd4dad2a6e4bb832e0283563a6057237122f325c72eef7dc89adc842b6f305ed9b2e7b24723754a1d3a26e149b90ba51cb0207d46ccd0a69bd63ad1e95f641069f69639bdccea03428601606bc85a5f2b747a3476e3449ff2aeed12214468353a5326e322354fb56c3f1dac4fa61584ddc38c5a54c5fb8ec332085f50ebfffde12c46e0283656fd954d121191dea53d19fe287e8aee935011fa7b3a240afdb24db95f3ae77c86462028f5b054ef8af36d3f7b4453ad50f470fec39f95901a57d3b3bb01e952269983475f1d13c5a5921a8709332fa9586a0fd8f82f87d06e66e9ec2272fd67a9cfcc1f48b7a1da9a3af716216b811f03fcf4a12c8e832c4e36bcb83f7cae5dd17a385cb9a679d9cc64be8d9f972ea022cd9625664180e98c3f292e62b56b5bea3b9845ce720482f5fb6931dfbd35aa3fc816a776a4553360ec18888b1d9d9acb07edeb5908955373fe6984abc8dbc6724cfec5a908fd606169d0c5ff914e0db3f1a566602dba4265c67f3233b1623b016306d8d3bb0d8c2f47e101fb626c42849c9cd83b5dd7d148ff4a488b6929e52048cf0a61d8e2d506e5d6e70c8beac188de2c14bf8f7c385461257886baf4bf3ad78e16c657e3de62e5cb42015a2cce88516887e1995018a51fa5a2a6688613dde7edf213266e5520b73336cc775ea542908f3f76e67d2792e73afb3429aeae188e39aceb3d17652740ae37fb3639c16888336bc9f1cfea546d3443214d153405e03216ae0ebb79b949ead937daf5587409cf53b6be2428c289dedd6194c2a42719660bc3ca3706f8ba4141734b6e2734ec0e90bb267fc59b92e91a38f554097193494073fb7559b6571994dc5381b5b4ca4443665cf4da2f41dbc737b554a4266c5a40bccc36f94585788eaceddbcc6a082cc1265811c7546f562743264fd8c6926b4f28a7136583057701b8386ba7821ffb12ba742d8a475765c58c1ab68d44adf9a45127a9d0a456152f2ec1317c3c7dda48944fa8595d0e86662c311e6970bb6e51589105def2032e775d5025553d3f44c89044272f870aa7b19a7f71ae0e5d184b6cb7d9e697ae8a56ac1d5619e0d9f1673072928e201975ec84417c83c0fd611cde590995d7d44ad1dbc09c98e178e48bc861b37e46c5257c8a66f6323a1a33958b14eb811ab6c8827dbf16955d01b5ce46bd1e1b19afd48a70310dfbc54d8bb6ed68ec4612c71145bff3a1833e1bb8c52962ec51219abbb58de0ba4c6ca3105fc2c181809102df98ba0e6c22ed21c6d5b30fa2432e8065d5b2b98b95800d6e5600aef541990321bf28be3cff705457c9c00d2a727352e92d102b15a9f7105457b27f93111bf4552ae1588e69e7656e2f1cb723c969c6e8a886564bee122eab57b145fbb2781dea3c099633a80141dfddefa16d93ed7becedff15f196dbd8adff8c47affc10d75aec5e9e03828e371787276193cae56253fc54eb9d1bf925152ad5f3b671f3944f9f61ab35f52b3790c655dc6f0f30ce33169b563f85057b1235fbd62c1d0f9ae9642c639c951bde2baf544117687ab8a3682206ab35b010000"
+	expTxHex := "020000000101b7fc3ad65a21649fdf9a225a6165a2f945e895f2eac6b2bbc1d2f3681080f8030000000000ffffffff030b3584c0a40110d0a208aad09ca9be67dbe5fc7343b6287a8abb122439def1cc8c094d982039de127c6ffb3a012d7a54cb790baf1e923f48307eefd189aaa830dd4f03536ffcfc5365ae010225b8011f8b94e495574b4d0527350fef11fdbd93dbe21b17a914a3949e9a8b0b813db67c8fc5ad14194a297979cd870bcf3a513f93f3098858ba760efdcea670e9675930b210b9b7e5c33a87ebe3823d08e6b041a5120606213de33e800d38636a5a18277badf9f9393db822b15f3973aa03eaa4f0b5baacb04a6d8b37b5e70584550be4962178e20a9c0aec5faef855ccc617a914a3949e9a8b0b813db67c8fc5ad14194a297979cd870125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000027100000000000000000024730440220750ed6df0b947abbe4ed7addfa7160a9bd628e1b6e01305562e518c8e683f278022044badfa55477a26acc5f4a160fe7f1f4c7f9e8d6bfd535711802800e814a9ba3412103f942716865bb9b62678d99aa34de4632249d066d99de2b5a2e542e54908450d60043010001033a6e5463aeaf8460ef48520746c9a162f4b715eb6d4f00cb975e3b7a01e57092012829e2e1e87787fe5e04512e0b68500f97ae8771a44c05a87d3646e9215bfd4d0b602300000000000000014d3500fbe175b8e442af9d8322a0c892e2bca2c25561799c01c07f66cbb936e9c90404338f40bcf348912cc25855cbd38621076efd088b36b1933baf9513aea1bbd522551c82a478a7fa34e1dcda8ef648761031332ad5388ccbc171f9475c9fde056908bdec0b0c408c41691c4bed297da4b1740bbf0f81eb2ccf0f112ba6ca2c6f1d6bf3c1cecc613aaac01153bfaf7906df82402dcc8d0867eecd212fee82827e1ab5fb7ab448b36bed57bc9edb153544a961ee5e22a33385336e77f2b67dd6274c4d0232635c3112f7cb9dbb758beeac7db0ca1945c3497d1187aee1106181b2b2bd8c5602b1460085d2ac1319d0df500169a9344528feed3304ad212678e79946ebcf915cbbb9be47b0e850e0022c058e95e6e18d73227d354910b6d2ef7435c8a5f6e1355c2e35173e7bef86924a14a0f3e747562af1898a8c65ac52ba31bd860e81090f3cc1da296557685c4529681b25066d4db6febed3cbc3252e87df247a96a6f8c44550ebaf0610b3ebfdc80c744d41b4cb80b17d3ffa95024fac8ec40cbad4a2e442479e334021ee50218dabfec1d68bfda180d7d509e0d2da389f589ee6024791c2557b4175aae469e7e11b2779d1a8433ffe99ac7db6cbc7a4296c1eba50636839b1a378ad27c9fca08859689d5f08103c45f8de0eedabe7987afa9dd3aeb970cb8276c22fd329f182b8200b1d1a4baa88f2a82e54b40ae07cb10bd7c9bad09e59b461ea0f955791ace19af8dd90cb7b55cd09d319abc75686d15606b88356cf1f6838f59d61d473d4d128821d7628ac3c9b9068e65acfbab69fcbe498ee115fcb1cb3133d51d66e4727a4c37a56b66b940d40f4aaa16be4fc7a8c58d1df13614905472354a996f463c0102503a5191c4677a9666f3190555022a1f447d0cc45f65a845dd8a0a9fd9835948fe4aee490ead426df02327ce189458c85d08aad605810e5b9372023992040213e0df83c1d775c248edd7095271f88d065c073a15b37c3455b23ae946fa4cb7e40a14dc8810614deacf8ccab5634bce2f6475c35867c0c71add1d2af013269bc0973d8a54a78b2f6234c9520ea490f188aa493d612f5bef278cfb9f48e525f7eb202f3603bfe5d978b1233447872dff46a21b1d19ec8a8f6a9c4dc1c4ee3ebb4124b4c2a9d7d28705eecb04b9c592cee292155c7204a5a3f781cbc970d9549f5afba68d2e1ddc4b08ee3af6085716c7af487c92a1abe79d7c9f5027cb03190c9f47e05db5896cd94b119c53de617533dd7bdce57e9f3ce69cf8f25b6bcfce6d8abdcf14e098551d8f72256c2c04a5fb835f5b9f5ba1c7a5989a1c93e181240cb175e34ecedb9f2ef23614054f44cbaacb732e5529f02a7622c2ffaf811d205ed2be83f723ff8ba4ff23dbca65aabad5196c44c37982bbd5a54f9b38e776b52b8e817ca2f2c246dcd7b68922f9b2b4e8792c4a00c02a81de950afa532ce77ded61182f8fb65a49d416ffd697a8bab26feff05c9e0e7bcf028fd4775566f5864c4cdd51e425756369d9d4478ca027907511cedab3dcd098f9c9a019714a6ce3b40f54fcfaa6e035c4c8e566bb050ef9b9f4ac995155f2fcda379f94a3cf2819e5d57221ebe63af2dbcf319942728ada876379a0d98991d25125168307e089bd2bc24843d0b58f958d75b37f097dced7d7579d94346127d7a2029c1966ccf7e80ede17511da539ed2e4cb7b65f644e906f9c57c5a17ec9375ab5b9b867d1ab68a00371cbb5fa209d6badae3728723e0dff89cd5f9bd38dec57321b43b32c747b0f645e02df0ce9d946a723243d53a85232c4f26853b2d788c7f5c6e9974da549af5cf23813eaf88a409198729f12f5b83cccff34b6153e0d3adb79a3ce11dde701807519db5df63939d4ed44abd34971bc14a477ed35a7596907753477aabdfc15265f2625787d8a152f9b5deabc5371682657b0c9bd4dc20ca95e388de3454ec80ded9b9b268ec55e2f0816be7e9b979a81685e2885bce1f0c873d6f268fda1a8d4fe8f736e95842fc9b05f84ed1d14a67566dfe931fa13ffff2672d9f9d30b13e62ecca4ff20f462be0626c0b93493446ff90d7ff1bddd867c8c6d9ccee603ab0fb0896544a20f2f9a5f5928e026bfd0ea93cc4c26abcf6159fa2c15245f2f3190cfc201316985a17b666e16230598a84e4bc31a6ae90491ea1f4550f96360778342c84c494c9faa073624396d8ca2e1ced3b545959040be0a5cb9d8bedd9584ba2db6f3bbf2dca734806076cb406432793f7b3ba7bc4ac35325e97d1f48d219c9e0e5a1555cb49cd97fdbfda3034ef08073a490624e2e1b76450e091d878c3caf9fe066680b96af0db14d9939c489dfd387b2e86b89ecd4bf1e6cc4c7a7f0e4533c6dcb510bec483faac1a9bc73cf2e1e595e8ffad98c7c400601b56840766f4d7934b2cbd6aa70bf6ebd18436d23f963b1a7711b3966415e50a0b0c67cb6de142e1a1ba5d7dfa77542c44bbbaa0e95ed0e702a506fdab23ee7aaa7843083266693dfb6c31be76e0bc3b33fa18b11e95888a18cdc4793ae7bc1a4686c546a52c9843fa19739522cdbbf874ec59d0c38b6a4b3aedbfbe72d82b8efba6deac3cbdb2f18ac25de8c8f095f1c921431e6a7c342fb17e8d3a5cb809521765de4adb001ae63d92e109317d090425dcdc197dfdbe7440b857824ef6128397653e20c33f995b4c782db036b420945b4c2c3d953ead32378939e9b74537e2dd26cd360bac1dbf752f66f1ddbb03eede3c76efc619bb06ebac2a0cfbb6c40f9a2762995e0911950c07eb7b5ca642234e0c0df99db32dfe99253003c052db72d4f744e423cc28620e1742363e5745ba759d15b62f77bb9c6534bcc13ee8ef1381219ac07219f8a75caa256ab7c3fffd0c40f93556541c929a1754c289235c4f80b68f0cd0043c9e0c2922e512a0730a80c2b4bf038ee9d5ece4e5dbc1f84258a81da43e4921278f1e4aeffa6cbfb8b2f83e9dc756811a00a44a48498b7f0f1b8ab9b1808914cb66b3fd41e6d4ff6579747b2174b4651c66382fd6000b6db2dec4763f61667115113469b73de1d911af384a36f7e4c960e10102e015b8d1250af9ea7981e79d84b49f714aa3210fb6e7f9b2a860d9df18c981f69b479bfd744a6c054df476919407bd227c58c76f244c8b8ea4265912e95b4285da68be013e3888b92d57b8689ad1ef5c6f0d3c0bed3cf25e86931e7c4bf14042d8ca9b7c323b2875b981eb9b5883c4e3bd75233cd9ae19568a3adede390bcfa787067596ab704c9b057d6a91b77c514de5c034a96cb31db3393ead266aab3eaebf2fbeffa63c4202c5febaa3f2b848878a5c2235619071c10f6146868e735971c8a53f59d3235b0e3b4a460473e7173f29d42982f69cef40207d43e2fd308a7ff6421044c8960c991f33a9d3334a8d63109251f672fd89f75ae1d9b32559b73c5a22e019f46a503f9dfb5bc82deb5103dde9e91f145c7507ad55b21e0ff8f96b5dcb6222dc8c5e428ddd9e9c7658a8ba8d318aa6180e75c260bb83e16898a68711be33c0ba8906e3233c8c1f31c9fc75857655ef26ba7b53952dab096a48ccf9258490a0b6e05304da43a43878eb0740fe1f952b9028d450b904ebca2d00d036bd38a435ffcf73d795397a84ec18f72a93cdddd4b8dfdac4c6c7877e16b480e819857c8e18920beb0ee09e6c3b2b6baadcffeac776591744394eb512d5814c1f68ff0c73e2bb3e2f4e0186282cd8da6b8e96e1d5bca47c98329608edaebe36c01895638a7c728cf871d2f19d5833234d2277d3acfd60ebd6c4add790eee3758bd840bc22962f1fa2227ae2853813cc36b5be46e37b246f6a9b0a21b6159a82b5f92800941e33df02188761bc730c2b284aa15dd4545ae0f4c4229a4d8c9b415a691a355e1858a26c7433195a42e55c020cbc0efcb51b560d561715c546091d655dd5cac04b4ce0986941229591f33f7c96e9acef7e878043c49a4a420de859ff20695196c37660511276e43705f73751d68f7ef1929b3ab8e32faabc3c83ac13466c543650220aa2669a3ed7fe34d6f6e6ddb44e390b7338a8a3056a8643010001ff410fe519866271fcc3d47b83120429858ebaa008dce79ae35b4455d7ec3f3045ffab1a938bbf628ff8c14f87f08943acca6bdeebfb06c18b58ec8f4d1d9c51fd4d0b60230000000000000001e20700490755f44beb25382ec7d71b25290f105ca685a456ebd1a7c560386ec9d03fbcb13ae429d8a04902b5daf4ef10010551a2848a31c42a43dc4037705a3ccd2e329f4ae6b02bebe80e58062b374e35d099147cdb36dcbf174ced965c6697a4187f68eb482706f30b24c4312a93a576f07398cd3c5a001645885aa6fdd659a1aeebfd51fe2fe0fc8f26ca9071ee7480de50a9c0637a9c551fedb0215045a888c40d4629109d8c93be540df83c991ac8c1ac9c3e2bb798fcea1c4a4791925c01d349e4ee5832b6e3d53a6d2dc2193b78d97b3b0dd951a846d48d83ceb067518e558214fa17837b747285b80aa92200c5340bdfb727e55d72c26dbc7816073a3654b084022e2d951463a0838f4683ec74184f18af1c0fddbebe292b6615c3c12b7bc381943f2a0968df482be55dd45ce19491349f2cb982935c092cd281f24e3ccffea71f3c776dc79cd4338fc93e393d92de1456166bc1019c1252932f43408338c3a84716dc842cea2a069b057a968d73892429ffd02225550bef7faa19e580cda00ec18d1d60d8e338a9cab95aaa857c579904eea03873c96b23bdd7b2d7aa39d402d5e81cf3585d390c990ba6d786ff2e8183c15e8ca4faeebefd7630b54179a6edea020f6de31ba0b8f36173ba0caf6eace25d9aaaf2ec1ec3cf6a87caef74787447017a2f661598ca5252baccedcf3b7cab0d1bf3d13d69651d92c0dda2baed6f979b5bf5b1f9e4b60592da53cad89bdc53111aafa7a9d8874e7d9f145e128162b709db2557456a1f06789ff8508bce78b47fcd6d63914753e3c5002b1a3a31cf5ac6e42ab6638499c0b964681e854e7284a9fad3a96e5c53ead3ea652e9d0af6e6b86fd920edb6187fe22a03f47fb617ab4232155fd249922d4893d2c786abb074bd399b210e4461c75169f13b0ddedc25c4def03f9a7e6e58e1a9575fe59556cefab31114c3b59fcfe80883920aede6ca6db4db539367894bf9c0a465a0448c6b2f370a3c41e1a9790dcad74918f41dcc7f568559401bc4a471102e43489a731328aad4cb8f9cb459298569a724048b2e879964143837eee75e8a4906fc3bfa22581589f3ca9f6b9958c46a30747e54b5c7fe66f510c77d658458f2311140287b9fc421a48e17073707087f37c1098e9d60b67bac01f1b5b2feef6c1902bbe5581a1b13836f555e63f6fefcc715f4b818acb499ac17e9a3633bf97e975ac49cbf76aaa1ef85411a3fb9062195e202d03a6aed9b652bcb380424032cbaadc3a8b808414836fe68f29b62d27a22abdb5a618191707b442e9dba525fb13698c1af1d00db5927e8178eb7e69ecd21b3199b3eb10ce7d9619428070fa17664b0b8134b45c6c532c74fb32b581a63f3af2d675a74ab467703f4dfede85c7f570fe65c21f71c709db4ae94e4b6fb92314aafb88f953dc8ed3b28da983910413fc9bdc78627c98b519bcaec8de7cf21abbe44deea9c3bd4ead89433bbffaf7a00f1712c09601df224c9635612f97df35812b64fe88a6055d7a971611b358ff7c65320a4eec533a007824fbfb1f0640f5634a0875189321a692fda6e4b39c2e339e3072e181dd228603c82d232f3e7370d344512ea0c0ae8428835974600bbb5870bb922de9f47be0c4fc2f3632f4ae44c7029589f3463ea4418e51c4038788942306cf7715ff8a09bd27413211db78d165fd0a698968f1f1b1023feccb850c99596933da86be7cea9590ec25d487739a25f1552a7f06f8265111dbd65b20241557234a6ddff88a42222e3622c2bb8c0020ed5e21cbce129b734df3cccb008386f78eab530f9625117a0d6d29a396e849564a0c74ec2198da0200dd80a5071fb23f282d0ef2c9bb0290bbad54f91fb3175d38b66cd7b729e370f64948fccdd69703c99196afef66b2187f7a8b9ad13a012cd344e43dc16b3cfc28a680a9764c150c93bf1db12ccb98414aaefa426ef91360acdad7cc13be34660751a8af8f11975ebfb646e8fe5293b51553dfe22d8be3c7d1ab1c4850a362ce11d12b2048a64e8b6398eb5e2078a14eebd532542917b337033b6e82b35a8630cccf170bd73f7e6868634409f1c3351fc83ad399afb3847fbaa7beb4c534bbdbd87df1cb49c9462901f46f00d9e4a1c02c8d817ed31a8e77cdc271ca8f05498951dba32abc0153637790377917ce9d872a4853c67ea639befdc9873ebeb66c30b803d9866c8118e5c7ced668fab3a80b2d4b68f8a387dd0efe3b493888cd02479c7186eea9b58f6b4b8dca92dea056ba78a81d35b29e2586a25385e3574ba4e28ce2702fe1d781b38aae3dd7ab7375014e631421fedfef38b00bc2e622422c3e5cfaf92180c20903e1ab4e983ef8fa20201f47674ce3f85f37691c611155367075ed9e131606105973b428d2e2f7badd32bb4d460735aa5d5774835d5b25369a3959bc71e60a53696c7473101c76a36fcf84192dd3f8ed934c7485033519d1704c78aecda9c8abf0dc118879779dbf4ca888dfd4dad2a6e4bb832e0283563a6057237122f325c72eef7dc89adc842b6f305ed9b2e7b24723754a1d3a26e149b90ba51cb0207d46ccd0a69bd63ad1e95f641069f69639bdccea03428601606bc85a5f2b747a3476e3449ff2aeed12214468353a5326e322354fb56c3f1dac4fa61584ddc38c5a54c5fb8ec332085f50ebfffde12c46e0283656fd954d121191dea53d19fe287e8aee935011fa7b3a240afdb24db95f3ae77c86462028f5b054ef8af36d3f7b4453ad50f470fec39f95901a57d3b3bb01e952269983475f1d13c5a5921a8709332fa9586a0fd8f82f87d06e66e9ec2272fd67a9cfcc1f48b7a1da9a3af716216b811f03fcf4a12c8e832c4e36bcb83f7cae5dd17a385cb9a679d9cc64be8d9f972ea022cd9625664180e98c3f292e62b56b5bea3b9845ce720482f5fb6931dfbd35aa3fc816a776a4553360ec18888b1d9d9acb07edeb5908955373fe6984abc8dbc6724cfec5a908fd606169d0c5ff914e0db3f1a566602dba4265c67f3233b1623b016306d8d3bb0d8c2f47e101fb626c42849c9cd83b5dd7d148ff4a488b6929e52048cf0a61d8e2d506e5d6e70c8beac188de2c14bf8f7c385461257886baf4bf3ad78e16c657e3de62e5cb42015a2cce88516887e1995018a51fa5a2a6688613dde7edf213266e5520b73336cc775ea542908f3f76e67d2792e73afb3429aeae188e39aceb3d17652740ae37fb3639c16888336bc9f1cfea546d3443214d153405e03216ae0ebb79b949ead937daf5587409cf53b6be2428c289dedd6194c2a42719660bc3ca3706f8ba4141734b6e2734ec0e90bb267fc59b92e91a38f554097193494073fb7559b6571994dc5381b5b4ca4443665cf4da2f41dbc737b554a4266c5a40bccc36f94585788eaceddbcc6a082cc1265811c7546f562743264fd8c6926b4f28a7136583057701b8386ba7821ffb12ba742d8a475765c58c1ab68d44adf9a45127a9d0a456152f2ec1317c3c7dda48944fa8595d0e86662c311e6970bb6e51589105def2032e775d5025553d3f44c89044272f870aa7b19a7f71ae0e5d184b6cb7d9e697ae8a56ac1d5619e0d9f1673072928e201975ec84417c83c0fd611cde590995d7d44ad1dbc09c98e178e48bc861b37e46c5257c8a66f6323a1a33958b14eb811ab6c8827dbf16955d01b5ce46bd1e1b19afd48a70310dfbc54d8bb6ed68ec4612c71145bff3a1833e1bb8c52962ec51219abbb58de0ba4c6ca3105fc2c181809102df98ba0e6c22ed21c6d5b30fa2432e8065d5b2b98b95800d6e5600aef541990321bf28be3cff705457c9c00d2a727352e92d102b15a9f7105457b27f93111bf4552ae1588e69e7656e2f1cb723c969c6e8a886564bee122eab57b145fbb2781dea3c099633a80141dfddefa16d93ed7becedff15f196dbd8adff8c47affc10d75aec5e9e03828e371787276193cae56253fc54eb9d1bf925152ad5f3b671f3944f9f61ab35f52b3790c655dc6f0f30ce33169b563f85057b1235fbd62c1d0f9ae9642c639c951bde2baf544117687ab8a3682206ab35b010000"
+
+	pubkey := "03f942716865bb9b62678d99aa34de4632249d066d99de2b5a2e542e54908450d6"
+	privkey := "cU4KjNUT7GjHm7CkjRjG46SzLrXHXoH3ekXmqa2jTCFPMkQ64sw1"
+	txid := "03f8801068f3d2c1bbb2c6eaf295e845f9a265615a229adf9f64215ad63afcb7"
+	vout := uint32(0)
+	sigHashType := (int)(KCfdSigHashAllPlusRangeproof)
+	hashType := (int)(KCfdP2wpkh)
+	txHex2, err := CfdGoAddConfidentialTxSignWithPrivkey(txHex, txid, vout, hashType, pubkey, privkey, int64(0), "09b6e7605917e27f35690dcae922f664c8a3b057e2c6249db6cd304096aa87a226", sigHashType, false, true)
+	assert.NoError(t, err)
+	assert.Equal(t, expTxHex, txHex2)
+
+	// add sighashtype
+	util := NewSchnorrUtil()
+	bytes, err := NewByteDataFromHex("61f75636003a870b7a1685abae84eedf8c9527227ac70183c376f7b3a35b07ebcbea14749e58ce1a87565b035b2f3963baa5ae3ede95e89fd607ab7849f20872")
+	assert.NoError(t, err)
+
+	sighashType := NewSigHashType(int(KCfdSigHashAll))
+	sighashType.Rangeproof = true
+	_, err = util.AddSighashTypeInSignature(&bytes, sighashType)
+	// Confirm that an error occurs because elements do not support it yet.
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid sighash type for schnorr signature.")
+	// assert.Equal(t, "61f75636003a870b7a1685abae84eedf8c9527227ac70183c376f7b3a35b07ebcbea14749e58ce1a87565b035b2f3963baa5ae3ede95e89fd607ab7849f2087241", sig.ToHex())
 
 	fmt.Printf("%s test done.\n", GetFuncName())
 }
