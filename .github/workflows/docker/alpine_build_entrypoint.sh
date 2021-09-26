@@ -16,4 +16,4 @@ make install DESTDIR=/github/workspace/dist
 ls /github/workspace/dist
 ls /github/workspace/dist/usr
 ls /github/workspace/dist/usr/local
-ls /github/workspace/dist/usr/local/lib64
+ls /github/workspace/dist/usr/local/lib*

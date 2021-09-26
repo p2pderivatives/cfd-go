@@ -1,0 +1,38 @@
+version: '3.5'
+
+services:
+  formatter:
+    build:
+      context: .
+      dockerfile: ./docker/tools.dockerfile
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: make all
+
+  swig:
+    build:
+      context: .
+      dockerfile: ./docker/tools.dockerfile
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: make build-all gen-swig
+
+  test:
+    build:
+      context: .
+      dockerfile: ./docker/tools.dockerfile
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: make build-all test
+
+  test-1.17:
+    build:
+      context: .
+      dockerfile: ./docker/golang17-alpine14.dockerfile
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: make build-all test
