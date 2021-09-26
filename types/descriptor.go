@@ -1,8 +1,8 @@
 package types
 
 import (
-	cfd "github.com/cryptogarageinc/cfd-go"
-	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
+	cfd "github.com/p2pderivatives/cfd-go"
+	cfdErrors "github.com/p2pderivatives/cfd-go/errors"
 )
 
 type DescriptorKeyType int

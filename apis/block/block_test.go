@@ -3,9 +3,9 @@ package block
 import (
 	"testing"
 
-	"github.com/cryptogarageinc/cfd-go/config"
-	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
-	types "github.com/cryptogarageinc/cfd-go/types"
+	"github.com/p2pderivatives/cfd-go/config"
+	cfdErrors "github.com/p2pderivatives/cfd-go/errors"
+	types "github.com/p2pderivatives/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
 

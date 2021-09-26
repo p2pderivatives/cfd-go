@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/cryptogarageinc/cfd-go/types"
+	"github.com/p2pderivatives/cfd-go/types"
 	"github.com/pkg/errors"
 )
 

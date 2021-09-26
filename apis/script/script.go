@@ -4,10 +4,10 @@ import (
 	"strconv"
 	"strings"
 
-	cfdgo "github.com/cryptogarageinc/cfd-go"
-	"github.com/cryptogarageinc/cfd-go/apis/key"
-	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
-	"github.com/cryptogarageinc/cfd-go/types"
+	cfdgo "github.com/p2pderivatives/cfd-go"
+	"github.com/p2pderivatives/cfd-go/apis/key"
+	cfdErrors "github.com/p2pderivatives/cfd-go/errors"
+	"github.com/p2pderivatives/cfd-go/types"
 
 	"github.com/pkg/errors"
 )

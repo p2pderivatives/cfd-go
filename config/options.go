@@ -1,7 +1,7 @@
 package config
 
 import (
-	types "github.com/cryptogarageinc/cfd-go/types"
+	types "github.com/p2pderivatives/cfd-go/types"
 )
 
 type CfdConfigOption func(*CfdConfig)

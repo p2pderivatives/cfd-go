@@ -1,8 +1,8 @@
 package address
 
 import (
-	cfd "github.com/cryptogarageinc/cfd-go"
-	types "github.com/cryptogarageinc/cfd-go/types"
+	cfd "github.com/p2pderivatives/cfd-go"
+	types "github.com/p2pderivatives/cfd-go/types"
 	"github.com/pkg/errors"
 )
 

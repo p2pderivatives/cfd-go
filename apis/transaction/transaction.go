@@ -1,12 +1,12 @@
 package transaction
 
 import (
-	cfd "github.com/cryptogarageinc/cfd-go"
-	"github.com/cryptogarageinc/cfd-go/apis/descriptor"
-	"github.com/cryptogarageinc/cfd-go/config"
-	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
-	"github.com/cryptogarageinc/cfd-go/types"
-	"github.com/cryptogarageinc/cfd-go/utils"
+	cfd "github.com/p2pderivatives/cfd-go"
+	"github.com/p2pderivatives/cfd-go/apis/descriptor"
+	"github.com/p2pderivatives/cfd-go/config"
+	cfdErrors "github.com/p2pderivatives/cfd-go/errors"
+	"github.com/p2pderivatives/cfd-go/types"
+	"github.com/p2pderivatives/cfd-go/utils"
 	"github.com/pkg/errors"
 )
 

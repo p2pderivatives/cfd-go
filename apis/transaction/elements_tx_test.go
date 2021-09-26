@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	cfdgo "github.com/cryptogarageinc/cfd-go"
-	"github.com/cryptogarageinc/cfd-go/apis/address"
-	"github.com/cryptogarageinc/cfd-go/apis/descriptor"
-	"github.com/cryptogarageinc/cfd-go/apis/key"
-	"github.com/cryptogarageinc/cfd-go/config"
-	cfdErrors "github.com/cryptogarageinc/cfd-go/errors"
-	"github.com/cryptogarageinc/cfd-go/types"
+	cfdgo "github.com/p2pderivatives/cfd-go"
+	"github.com/p2pderivatives/cfd-go/apis/address"
+	"github.com/p2pderivatives/cfd-go/apis/descriptor"
+	"github.com/p2pderivatives/cfd-go/apis/key"
+	"github.com/p2pderivatives/cfd-go/config"
+	cfdErrors "github.com/p2pderivatives/cfd-go/errors"
+	"github.com/p2pderivatives/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
 

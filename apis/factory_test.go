@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	cfd "github.com/cryptogarageinc/cfd-go"
-	"github.com/cryptogarageinc/cfd-go/apis/key"
-	"github.com/cryptogarageinc/cfd-go/config"
-	"github.com/cryptogarageinc/cfd-go/types"
+	cfd "github.com/p2pderivatives/cfd-go"
+	"github.com/p2pderivatives/cfd-go/apis/key"
+	"github.com/p2pderivatives/cfd-go/config"
+	"github.com/p2pderivatives/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
 

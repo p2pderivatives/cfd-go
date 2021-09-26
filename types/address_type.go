@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	cfd "github.com/cryptogarageinc/cfd-go"
+	cfd "github.com/p2pderivatives/cfd-go"
 )
 
 type AddressType int

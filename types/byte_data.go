@@ -3,7 +3,7 @@ package types
 import (
 	"encoding/hex"
 
-	cfd "github.com/cryptogarageinc/cfd-go"
+	cfd "github.com/p2pderivatives/cfd-go"
 )
 
 // ByteData This struct holds a byte array.

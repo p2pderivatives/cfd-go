@@ -7,7 +7,7 @@ package mock
 import (
 	reflect "reflect"
 
-	types "github.com/cryptogarageinc/cfd-go/types"
+	types "github.com/p2pderivatives/cfd-go/types"
 	gomock "github.com/golang/mock/gomock"
 )
 

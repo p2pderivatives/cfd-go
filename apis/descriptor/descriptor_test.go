@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cryptogarageinc/cfd-go/config"
-	"github.com/cryptogarageinc/cfd-go/errors"
-	"github.com/cryptogarageinc/cfd-go/types"
+	"github.com/p2pderivatives/cfd-go/config"
+	"github.com/p2pderivatives/cfd-go/errors"
+	"github.com/p2pderivatives/cfd-go/types"
 	"github.com/stretchr/testify/assert"
 )
 

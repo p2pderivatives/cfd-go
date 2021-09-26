@@ -1,7 +1,7 @@
 package crypto
 
 import (
-	cfdgo "github.com/cryptogarageinc/cfd-go"
+	cfdgo "github.com/p2pderivatives/cfd-go"
 )
 
 // go generate comment

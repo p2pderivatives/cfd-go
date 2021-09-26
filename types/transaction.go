@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	cfd "github.com/cryptogarageinc/cfd-go"
+	cfd "github.com/p2pderivatives/cfd-go"
 )
 
 const (

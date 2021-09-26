@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	cfd "github.com/cryptogarageinc/cfd-go"
+	cfd "github.com/p2pderivatives/cfd-go"
 	"github.com/stretchr/testify/assert"
 )
 

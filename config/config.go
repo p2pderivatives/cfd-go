@@ -1,8 +1,8 @@
 package config
 
 import (
-	types "github.com/cryptogarageinc/cfd-go/types"
-	"github.com/cryptogarageinc/cfd-go/utils"
+	types "github.com/p2pderivatives/cfd-go/types"
+	"github.com/p2pderivatives/cfd-go/utils"
 	"github.com/pkg/errors"
 )
 
