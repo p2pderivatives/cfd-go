@@ -69,6 +69,7 @@ attention: Cgo can only be used on the `make` platform.
 (Recommended to use wsl(Windows Subsystem for Linux), because it can be cumbersome.)
 
 download and install files.
+
 - go (1.12 or higher)
 - [CMake](https://cmake.org/) (3.14.3 or higher)
 - [MinGW](http://mingw-w64.org/) (Add to PATH after install)
@@ -92,11 +93,9 @@ brew install cmake go node
 apt-get install -y build-essential golang cmake nodejs
 ```
 
-cmake version 3.14.2 or lower, download from website and install cmake.
-(https://cmake.org/download/)
+cmake version 3.14.2 or lower, [download from website](https://cmake.org/download/) and install cmake.
 
 go version 1.11 or lower, get `golang.org/dl/go1.12` or higher.
-(https://www.mazn.net/blog/2019/02/03/1704.html)
 
 ---
 
@@ -128,7 +127,7 @@ go mod download
 go build
 ```
 
-**CMake options**
+#### CMake options
 
 `cmake .. (CMake options) -DENABLE_JS_WRAPPER=off`
 
@@ -152,21 +151,22 @@ On Windows, can use `releases asset`.
 The fastest and easiest way.
 
 - macos / linux(ubuntu)
+
 ```Shell
 (cleanup)
 ./tools/cmake_cleanup.sh
 sudo ./tools/cleanup_install_files.sh
 
 (download)
-wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.3.1/cfdgo-v0.3.1-ubuntu2004-gcc-x86_64.zip
+wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.3.2/cfdgo-v0.3.2-ubuntu2004-gcc-x86_64.zip
 
 (unzip)
-sudo unzip -q cfdgo-v0.3.1-ubuntu2004-gcc-x86_64.zip -d /
+sudo unzip -q cfdgo-v0.3.2-ubuntu2004-gcc-x86_64.zip -d /
 ```
 
 - windows
   1. cleanup: `c:/usr/local` directory.
-  2. download: https://github.com/p2pderivatives/cfd-go/releases/download/v0.3.1/cfdgo-v0.3.1-win-gcc-static-x86_64.zip
+  2. download [asset](https://github.com/p2pderivatives/cfd-go/releases/download/v0.3.2/cfdgo-v0.3.2-win-gcc-static-x86_64.zip).
   3. Unzip and extract to `c:/usr/local` directory.
 
 ### install (after build)
@@ -190,6 +190,7 @@ npm run cmake_make_install
 ```
 
 cmake version is 3.15 or higher:
+
 ```Shell
 (cleanup)
 ./tools/cmake_cleanup.sh
@@ -221,26 +222,28 @@ cd build && sudo ninja install
 
 cmake version is 3.15 or higher: `cmake --install build`
 
-#### Using releases asset
+#### Using releases asset (for install)
 
 - Ubuntu / MacOS
+
 ```Shell
 (cleanup)
 ./tools/cmake_cleanup.sh
 sudo ./tools/cleanup_install_files.sh
 
 (download)
-wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.3.1/cfdgo-v0.3.1-ubuntu2004-gcc-x86_64.zip
+wget https://github.com/p2pderivatives/cfd-go/releases/download/v0.3.2/cfdgo-v0.3.2-ubuntu2004-gcc-x86_64.zip
 
 (unzip)
-sudo unzip -q cfdgo-v0.3.1-ubuntu2004-gcc-x86_64.zip -d /
+sudo unzip -q cfdgo-v0.3.2-ubuntu2004-gcc-x86_64.zip -d /
 ```
 
 - Windows
-  1. get releases asset. (ex. https://github.com/p2pderivatives/cfd-go/releases/download/v0.3.1/cfdgo-v0.3.1-win-gcc-static-x86_64.zip )
+  1. get [releases asset](https://github.com/p2pderivatives/cfd-go/releases/download/v0.3.2/cfdgo-v0.3.2-win-gcc-static-x86_64.zip).
   2. Expand to PATH
 
 ### uninstall
+
 ```Shell
 (uninstall by using makefile)
 cd build && sudo make uninstall
@@ -260,29 +263,31 @@ sudo ./tools/cleanup_install_files.sh
 2. Build & install cfd-go(and dependencies).
 3. Modify `go.mod` file adding cfd-go as go moudle
 
-go.mod
+    go.mod
 
-```
-require (
-  github.com/p2pderivatives/cfd-go v0.3.1
-  ...
-)
-```
+    ```go
+    require (
+      github.com/p2pderivatives/cfd-go v0.3.2
+      ...
+    )
+    ```
 
-Reference github commit:
-```
-require (
-  github.com/p2pderivatives/cfd-go v1.0.0-0.20191205091101-a48a6a8b1a24
-  ...
-)
-```
-(version format: UnknownVersionTag-UtcDate-CommitHash)
+    Reference github commit:
+
+    ```go
+    require (
+      github.com/p2pderivatives/cfd-go v1.0.0-0.20191205091101-a48a6a8b1a24
+      ...
+    )
+    ```
+
+    (version format: UnknownVersionTag-UtcDate-CommitHash)
 
 4. Download cfd-go module
 
-```Shell
-go mod download
-```
+    ```Shell
+    go mod download
+    ```
 
 ---
 
@@ -293,18 +298,20 @@ go mod download
 test file is `cfdgo_test.go` . Execute by the following method.
 
 - shell script or bat file
-```
-(linux/macos)
-./go_test.sh
 
-(Windows)
-.\go_test.bat
-```
+  ```sh
+  (linux/macos)
+  ./go_test.sh
+
+  (Windows)
+  .\go_test.bat
+  ```
 
 - go command (linux/macos)
-```Shell
-LD_LIBRARY_PATH=./build/Release go test
-```
+
+  ```Shell
+  LD_LIBRARY_PATH=./build/Release go test
+  ```
 
 ### Example
 
@@ -319,18 +326,6 @@ LD_LIBRARY_PATH=./build/Release go test
 - cfdgo.go, cfdgo.cxx: generated from swig.
 - swig.i: swig file.
 
-#### generate from swig.i
-
-attention: At first, install swig and set PATH.
-
-```
-(linux/macos)
-./tools/gen_swig.sh
-
-(Windows)
-.\tools\gen_swig.bat
-```
-
 ### using library
 
 - cfd
@@ -338,9 +333,56 @@ attention: At first, install swig and set PATH.
     - [libwally-core](https://github.com/cryptogarageinc/libwally-core/tree/cfd-develop) (forked from [ElementsProject/libwally-core](https://github.com/ElementsProject/libwally-core))
     - [univalue](https://github.com/jgarzik/univalue) (for JSON encoding and decoding)
 
-### formatter
+### develop tools
 
-- go fmt (ignore cfdgo.go)
+#### generate from swig.i
+
+attention: At first, install swig and set PATH.
+
+```sh
+(linux/macos)
+./tools/gen_swig.sh
+
+(Windows)
+.\tools\gen_swig.bat
+```
+
+#### formatter
+
+- go fmt
+- goimports
+
+use by makefile:
+
+```sh
+make
+
+(windows)
+mingw32-make
+```
+
+#### mockgen
+
+```sh
+make
+
+(windows)
+mingw32-make
+```
+
+### develop tools by docker compose
+
+#### generate from swig.i by docker compose
+
+```sh
+docker-compose run swig
+```
+
+#### formatter and mockgen by docker compose
+
+```sh
+docker-compose run formatter
+```
 
 ### support compilers
 
@@ -349,7 +391,7 @@ attention: At first, install swig and set PATH.
 
 ### code coverage
 
-```
+```sh
 (Windows)
 .\go_coverage.bat
 
@@ -361,26 +403,29 @@ attention: At first, install swig and set PATH.
 
 ## Note
 
-### Git connection:
+### Git connection
 
 Git repository connections default to HTTPS.
 However, depending on the connection settings of GitHub, you may only be able to connect via SSH.
 As a countermeasure, forcibly establish SSH connection by setting `CFD_CMAKE_GIT_SSH=1` in the environment variable.
 
 - Windows: (On the command line. Or set from the system setting screen.)
-```
-set CFD_CMAKE_GIT_SSH=1
-```
+
+  ```bat
+  set CFD_CMAKE_GIT_SSH=1
+  ```
 
 - MacOS & Linux(Ubuntu):
-```
-export CFD_CMAKE_GIT_SSH=1
-```
 
-### Ignore git update for CMake External Project:
+  ```sh
+  export CFD_CMAKE_GIT_SSH=1
+  ```
+
+### Ignore git update for CMake External Project
 
 Depending on your git environment, you may get the following error when checking out external:
-```
+
+```sh
   Performing update step for 'libwally-core-download'
   Current branch cmake_build is up to date.
   No stash entries found.
@@ -399,11 +444,13 @@ This phenomenon is due to the `git update` related command.
 Please set an environment variable that skips update processing.
 
 - Windows: (On the command line. Or set from the system setting screen.)
-```
-set CFD_CMAKE_GIT_SKIP_UPDATE=1
-```
+
+  ```bat
+  set CFD_CMAKE_GIT_SKIP_UPDATE=1
+  ```
 
 - MacOS & Linux(Ubuntu):
-```
-export CFD_CMAKE_GIT_SKIP_UPDATE=1
-```
+
+  ```sh
+  export CFD_CMAKE_GIT_SKIP_UPDATE=1
+  ```

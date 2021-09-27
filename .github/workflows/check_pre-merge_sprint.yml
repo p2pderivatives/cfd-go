@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - features/sprint*
+    - feature/ci*
     paths-ignore:
     - 'README.md'
     - '*.dockerfile'
@@ -21,12 +22,10 @@ jobs:
     strategy:
       matrix:
         os: [macos-10.15, windows-2019, ubuntu-20.04, ubuntu-18.04]
-        go-version: [1.14.x, 1.15.x, 1.16.x]
+        go-version: [1.16.x, 1.17.x]
         exclude:
           - os: macos-10.15
-            go-version: 1.15.x
-          - os: macos-10.15
-            go-version: 1.14.x
+            go-version: 1.17.x
         include:
           - os: windows-2019
             generator: MSYS Makefiles
@@ -62,7 +61,7 @@ jobs:
         cd build
         sudo make install
         cd ..
-        LD_LIBRARY_PATH=/usr/local/lib go test
+        ./go_test_installed.sh
     - name: go_test-ubuntu
       if: runner.os == 'Linux'
       run: ./go_test.sh

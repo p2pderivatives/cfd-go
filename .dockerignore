@@ -1,0 +1,5 @@
+build
+external/cfd
+external/cfd-core
+external/libwally-core
+external/googletest

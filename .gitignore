@@ -45,7 +45,6 @@
 /bin
 autom4te.cache
 *.in
-/Makefile
 /config.h
 *.m4
 config.h.in~
@@ -174,7 +173,6 @@ external/*
 /tools/*localdebug.bat
 
 !go.mod
-/go.sum
 /cover.html
 *.log
 /cover.txt

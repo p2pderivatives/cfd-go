@@ -2,13 +2,13 @@ FROM golang:1.15-alpine3.12
 
 WORKDIR /workspace
 
-ARG CFDGO_DOMAIN=p2pderivatives
-ARG CFDGO_VER=v0.3.0
+ARG CFDGO_DOMAIN=cryptogarageinc
+ARG CFDGO_VER=v0.3.2
 
 RUN apk add --update --no-cache musl gcc g++ make unzip wget \
   && echo "---- download cfd binary ----" \
   && wget https://github.com/$CFDGO_DOMAIN/cfd-go/releases/download/$CFDGO_VER/cfdgo-$CFDGO_VER-alpine_x86_64.zip \
-  && unzip -d / cfdgo-$CFDGO_VER-alpine_x86_64.zip
+  && unzip -d / cfdgo-$CFDGO_VER-alpine-3.12-x86_64.zip
 
 RUN echo "---- test cfd-go ----" \
   && apk add --update --no-cache git \
