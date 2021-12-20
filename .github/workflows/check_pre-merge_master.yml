@@ -49,7 +49,7 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: ${{ matrix.go-version }}
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: cmake-generate
       run: cmake -S . -B build -G "${{ matrix.generator }}" -DENABLE_SHARED=on -DENABLE_TESTS=off -DTARGET_RPATH="/usr/local/lib;/usr/local/lib64;./build/Release"
     - name: cmake-build
